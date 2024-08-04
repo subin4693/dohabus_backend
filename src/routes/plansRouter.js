@@ -12,6 +12,7 @@ router
 router
   .route("/:id")
   .delete(verify.verifyToken, plansController.deletePlan)
-  .put(verify.verifyToken, plansController.editPlan);
+  .put(verify.verifyToken, plansController.editPlan)
+  .get(plansController.getSinglePlan);
 
 module.exports = router;
