@@ -2,6 +2,12 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 
 const userRouter = require("./src/routes/usersRouter");
+const categoryRouter = require("./src/routes/categorysRouter");
+
+const planRouter = require("./src/routes/plansRouter");
+
+const ticketRouter = require("./src/routes/ticketsRouter");
+const cartRouter = require("./src/routes/cartsRouter");
 
 const cors = require("cors");
 const AppError = require("./src/utils/appError");
@@ -19,6 +25,10 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/categorys", categoryRouter);
+app.use("/api/v1/plans", planRouter);
+app.use("/api/v1/tickets", ticketRouter);
+app.use("/api/v1/carts", cartRouter);
 
 app.all("*", (req, res, next) => {
   res.status(404).json({

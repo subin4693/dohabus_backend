@@ -12,9 +12,13 @@ exports.signup = catchAsync(async (req, res, next) => {
   const hashed = await bcryptjs.hash(password, 8);
 
   const newUser = await User.create({ email, name, password: hashed });
-  const token = jwt.sign({ id: newUser._id, role: newUser.role }, process.env.JWT_SECRECT, {
-    expiresIn: process.env.LOGIN_EXPIRES,
-  });
+  const token = jwt.sign(
+    { id: newUser._id, role: newUser.role, email: newUser.email },
+    process.env.JWT_SECRECT,
+    {
+      expiresIn: process.env.LOGIN_EXPIRES,
+    },
+  );
 
   newUser.password = undefined;
   var expirationDate = new Date();
@@ -56,9 +60,13 @@ exports.signin = catchAsync(async (req, res, next) => {
     return next(error);
   }
   user.password = undefined;
-  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRECT, {
-    expiresIn: process.env.LOGIN_EXPIRES,
-  });
+  const token = jwt.sign(
+    { id: user._id, role: user.role, email: user.email },
+    process.env.JWT_SECRECT,
+    {
+      expiresIn: process.env.LOGIN_EXPIRES,
+    },
+  );
 
   var expirationDate = new Date();
   expirationDate.setDate(expirationDate.getDate() + 30);
