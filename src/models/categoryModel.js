@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 //sea tours,city tours...
-const tourCategorysModel = new mongoose.Schema(
+const categorysModel = new mongoose.Schema(
   {
     coverImage: {
       type: String,
@@ -34,6 +34,6 @@ const tourCategorysModel = new mongoose.Schema(
   { timestamps: true },
 );
 
-const Category = new mongoose.model("Category", tourCategorysModel);
+const Category = new mongoose.model("Category", categorysModel);
 
 module.exports = Category;

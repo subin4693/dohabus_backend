@@ -14,7 +14,7 @@ const cartSchema = new mongoose.Schema(
     },
     tour: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Tour",
+      ref: "Plan",
       required: [true, "Please provide a courseid."],
     },
   },

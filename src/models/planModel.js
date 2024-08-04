@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const tourModel = new mongoose.Schema({
+const plansModel = new mongoose.Schema({
   category: {
     type: mongoose.Schema.Types.ObjectId,
     required: [true, "Category is required"],
@@ -20,6 +20,23 @@ const tourModel = new mongoose.Schema({
     required: [true, "Please provide a valid description   for tour"],
     trim: true,
   },
+  hopOn: {
+    type: String,
+    required: [true, "Please provide a valid hop-on   for tour"],
+    trim: true,
+  },
+  hopOff: {
+    type: String,
+    required: [true, "Please provide a valid hop-off   for tour"],
+    trim: true,
+  },
+  places: [
+    {
+      type: String,
+      required: [true, "Please provide a valid places  for tour"],
+      trim: true,
+    },
+  ],
   timings: [
     {
       type: String,
@@ -59,6 +76,6 @@ const tourModel = new mongoose.Schema({
     required: [true, "Please provide a valid price for tour"],
   },
 });
-const Tour = new mongoose.model("Tour", tourModel);
+const Plan = new mongoose.model("Plan", plansModel);
 
-module.exports = Tour;
+module.exports = Plan;
