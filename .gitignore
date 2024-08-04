@@ -6,6 +6,6 @@ package-lock.json
 
 
 # dotenv environment variable files
-.env
+# .env
 .env.test
 .env.production
