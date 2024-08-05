@@ -9,6 +9,6 @@ router
   .post(verify.verifyToken, ticketsController.bookTicket)
   .get(verify.verifyToken, ticketsController.getTickets);
 
-router.route("/:id").delete(verify.verifyToken, ticketsController.deleteTicket);
+router.route("/:ticketId").delete(verify.verifyToken, ticketsController.deleteTicket);
 
 module.exports = router;

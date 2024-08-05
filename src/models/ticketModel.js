@@ -16,6 +16,10 @@ const ticketModel = new mongoose.Schema({
     required: [true, "plan id is required"],
     ref: "Plan",
   },
+  price: {
+    type: Number,
+    required: [true, "Please enter a valid price"],
+  },
   quantity: {
     type: Number,
     required: [true, "Please enter a valid quantity"],
