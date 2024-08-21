@@ -10,6 +10,7 @@ const ticketRouter = require("./src/routes/ticketsRouter");
 const cartRouter = require("./src/routes/cartsRouter");
 const hotelRouter = require("./src/routes/hotelRouter");
 const favouriteRoutes = require("./src/routes/favouriteRoutes");
+const adminRoutes = require("./src/routes/adminRoutes");
 
 const cors = require("cors");
 const AppError = require("./src/utils/appError");
@@ -33,6 +34,8 @@ app.use("/api/v1/tickets", ticketRouter);
 app.use("/api/v1/carts", cartRouter);
 app.use("/api/v1/hotels", hotelRouter);
 app.use("/api/v1/favourites", favouriteRoutes);
+app.use("/api/v1/admin", adminRoutes);
+
 
 app.all("*", (req, res, next) => {
   res.status(404).json({
