@@ -15,4 +15,8 @@ router
   .put(verify.verifyToken, plansController.editPlan)
   .get(plansController.getSinglePlan);
 
+router
+  .route("/category/:categoryId")
+  .get(plansController.getPlanByCategory);
+
 module.exports = router;
