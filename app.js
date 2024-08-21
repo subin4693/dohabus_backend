@@ -3,6 +3,7 @@ const cookieParser = require("cookie-parser");
 
 const userRouter = require("./src/routes/usersRouter");
 const categoryRouter = require("./src/routes/categorysRouter");
+const reviewsRouter = require("./src/routes/reviewsRouter");
 
 const planRouter = require("./src/routes/plansRouter");
 
@@ -29,6 +30,7 @@ app.use("/api/v1/categorys", categoryRouter);
 app.use("/api/v1/plans", planRouter);
 app.use("/api/v1/tickets", ticketRouter);
 app.use("/api/v1/carts", cartRouter);
+app.use("/api/v1/reviews", reviewsRouter);
 
 app.all("*", (req, res, next) => {
   res.status(404).json({
