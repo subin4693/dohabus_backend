@@ -28,7 +28,14 @@ const ticketModel = new mongoose.Schema({
     type: Date,
     required: [true, "Please provide a valid date"],
   },
+  status: {
+    type: String,
+    enum: ["Booked", "Canceled"],
+    default: "Booked",
+  },
 });
 const Ticket = new mongoose.model("Ticket", ticketModel);
 
 module.exports = Ticket;
+
+//https://docs.google.com/spreadsheets/d/1VU54zKQwfDjtoU31kv_NqJgvVstGSaFkLk5_u1G0ekQ/edit?usp=sharing
