@@ -135,7 +135,6 @@ exports.editTicket = catchAsync(async (req, res, next) => {
     totalQuantity += t.quantity;
   }
 
-  console.log(ticketTest);
   res.status(201).json({
     status: "success",
     data: {
