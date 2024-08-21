@@ -8,6 +8,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
   const data = req.body;
   const user = req.user;
 
+
   const planTypes = await Plan.find({ _id: { $in: data.map((plan) => plan.plan) } });
 
   if (planTypes.length !== data.length) return next(new AppError("Invalid tickets", 400));
