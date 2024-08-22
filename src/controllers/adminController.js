@@ -139,7 +139,7 @@ exports.getCarts = catchAsync(async (req, res, next) => {
     const carts = await Cart.aggregate([
         {
             $lookup: {
-                from: 'users', 
+                from: 'users',
                 localField: 'user',
                 foreignField: '_id',
                 as: 'userDetails'
@@ -148,12 +148,12 @@ exports.getCarts = catchAsync(async (req, res, next) => {
         {
             $unwind: {
                 path: '$userDetails',
-                preserveNullAndEmptyArrays: true 
+                preserveNullAndEmptyArrays: true
             }
         },
         {
             $lookup: {
-                from: 'categories', 
+                from: 'categories',
                 localField: 'category',
                 foreignField: '_id',
                 as: 'categoryDetails'
@@ -162,12 +162,12 @@ exports.getCarts = catchAsync(async (req, res, next) => {
         {
             $unwind: {
                 path: '$categoryDetails',
-                preserveNullAndEmptyArrays: true 
+                preserveNullAndEmptyArrays: true
             }
         },
         {
             $lookup: {
-                from: 'plans', 
+                from: 'plans',
                 localField: 'tour',
                 foreignField: '_id',
                 as: 'planDetails'
@@ -176,16 +176,16 @@ exports.getCarts = catchAsync(async (req, res, next) => {
         {
             $unwind: {
                 path: '$planDetails',
-                preserveNullAndEmptyArrays: true 
+                preserveNullAndEmptyArrays: true
             }
         },
         {
             $project: {
                 _id: 0,
-                tourName: '$planDetails.title', 
-                categoryName: '$categoryDetails.name', 
-                username: '$userDetails.name', 
-                userEmail: '$userDetails.email' 
+                tourName: '$planDetails.title',
+                categoryName: '$categoryDetails.name',
+                username: '$userDetails.name',
+                userEmail: '$userDetails.email'
             }
         }
     ]);
@@ -203,7 +203,7 @@ exports.getFavourites = catchAsync(async (req, res, next) => {
     const favourites = await Favourite.aggregate([
         {
             $lookup: {
-                from: 'users', 
+                from: 'users',
                 localField: 'user',
                 foreignField: '_id',
                 as: 'userDetails'
@@ -212,12 +212,12 @@ exports.getFavourites = catchAsync(async (req, res, next) => {
         {
             $unwind: {
                 path: '$userDetails',
-                preserveNullAndEmptyArrays: true 
+                preserveNullAndEmptyArrays: true
             }
         },
         {
             $lookup: {
-                from: 'categories', 
+                from: 'categories',
                 localField: 'category',
                 foreignField: '_id',
                 as: 'categoryDetails'
@@ -226,12 +226,12 @@ exports.getFavourites = catchAsync(async (req, res, next) => {
         {
             $unwind: {
                 path: '$categoryDetails',
-                preserveNullAndEmptyArrays: true 
+                preserveNullAndEmptyArrays: true
             }
         },
         {
             $lookup: {
-                from: 'plans', 
+                from: 'plans',
                 localField: 'tour',
                 foreignField: '_id',
                 as: 'planDetails'
@@ -240,16 +240,16 @@ exports.getFavourites = catchAsync(async (req, res, next) => {
         {
             $unwind: {
                 path: '$planDetails',
-                preserveNullAndEmptyArrays: true 
+                preserveNullAndEmptyArrays: true
             }
         },
         {
             $project: {
                 _id: 0,
-                tourName: '$planDetails.title', 
-                favouritesName: '$categoryDetails.name', 
+                tourName: '$planDetails.title',
+                favouritesName: '$categoryDetails.name',
                 username: '$userDetails.name',
-                userEmail: '$userDetails.email' 
+                userEmail: '$userDetails.email'
             }
         }
     ]);
@@ -262,4 +262,126 @@ exports.getFavourites = catchAsync(async (req, res, next) => {
         }
     });
 });
+
+
+exports.getPlans = catchAsync(async (req, res, next) => {
+    const plans = await Plan.aggregate([
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'category',
+                foreignField: '_id',
+                as: 'categoryDetails'
+            }
+        },
+        {
+            $unwind: '$categoryDetails'
+        },
+        {
+            $project: {
+                title: 1,
+                coverImage: 1,
+                'category.title': '$categoryDetails.title',
+                'category.description': '$categoryDetails.description'
+            }
+        }
+    ]);
+
+    res.status(200).json({
+        status: 'success',
+        results: plans.length,
+        data: plans
+    });
+});
+
+exports.getUsers = catchAsync(async (req, res, next) => {
+    const users = await User.find().select('name email role');
+
+    res.status(200).json({
+        status: 'success',
+        data: users
+    });
+});
+
+
+exports.getTickets = catchAsync(async (req, res, next) => {
+    const tickets = await Ticket.aggregate([
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'user',
+                foreignField: '_id',
+                as: 'userDetails'
+            }
+        },
+        {
+            $unwind: {
+                path: '$userDetails',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'category',
+                foreignField: '_id',
+                as: 'categoryDetails'
+            }
+        },
+        {
+            $unwind: {
+                path: '$categoryDetails',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'plans',
+                localField: 'plan',
+                foreignField: '_id',
+                as: 'planDetails'
+            }
+        },
+        {
+            $unwind: {
+                path: '$planDetails',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                user: {
+                    name: '$userDetails.name',
+                    email: '$userDetails.email'
+                },
+                category: {
+                    title: '$categoryDetails.title'
+                },
+                plan: {
+                    title: '$planDetails.title',
+                    coverImage: '$planDetails.coverImage'
+                },
+                price: '$price',
+                quantity: '$quantity',
+                dates: '$dates',
+                status: '$status'
+            }
+        }
+    ]);
+
+    if (tickets.length === 0) {
+        return res.status(200).json({
+            status: 'success',
+            data: []
+        });
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: tickets
+    });
+});
+
+
 
