@@ -12,6 +12,18 @@ const priceModel = new mongoose.Schema({
     },
   ],
 });
+const localizedString = {
+  en: {
+    type: String,
+    required: [true, "Please provide the English translation"],
+    trim: true,
+  },
+  ar: {
+    type: String,
+    required: [true, "Please provide the Arabic translation"],
+    trim: true,
+  },
+};
 
 const plansModel = new mongoose.Schema({
   category: {
@@ -23,60 +35,15 @@ const plansModel = new mongoose.Schema({
     type: String,
     required: [true, "Please provide cover image for tour"],
   },
-  title: {
-    type: String,
-    required: [true, "Please provide title for tour"],
-    trim: true,
-  },
-  itinerary: {
-    type: String,
-    required: [true, "Please provide a valid description   for tour"],
-    trim: true,
-  },
 
-  highlights: {
-    type: String,
-    required: [true, "Please provide a valid description   for tour"],
-    trim: true,
-  },
-  timings: [
-    {
-      type: String,
-      required: [true, "Please provide a valid dates for tour"],
-      trim: true,
-    },
-  ],
-  includes: [
-    {
-      type: String,
-      required: [true, "Please provide a valid datas for tour"],
-      trim: true,
-    },
-  ],
-
-  excludes: [
-    {
-      type: String,
-      required: [true, "Please provide a valid datas for tour"],
-      trim: true,
-    },
-  ],
-  importantInformations: [
-    {
-      type: String,
-      required: [true, "Please provide a valid informations for tour"],
-      trim: true,
-    },
-  ],
-
-  cancellationpolicy: [
-    {
-      type: String,
-      required: [true, "Please provide a valid notes for tour"],
-      trim: true,
-    },
-  ],
-
+  title: localizedString,
+  itinerary: localizedString,
+  highlights: [localizedString],
+  timings: [localizedString],
+  includes: [localizedString],
+  excludes: [localizedString],
+  importantInformations: [localizedString],
+  cancellationpolicy: [localizedString],
   gallerys: [
     {
       type: String,

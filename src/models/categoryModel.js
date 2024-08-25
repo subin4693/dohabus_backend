@@ -1,5 +1,16 @@
 const mongoose = require("mongoose");
-//sea tours,city tours...
+const localizedString = {
+  en: {
+    type: String,
+    required: [true, "Please provide the English translation"],
+    trim: true,
+  },
+  ar: {
+    type: String,
+    required: [true, "Please provide the Arabic translation"],
+    trim: true,
+  },
+};
 const categorysModel = new mongoose.Schema(
   {
     coverImage: {
@@ -7,17 +18,9 @@ const categorysModel = new mongoose.Schema(
       required: [true, "Please provide cover image for tour categorys"],
     },
 
-    title: {
-      type: String,
-      trim: true,
-      required: [true, "Please provide a valid title  for tour categorys"],
-    },
+    title: localizedString,
 
-    description: {
-      type: String,
-      required: [true, "Please provide a valid description   for tour categorys"],
-      trim: true,
-    },
+    description: localizedString,
   },
   { timestamps: true },
 );
