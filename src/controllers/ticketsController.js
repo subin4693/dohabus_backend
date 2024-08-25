@@ -8,41 +8,79 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
   const data = req.body;
   const user = req.user;
 
+  try {
+    // Fetch plans based on the IDs provided in the request
+    const planIds = data.map((ticket) => ticket.plan);
+    const planTypes = await Plan.find({ _id: { $in: planIds } });
 
-  const planTypes = await Plan.find({ _id: { $in: data.map((plan) => plan.plan) } });
+    // Log the fetched plans for debugging
+    console.log("Fetched Plans:", planTypes);
 
-  if (planTypes.length !== data.length) return next(new AppError("Invalid tickets", 400));
+    // Check if all requested plans are valid
+    if (planTypes.length !== new Set(planIds).size) {
+      console.log("Invalid or missing plans:", planIds.filter(id => !planTypes.find(plan => plan._id.toString() === id.toString())));
+      return next(new AppError("Invalid tickets", 400));
+    }
 
-  const ticketPromise = data.map((ticket) => {
-    return Ticket.create({
-      user: user.id,
-      category: ticket?.category,
-      plan: ticket?.plan,
-      price:
-        planTypes?.find((plan) => plan._id.toString() === ticket.plan.toString()).price *
-        ticket.quantity,
-      quantity: ticket?.quantity,
-      dates: ticket?.dates,
+    // Create tickets
+    const ticketPromises = data.map((ticket) => {
+      const plan = planTypes.find((plan) => plan._id.toString() === ticket.plan.toString());
+
+      if (!plan) {
+        console.log("Plan not found:", ticket.plan);
+        return next(new AppError("Invalid plan", 400));
+      }
+
+      const priceEntry = plan.price.find(p => p.type === ticket.type);
+
+      if (!priceEntry) {
+        console.log("Price type not found:", ticket.type);
+        return next(new AppError("Price type not found", 400));
+      }
+
+      const price = parseFloat(priceEntry.detail[0].replace(' USD', '').replace(',', ''));
+
+      if (isNaN(price)) {
+        console.log("Invalid price format:", priceEntry.detail[0]);
+        return next(new AppError("Invalid price format", 400));
+      }
+
+      return Ticket.create({
+        user: user.id,
+        category: ticket.category,
+        plan: ticket.plan,
+        price: price * ticket.quantity,
+        quantity: ticket.quantity,
+        dates: ticket.dates,
+      });
     });
-  });
-  const ticketTest = await Promise.all(ticketPromise);
 
-  let totalQuantity = 0,
-    totalCost = 0;
+    const ticketResults = await Promise.all(ticketPromises);
 
-  for (t of ticketTest) {
-    totalCost += t.price;
-    totalQuantity += t.quantity;
+    let totalQuantity = 0,
+        totalCost = 0;
+
+    for (const t of ticketResults) {
+      totalCost += t.price;
+      totalQuantity += t.quantity;
+    }
+
+    console.log("Booked Tickets:", ticketResults);
+
+    res.status(201).json({
+      status: "success",
+      data: {
+        bookedTickets: ticketResults,
+        totalQuantity,
+        totalCost,
+      },
+    });
+  } catch (err) {
+    console.error("Error:", err);
+    return next(new AppError("Internal Server Error", 500));
   }
-
-  console.log(ticketTest);
-  res.status(201).json({
-    status: "success",
-    data: {
-      bookedTickets: ticketTest,
-    },
-  });
 });
+
 
 exports.getTickets = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
