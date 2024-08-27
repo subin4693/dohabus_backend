@@ -1,17 +1,19 @@
 const express = require("express");
 const verify = require("../utils/verifyToken");
+const { verifyAdminToken } = require("../utils/verifyAdminToken");
 const categorysController = require("../controllers/categorysController");
 
 const router = express.Router();
+// router.use(verifyAdminToken);
 
 router
   .route("/")
-  .post(verify.verifyToken, categorysController.createCategory)
-  .get(verify.verifyToken, categorysController.getCategorys);
+  .post(categorysController.createCategory)
+  .get(categorysController.getCategories);
 
 router
   .route("/:id")
-  .delete(verify.verifyToken, categorysController.deleteCategory)
-  .put(verify.verifyToken, categorysController.editCategory);
+  .delete(categorysController.deleteCategory)
+  .put(categorysController.editCategory);
 
 module.exports = router;

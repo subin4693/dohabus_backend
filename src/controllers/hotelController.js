@@ -2,9 +2,15 @@ const Hotel = require("../models/hotelModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 
+// Create a new hotel
 exports.createHotel = catchAsync(async (req, res, next) => {
     const { image, name, description } = req.body;
-    console.log(image, name, description)
+
+    // Ensure all fields are provided
+    if (!image || !name || !description) {
+        return next(new AppError("All fields are required to create a hotel", 400));
+    }
+
     const newHotel = await Hotel.create({ image, name, description });
 
     res.status(201).json({
@@ -15,19 +21,23 @@ exports.createHotel = catchAsync(async (req, res, next) => {
     });
 });
 
+// Get all hotels
 exports.getAllHotels = catchAsync(async (req, res, next) => {
     const hotels = await Hotel.find();
 
     res.status(200).json({
         status: "success",
+        results: hotels.length,
         data: {
             hotels
         }
     });
 });
 
+// Get a single hotel by ID
 exports.getHotelById = catchAsync(async (req, res, next) => {
     const { id } = req.params;
+
     const hotel = await Hotel.findById(id);
 
     if (!hotel) {
@@ -42,9 +52,15 @@ exports.getHotelById = catchAsync(async (req, res, next) => {
     });
 });
 
+// Update an existing hotel
 exports.updateHotel = catchAsync(async (req, res, next) => {
     const { id } = req.params;
     const { image, name, description } = req.body;
+
+    // Ensure at least one field is provided to update
+    if (!image && !name && !description) {
+        return next(new AppError("At least one field is required to update the hotel", 400));
+    }
 
     const updatedHotel = await Hotel.findByIdAndUpdate(
         id,
@@ -64,6 +80,7 @@ exports.updateHotel = catchAsync(async (req, res, next) => {
     });
 });
 
+// Delete a hotel
 exports.deleteHotel = catchAsync(async (req, res, next) => {
     const { id } = req.params;
 
