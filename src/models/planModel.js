@@ -32,12 +32,18 @@ const plansModel = new mongoose.Schema({
   highlights: [localizedString],
   includes: [localizedString],
   itinerary: [localizedString],
-  gallerys: [
+  galleryimages: [
     {
       type: String,
       required: [true, "Please provide a valid Gallery images for tour"],
     },
   ], //["image url1","imageurl2"]
+  galleryvideos: [
+    {
+      type: String,
+      required: [true, "Please provide a valid Gallery images for tour"],
+    },
+  ],
   availableDays: [{ type: Number, required: [true, "Please provide the valid available days"] }], //[1,2,3,4]
   sessions: [
     {
