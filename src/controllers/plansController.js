@@ -1,32 +1,44 @@
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
-const Plan = require('../models/planModel')
+const Plan = require('../models/planModel');
 
+// Create a new plan
 exports.createNewPlans = catchAsync(async (req, res, next) => {
     const {
-        category, coverImage, title, itinerary, highlights, timings,
-        includes, excludes, importantInformations, cancellationpolicy, gallerys, price
+        category, coverImage, title, duration, typeOfTour, transportation, language,
+        description, highlights, includes, itinerary, knowBeforeYouGo, faq,
+        galleryimages, galleryvideos, availableDays, sessions, adultPrice, childPrice, isActive
     } = req.body;
 
-    if (!category || !coverImage || !title || !itinerary || !highlights || !timings ||
-        !includes || !excludes || !importantInformations || !cancellationpolicy || !gallerys || !price) {
-        const error = new AppError("All fields are required to create a plan", 400);
-        return next(error);
+    // Check for missing required fields
+    if (!category || !coverImage || !title || !duration || !typeOfTour || !transportation ||
+        !language || !description || !highlights || !includes || !itinerary || !galleryimages ||
+        !galleryvideos || !availableDays || !sessions || adultPrice === undefined || childPrice === undefined) {
+        return next(new AppError("All fields are required to create a plan", 400));
     }
 
+    // Create the plan
     const newPlan = await Plan.create({
         category,
         coverImage,
         title,
-        itinerary,
+        duration,
+        typeOfTour,
+        transportation,
+        language,
+        description,
         highlights,
-        timings,
         includes,
-        excludes,
-        importantInformations,
-        cancellationpolicy,
-        gallerys,
-        price
+        itinerary,
+        knowBeforeYouGo,
+        faq,
+        galleryimages,
+        galleryvideos,
+        availableDays,
+        sessions,
+        adultPrice,
+        childPrice,
+        isActive
     });
 
     res.status(201).json({
@@ -36,61 +48,77 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
         }
     });
 });
+
 exports.getAllPlans = catchAsync(async (req, res, next) => {
-    const plans = await Plan.find()
-    console.log("plan get all", plans);
+    const plans = await Plan.find({ isActive: true });
 
     res.status(200).json({
         status: "success",
+        results: plans.length,
         data: {
             plans
         }
-    })
+    });
 });
-exports.deletePlan = catchAsync(async (req, res, next) => {
-    const { id } = req.params
 
-    const plan = await Plan.findByIdAndDelete(id)
+// Delete a plan by ID
+exports.deletePlan = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+
+    const plan = await Plan.findByIdAndDelete(id);
 
     if (!plan) {
         return next(new AppError("No plan found with that ID", 404));
     }
-    res.status(200).json({
-        status: "success",
-        message: "plan deleted successfully",
-        data: null
-    })
 
+    res.status(204).json({
+        status: "success",
+        message: "Plan deleted successfully",
+        data: null
+    });
 });
+
+// Update a plan by ID
 exports.editPlan = catchAsync(async (req, res, next) => {
     const { id } = req.params;
 
     const {
-        category, coverImage, title, itinerary, highlights, timings,
-        includes, excludes, importantInformations, cancellationpolicy, gallerys, price
+        category, coverImage, title, duration, typeOfTour, transportation, language,
+        description, highlights, includes, itinerary, knowBeforeYouGo, faq,
+        galleryimages, galleryvideos, availableDays, sessions, adultPrice, childPrice, isActive
     } = req.body;
 
-    if (!category || !coverImage || !title || !itinerary || !highlights ||
-        !timings || !includes || !excludes || !importantInformations ||
-        !cancellationpolicy || !gallerys || !price) {
+    // Check for missing required fields
+    if (!category || !coverImage || !title || !duration || !typeOfTour || !transportation ||
+        !language || !description || !highlights || !includes || !itinerary || !galleryimages ||
+        !galleryvideos || !availableDays || !sessions || adultPrice === undefined || childPrice === undefined) {
         return next(new AppError("All fields are required to update a plan", 400));
     }
 
+    // Update the plan
     const updatedPlan = await Plan.findByIdAndUpdate(
         id,
         {
             category,
             coverImage,
             title,
-            itinerary,
+            duration,
+            typeOfTour,
+            transportation,
+            language,
+            description,
             highlights,
-            timings,
             includes,
-            excludes,
-            importantInformations,
-            cancellationpolicy,
-            gallerys,
-            price
+            itinerary,
+            knowBeforeYouGo,
+            faq,
+            galleryimages,
+            galleryvideos,
+            availableDays,
+            sessions,
+            adultPrice,
+            childPrice,
+            isActive
         },
         {
             new: true,
@@ -110,6 +138,7 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     });
 });
 
+// Get a single plan by ID
 exports.getSinglePlan = catchAsync(async (req, res, next) => {
     const { id } = req.params;
 
@@ -126,6 +155,8 @@ exports.getSinglePlan = catchAsync(async (req, res, next) => {
         }
     });
 });
+
+// Get plans by category ID
 exports.getPlanByCategory = catchAsync(async (req, res, next) => {
     const { categoryId } = req.params;
 
@@ -142,4 +173,3 @@ exports.getPlanByCategory = catchAsync(async (req, res, next) => {
         }
     });
 });
-

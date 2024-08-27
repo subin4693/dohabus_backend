@@ -1,20 +1,20 @@
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
-const category = require("../models/categoryModel")
+const Category = require("../models/categoryModel");
 
 exports.createCategory = catchAsync(async (req, res, next) => {
     console.log("API called successfully");
 
     const { coverImage, title, description } = req.body;
 
-    if (!coverImage || !title || !description) {
-        return next(new AppError("All fields are required to create a category", 400));
+    if (!coverImage || !title?.en || !title?.ar || !description?.en || !description?.ar) {
+        return next(new AppError("All fields, including localized strings, are required to create a category", 400));
     }
 
-    const newCategory = await category.create({
+    const newCategory = await Category.create({
         coverImage,
         title,
-        description
+        description,
     });
 
     console.log(newCategory);
@@ -22,35 +22,35 @@ exports.createCategory = catchAsync(async (req, res, next) => {
     res.status(201).json({
         status: "success",
         data: {
-            category: newCategory
-        }
+            category: newCategory,
+        },
     });
 });
 
-
-exports.getCategorys = catchAsync(async (req, res, next) => {
-    const categories = await category.find()
-    console.log("category", categories)
+exports.getCategories = catchAsync(async (req, res, next) => {
+    const categories = await Category.find();
+    console.log("categories", categories);
 
     res.status(200).json({
         status: "success",
         data: {
-            categories
-        }
-    })
+            categories,
+        },
+    });
 });
-exports.deleteCategory = catchAsync(async (req, res, next) => {
-    console.log("delete api called")
-    const { id } = req.params
-    console.log(id)
-    const Category = await category.findByIdAndDelete(id)
 
-    if (!Category) {
+exports.deleteCategory = catchAsync(async (req, res, next) => {
+    console.log("Delete API called");
+    const { id } = req.params;
+    console.log(id);
+    const deletedCategory = await Category.findByIdAndDelete(id);
+
+    if (!deletedCategory) {
         const error = new AppError("No category found with that ID", 404);
         return next(error);
     }
 
-    console.log("delition completed");
+    console.log("Deletion completed");
     res.status(200).json({
         status: "success",
         message: "Category deleted successfully",
@@ -65,11 +65,11 @@ exports.editCategory = catchAsync(async (req, res, next) => {
     console.log("ID from params:", id);
     console.log("Request body:", { coverImage, title, description });
 
-    if (!coverImage || !title || !description) {
-        return next(new AppError("Cover image, title, and description are required to update a category", 400));
+    if (!req.body) {
+        return next(new AppError("Cover image, title (in both languages), and description (in both languages) are required to update a category", 400));
     }
 
-    const updatedCategory = await category.findByIdAndUpdate(
+    const updatedCategory = await Category.findByIdAndUpdate(
         id,
         { coverImage, title, description },
         { new: true, runValidators: true }
@@ -84,8 +84,7 @@ exports.editCategory = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: "success",
         data: {
-            category: updatedCategory
-        }
+            category: updatedCategory,
+        },
     });
 });
-

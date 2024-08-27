@@ -1,18 +1,19 @@
 const express = require("express");
-const verify = require("../utils/verifyToken");
 const plansController = require("../controllers/plansController");
+const { verifyAdminToken } = require('../utils/verifyAdminToken');
 
 const router = express.Router();
+router.use(verifyAdminToken);
 
 router
   .route("/")
-  .post(verify.verifyToken, plansController.createNewPlans)
-  .get(verify.verifyToken, plansController.getAllPlans);
+  .post(plansController.createNewPlans)
+  .get(plansController.getAllPlans);
 
 router
   .route("/:id")
-  .delete(verify.verifyToken, plansController.deletePlan)
-  .put(verify.verifyToken, plansController.editPlan)
+  .delete(plansController.deletePlan)
+  .put(plansController.editPlan)
   .get(plansController.getSinglePlan);
 
 router
