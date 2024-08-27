@@ -61,6 +61,10 @@ const plansModel = new mongoose.Schema({
     type: Number,
     required: [true, "Please enter valid adult price"],
   }, //2500
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
 });
 const Plan = new mongoose.model("Plan", plansModel);
 
