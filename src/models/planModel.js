@@ -32,6 +32,13 @@ const plansModel = new mongoose.Schema({
   highlights: [localizedString],
   includes: [localizedString],
   itinerary: [localizedString],
+  knowBeforeYouGo: [localizedString],
+  faq: [
+    {
+      question: localizedString,
+      answer: localizedString,
+    },
+  ],
   galleryimages: [
     {
       type: String,
