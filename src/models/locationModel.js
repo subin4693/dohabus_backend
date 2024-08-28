@@ -16,7 +16,12 @@ const localizedString = {
 const locationModel = new mongoose.Schema(
   {
     title: localizedString,
-    time: [localizedString],
+    dates: [
+      {
+        day: localizedString,
+        time: { type: String, required: [true, "Please provide the time "], trim: true },
+      },
+    ],
   },
   { timestamps: true },
 );
