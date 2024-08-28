@@ -10,6 +10,7 @@ router
   .route("/")
   .post(categorysController.createCategory)
   .get(categorysController.getCategories);
+router.route("/cat-tour").get(categorysController.getCategoriesWithTours);
 
 router
   .route("/:id")

@@ -21,6 +21,16 @@ const offerModel = new mongoose.Schema(
       required: [true, "Please provide the English translation"],
       trim: true,
     },
+    startingDate: {
+      type: Date,
+      required: [true, "Please provide the starting date"],
+      trim: true,
+    },
+    endingDate: {
+      type: Date,
+      required: [true, "Please provide the ending date"],
+      trim: true,
+    },
   },
   { timestamps: true },
 );

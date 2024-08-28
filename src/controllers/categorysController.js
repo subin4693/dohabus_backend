@@ -1,6 +1,7 @@
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const Category = require("../models/categoryModel");
+const Plan = require("../models/planModel");
 
 exports.createCategory = catchAsync(async (req, res, next) => {
   console.log("API called successfully");
@@ -94,6 +95,39 @@ exports.editCategory = catchAsync(async (req, res, next) => {
     status: "success",
     data: {
       category: updatedCategory,
+    },
+  });
+});
+
+exports.getCategoriesWithTours = catchAsync(async (req, res, next) => {
+  // Fetch all categories
+  const categories = await Category.find()
+    .lean() // Convert documents to plain JS objects
+    .exec();
+
+  // Fetch all tour plans and group by category ID
+  const tours = await Plan.find()
+    .lean()
+    .exec();
+
+  // Map the categories to include the associated tours
+  const result = categories.map((category) => {
+    return {
+      text: category.title, // Localized string handling can be applied here if needed
+      _id: category._id,
+      tours: tours
+        .filter((tour) => tour.category.toString() === category._id.toString())
+        .map((tour) => ({
+          text: tour.title, // Localized string handling can be applied here if needed
+          _id: tour._id,
+        })),
+    };
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      category: result,
     },
   });
 });
