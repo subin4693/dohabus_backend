@@ -15,5 +15,6 @@ router.get("/users", adminController.getUsers);
 router.post("/promote", adminController.promoteUser);
 router.post("/demote", adminController.demoteUser);
 router.get("/tickets", adminController.getTickets);
+router.put("/tickets-cancel/:id", adminController.cancelTicket);
 
 module.exports = router;

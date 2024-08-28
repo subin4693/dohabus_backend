@@ -9,6 +9,7 @@ exports.verifyToken = catchAsync(async (req, res, next) => {
   if (testToken && testToken.startsWith("bearer")) {
     token = testToken.split(" ")[1];
   }
+  console.log(token);
 
   if (!token) {
     return res.status(200).json({

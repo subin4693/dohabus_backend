@@ -304,7 +304,7 @@ exports.getPlans = catchAsync(async (req, res, next) => {
 });
 
 exports.getUsers = catchAsync(async (req, res, next) => {
-  console.log("user", req.user)
+  console.log("user", req.user);
   const users = await User.find().select("name email role");
 
   res.status(200).json({
@@ -315,118 +315,138 @@ exports.getUsers = catchAsync(async (req, res, next) => {
 
 exports.promoteUser = catchAsync(async (req, res, next) => {
   const { userId } = req.body;
-  console.log("userId", userId)
+  console.log("userId", userId);
   if (!userId) {
-    return res.status(400).json({ message: 'User ID is required.' });
+    return res.status(400).json({ message: "User ID is required." });
   }
 
   const user = await User.findById(userId);
 
   if (!user) {
-    return res.status(404).json({ message: 'User not found.' });
+    return res.status(404).json({ message: "User not found." });
   }
 
-  user.role = 'admin';
+  user.role = "admin";
   await user.save();
 
-  res.status(200).json({ message: 'User promoted successfully', user });
+  res.status(200).json({ message: "User promoted successfully", user });
 });
 
 exports.demoteUser = catchAsync(async (req, res, next) => {
   const { userId } = req.body;
-  console.log(userId)
+  console.log(userId);
 
   if (!userId) {
-    return res.status(400).json({ message: 'User ID is required.' });
+    return res.status(400).json({ message: "User ID is required." });
   }
 
   const user = await User.findById(userId);
 
   if (!user) {
-    return res.status(404).json({ message: 'User not found.' });
+    return res.status(404).json({ message: "User not found." });
   }
 
-  user.role = 'user';
+  user.role = "user";
   await user.save();
 
-  res.status(200).json({ message: 'User demoted successfully', user });
+  res.status(200).json({ message: "User demoted successfully", user });
 });
 
 exports.getTickets = catchAsync(async (req, res, next) => {
-  const tickets = await Ticket.aggregate([
-    {
-      $lookup: {
-        from: "users",
-        localField: "user",
-        foreignField: "_id",
-        as: "userDetails",
-      },
-    },
-    {
-      $unwind: {
-        path: "$userDetails",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "categories",
-        localField: "category",
-        foreignField: "_id",
-        as: "categoryDetails",
-      },
-    },
-    {
-      $unwind: {
-        path: "$categoryDetails",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "plans",
-        localField: "plan",
-        foreignField: "_id",
-        as: "planDetails",
-      },
-    },
-    {
-      $unwind: {
-        path: "$planDetails",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        user: {
-          name: "$userDetails.name",
-          email: "$userDetails.email",
-        },
-        category: {
-          title: "$categoryDetails.title",
-        },
-        plan: {
-          title: "$planDetails.title",
-          coverImage: "$planDetails.coverImage",
-        },
-        price: "$price",
-        quantity: "$quantity",
-        dates: "$dates",
-        status: "$status",
-      },
-    },
-  ]);
+  try {
+    // Get today's date in ISO format without the time portion
+    const today = new Date().setHours(0, 0, 0, 0);
 
-  if (tickets.length === 0) {
-    return res.status(200).json({
+    // Aggregation pipeline to join tickets with users, plans, and categories
+    const tickets = await Ticket.aggregate([
+      {
+        $match: {
+          date: { $gte: new Date(today) }, // Only include tickets with date >= today
+        },
+      },
+      {
+        $lookup: {
+          from: "plans", // Join with plans collection
+          localField: "plan",
+          foreignField: "_id",
+          as: "planDetails",
+        },
+      },
+      {
+        $unwind: "$planDetails", // Deconstruct array field planDetails
+      },
+      {
+        $lookup: {
+          from: "users", // Join with users collection
+          localField: "user",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      {
+        $unwind: "$userDetails", // Deconstruct array field userDetails
+      },
+      {
+        $lookup: {
+          from: "categories", // Join with categories collection
+          localField: "category",
+          foreignField: "_id",
+          as: "categoryDetails",
+        },
+      },
+      {
+        $unwind: "$categoryDetails", // Deconstruct array field categoryDetails
+      },
+      {
+        $project: {
+          _id: 1, // Include the ticket ID
+          "plan.coverImage": "$planDetails.coverImage",
+          "plan.title": "$planDetails.title",
+          "plan.description": "$planDetails.description",
+          "user.name": "$userDetails.name",
+          "user.email": "$userDetails.email",
+          "category.title": "$categoryDetails.title", // Include category title
+          totalPrice: "$price",
+          adultQuantity: "$adultQuantity",
+          childQuantity: "$childQuantity",
+          status: 1, // Include the ticket status
+        },
+      },
+    ]);
+
+    // Send the formatted response
+    res.status(200).json({
       status: "success",
-      data: [],
+      data: tickets,
     });
+  } catch (err) {
+    console.error("Error:", err);
+    return next(new AppError("Internal Server Error", 500));
   }
+});
 
-  res.status(200).json({
-    status: "success",
-    data: tickets,
-  });
+exports.cancelTicket = catchAsync(async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Find the ticket by its ID
+    const ticket = await Ticket.findById(id);
+    if (!ticket) {
+      return next(new AppError("Ticket not found", 404));
+    }
+
+    // Update the ticket status to "Canceled"
+    ticket.status = "Canceled";
+    await ticket.save();
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        ticket,
+      },
+    });
+  } catch (err) {
+    console.error("Error:", err);
+    return next(new AppError("Internal Server Error", 500));
+  }
 });

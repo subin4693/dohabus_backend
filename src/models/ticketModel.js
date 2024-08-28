@@ -20,11 +20,19 @@ const ticketModel = new mongoose.Schema({
     type: Number,
     required: [true, "Please enter a valid price"],
   },
-  quantity: {
+  adultQuantity: {
     type: Number,
-    required: [true, "Please enter a valid quantity"],
+    required: [true, "Please enter a valid adult quantity"],
   },
-  dates: {
+  childQuantity: {
+    type: Number,
+    required: [true, "Please enter a valid child quantity"],
+  },
+  session: {
+    type: String,
+    required: [true, "Please enter a session"],
+  },
+  date: {
     type: Date,
     required: [true, "Please provide a valid date"],
   },
