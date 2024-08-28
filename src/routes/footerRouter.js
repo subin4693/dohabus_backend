@@ -8,6 +8,9 @@ router
 	.get(footerController.getFooterImages)
 	.post(footerController.createNewFooterImage);
 
-router.route("/:id").delete(footerController.deletetFooterImages);
+router
+	.route("/:id")
+	.put(footerController.editFooterImage)
+	.delete(footerController.deletetFooterImages);
 
 module.exports = router;

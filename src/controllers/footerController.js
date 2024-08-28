@@ -14,10 +14,10 @@ exports.getFooterImages = catchAsync(async (req, res, next) => {
 });
 
 exports.createNewFooterImage = catchAsync(async (req, res, next) => {
-	const image = req.body;
-
-	await footer.create(image);
-	res.status(201).json({ status: "success" });
+	const image = req.body.imageUrl;
+	console.log(req.body);
+	const iiimage = await footer.create({ image });
+	res.status(201).json({ status: "success", iiimage });
 });
 
 exports.deletetFooterImages = catchAsync(async (req, res, next) => {
@@ -26,4 +26,12 @@ exports.deletetFooterImages = catchAsync(async (req, res, next) => {
 	await footer.findByIdAndDelete(id);
 
 	res.status(200).json({ status: "success" });
+});
+
+exports.editFooterImage = catchAsync(async (req, res, next) => {
+	const { id } = req.params;
+	console.log("edit footer called");
+	console.log(id);
+	const resposne = await footer.findByIdAndUpdate(id, req.body, { new: true });
+	res.status(200).json({ status: "success", resposne });
 });
