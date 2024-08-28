@@ -304,12 +304,52 @@ exports.getPlans = catchAsync(async (req, res, next) => {
 });
 
 exports.getUsers = catchAsync(async (req, res, next) => {
+  console.log("user", req.user)
   const users = await User.find().select("name email role");
 
   res.status(200).json({
     status: "success",
     data: users,
   });
+});
+
+exports.promoteUser = catchAsync(async (req, res, next) => {
+  const { userId } = req.body;
+  console.log("userId", userId)
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required.' });
+  }
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json({ message: 'User not found.' });
+  }
+
+  user.role = 'admin';
+  await user.save();
+
+  res.status(200).json({ message: 'User promoted successfully', user });
+});
+
+exports.demoteUser = catchAsync(async (req, res, next) => {
+  const { userId } = req.body;
+  console.log(userId)
+
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required.' });
+  }
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json({ message: 'User not found.' });
+  }
+
+  user.role = 'user';
+  await user.save();
+
+  res.status(200).json({ message: 'User demoted successfully', user });
 });
 
 exports.getTickets = catchAsync(async (req, res, next) => {

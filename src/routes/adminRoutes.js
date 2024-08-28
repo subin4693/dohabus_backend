@@ -12,6 +12,8 @@ router.get("/cart", adminController.getCarts);
 router.get("/favourite", adminController.getFavourites);
 router.get("/plans", adminController.getPlans);
 router.get("/users", adminController.getUsers);
+router.post("/promote", adminController.promoteUser);
+router.post("/demote", adminController.demoteUser);
 router.get("/tickets", adminController.getTickets);
 
 module.exports = router;

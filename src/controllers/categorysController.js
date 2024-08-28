@@ -6,11 +6,7 @@ exports.createCategory = catchAsync(async (req, res, next) => {
   console.log("API called successfully");
 
   const { coverImage, title, description } = req.body;
-  console.log({
-    coverImage,
-    title,
-    description,
-  });
+  console.log("Form data here!!!", coverImage, title, description);
   if (!coverImage || !title?.en || !title?.ar || !description?.en || !description?.ar) {
     return next(
       new AppError(
@@ -19,14 +15,13 @@ exports.createCategory = catchAsync(async (req, res, next) => {
       ),
     );
   }
+  console.log("Erro2");
 
   const newCategory = await Category.create({
     coverImage,
     title,
     description,
   });
-
-  console.log(newCategory);
 
   res.status(201).json({
     status: "success",
