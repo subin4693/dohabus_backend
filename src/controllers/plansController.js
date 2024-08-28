@@ -1,5 +1,6 @@
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
+const Category = require("../models/categoryModel");
 const Plan = require("../models/planModel");
 
 // Create a new plan
@@ -245,13 +246,16 @@ exports.getPlanByCategory = catchAsync(async (req, res, next) => {
 
   const plans = await Plan.find({ category: categoryId });
 
-  if (!plans || plans.length === 0) {
-    return next(new AppError("No plans found for this category", 404));
-  }
+  const category = await Category.findById(categoryId);
+
+  // if (!plans || plans.length === 0) {
+  //   return next(new AppError("No plans found for this category", 404));
+  // }
 
   res.status(200).json({
     status: "success",
     data: {
+      category,
       plans,
     },
   });
