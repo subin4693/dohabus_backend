@@ -3,7 +3,9 @@ const catchAsync = require("../utils/catchAsync");
 const Aboutus = require("../models/aboutusModel");
 
 exports.createAbout = catchAsync(async (req, res, next) => {
-  const newAboutUs = await Aboutus.create(req.body);
+  const data = req.body;
+  data.text = req.body.about;
+  const newAboutUs = await Aboutus.create(data);
   console.log("New About Us created:", newAboutUs);
   res.status(201).json({
     status: "success",
@@ -23,6 +25,7 @@ exports.getAboutus = catchAsync(async (req, res, next) => {
 exports.editAboutus = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const data = req.body;
+  data.text = req.body.about;
   const updatedAboutUs = await Aboutus.findByIdAndUpdate(id, data, {
     new: true,
   });

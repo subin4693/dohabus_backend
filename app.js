@@ -47,7 +47,7 @@ app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/about", aboutRouter);
 app.use("/api/v1/footer", footerRoutes);
 app.use("/api/v1/locations", locationRouter);
-app.use("/api/v1/banners", bannerRouter);
+app.use("/api/v1/banner", bannerRouter);
 
 app.all("*", (req, res, next) => {
   res.status(404).json({
