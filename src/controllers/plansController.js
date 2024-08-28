@@ -42,7 +42,7 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     { name: "includes", value: includes },
     { name: "itinerary", value: itinerary },
     { name: "galleryImages", value: galleryImages },
-    { name: "galleryVideos", value: galleryVideos },
+
     { name: "availableDays", value: availableDays },
     { name: "selectedSessions", value: selectedSessions },
     { name: "adultPrice", value: adultPrice },
@@ -161,7 +161,7 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     { name: "includes", value: includes },
     { name: "itinerary", value: itinerary },
     { name: "galleryImages", value: galleryImages },
-    { name: "galleryVideos", value: galleryVideos },
+
     { name: "availableDays", value: availableDays },
     { name: "selectedSessions", value: selectedSessions },
     { name: "adultPrice", value: adultPrice },
