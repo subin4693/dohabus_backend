@@ -4,10 +4,6 @@ const appError = require("./appError");
 
 exports.verifyToken = catchAsync(async (req, res, next) => {
   const testToken = req.cookies.token;
-  console.log(
-    "888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888",
-  );
-  console.log(testToken);
 
   let token;
   if (testToken && testToken.startsWith("bearer")) {

@@ -88,3 +88,28 @@ exports.signout = catchAsync(async (req, res, next) => {
     message: "User successfully signed out.",
   });
 });
+
+exports.verify = catchAsync(async (req, res, next) => {
+  const userId = req.user.id;
+
+  // Find the user and exclude the password
+  const user = await User.findById(userId).select("-password");
+
+  // Create a new object with user.id instead of user._id
+  const responseUser = {
+    id: user.id, // Use user.id
+    // Add other properties you want to include here
+    // For example:
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    // ...other properties
+  };
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      user: responseUser,
+    },
+  });
+});

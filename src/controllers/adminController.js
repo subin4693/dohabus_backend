@@ -13,7 +13,12 @@ exports.getSummary = catchAsync(async (req, res, next) => {
 
   const totalBookings = await Ticket.countDocuments();
 
-  const activeTickets = await Ticket.countDocuments({ status: "Booked" });
+  const activeTickets = await Ticket.countDocuments({
+    status: "Booked",
+    date: { $gte: new Date().setHours(0, 0, 0, 0) }, // Ensure the date is greater than or equal to today's date
+  });
+  console.log("************");
+  console.log(activeTickets);
 
   res.status(200).json({
     status: "success",

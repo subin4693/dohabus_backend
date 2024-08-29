@@ -268,7 +268,13 @@ exports.getPlanByCategory = catchAsync(async (req, res, next) => {
 
   // If no plans found, return an error
   if (!plans || plans.length === 0) {
-    return next(new AppError("No plans found for this category", 404));
+    return res.status(200).json({
+      status: "success",
+      data: {
+        category,
+        plans: [],
+      },
+    });
   }
 
   // Map plan IDs to their respective cart and favorite IDs

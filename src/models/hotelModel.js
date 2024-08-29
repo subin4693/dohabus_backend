@@ -12,11 +12,11 @@ const localizedString = {
 	},
 };
 const hotelModel = mongoose.Schema({
-	image: {
+	coverImage: {
 		type: String,
 		required: [true, "Provide a valid image"],
 	},
-	name: localizedString,
+	title: localizedString,
 	description: localizedString,
 });
 
