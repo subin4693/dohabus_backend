@@ -4,6 +4,7 @@ const Category = require("../models/categoryModel");
 const Plan = require("../models/planModel");
 const Cart = require("../models/cartModel");
 const Favourite = require("../models/favouritesModel");
+const Ticket = require("../models/ticketModel");
 
 // Create a new plan
 
@@ -227,6 +228,7 @@ exports.editPlan = catchAsync(async (req, res, next) => {
 // Get a single plan by ID
 exports.getSinglePlan = catchAsync(async (req, res, next) => {
   const { id } = req.params;
+  const userId = req?.user ? req?.user?.id : null; // Get the user ID if available
 
   const plan = await Plan.findById(id);
 
@@ -234,10 +236,28 @@ exports.getSinglePlan = catchAsync(async (req, res, next) => {
     return next(new AppError("No plan found with that ID", 404));
   }
 
+  let canWriteReview = false; // Default to false
+
+  if (userId) {
+    // Check if the user has a booked ticket for the plan with a future date
+    const ticket = await Ticket.findOne({
+      user: userId,
+      plan: id,
+      status: "Booked",
+      date: { $lt: Date.now() },
+    });
+    console.log(ticket);
+
+    if (ticket) {
+      canWriteReview = true; // Set to true if such a ticket is found
+    }
+  }
+
   res.status(200).json({
     status: "success",
     data: {
       plan,
+      canWriteReview, // Add this field to the response
     },
   });
 });
@@ -280,8 +300,6 @@ exports.getPlanByCategory = catchAsync(async (req, res, next) => {
   // Map plan IDs to their respective cart and favorite IDs
   const cartMap = new Map(cartItems.map((item) => [item.tour.toString(), item._id.toString()]));
   const favMap = new Map(favoriteItems.map((item) => [item.tour.toString(), item._id.toString()]));
-
-  console.log(favMap.get("66cf128166a125c823fdb57c"));
 
   const updatedPlans = plans.map((plan) => {
     const planIdStr = plan._id.toString();

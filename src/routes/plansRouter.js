@@ -15,7 +15,7 @@ router
   .route("/:id")
   .delete(plansController.deletePlan)
   .put(plansController.editPlan)
-  .get(plansController.getSinglePlan)
+  .get(verifyProduct.verifyToken, plansController.getSinglePlan)
   .patch(plansController.switchActive);
 
 router

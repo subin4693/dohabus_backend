@@ -19,7 +19,6 @@ const reviewSchema = new mongoose.Schema(
     },
     imageURL: {
       type: String,
-      required: false, // Optional, as not every review may have an image
     },
   },
   {
