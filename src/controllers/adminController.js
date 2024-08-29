@@ -147,6 +147,7 @@ exports.getPieChartData = catchAsync(async (req, res, next) => {
 
 exports.getCarts = catchAsync(async (req, res, next) => {
   const carts = await Cart.aggregate([
+    // Join with users collection
     {
       $lookup: {
         from: "users",
@@ -161,6 +162,7 @@ exports.getCarts = catchAsync(async (req, res, next) => {
         preserveNullAndEmptyArrays: true,
       },
     },
+    // Join with categories collection
     {
       $lookup: {
         from: "categories",
@@ -175,6 +177,7 @@ exports.getCarts = catchAsync(async (req, res, next) => {
         preserveNullAndEmptyArrays: true,
       },
     },
+    // Join with plans collection
     {
       $lookup: {
         from: "plans",
@@ -189,13 +192,22 @@ exports.getCarts = catchAsync(async (req, res, next) => {
         preserveNullAndEmptyArrays: true,
       },
     },
+    // Project required fields
     {
       $project: {
         _id: 0,
         tourName: "$planDetails.title",
-        categoryName: "$categoryDetails.name",
+        categoryName: "$categoryDetails.title",
         username: "$userDetails.name",
         userEmail: "$userDetails.email",
+        quantity: "$quantity",
+        dateAdded: "$dateAdded",
+      },
+    },
+    // Debugging: Check intermediate results
+    {
+      $addFields: {
+        debugCategory: "$categoryDetails",
       },
     },
   ]);
@@ -208,6 +220,8 @@ exports.getCarts = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+
 
 exports.getFavourites = catchAsync(async (req, res, next) => {
   const favourites = await Favourite.aggregate([
@@ -257,7 +271,7 @@ exports.getFavourites = catchAsync(async (req, res, next) => {
       $project: {
         _id: 0,
         tourName: "$planDetails.title",
-        favouritesName: "$categoryDetails.name",
+        categoryName: "$categoryDetails.title",
         username: "$userDetails.name",
         userEmail: "$userDetails.email",
       },
