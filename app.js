@@ -17,6 +17,8 @@ const footerRoutes = require("./src/routes/footerRouter");
 const locationRouter = require("./src/routes/locationRouter");
 const bannerRouter = require("./src/routes/bannerRouter");
 
+const transportationRouter = require("./src/routes/transportationRouter");
+
 const cors = require("cors");
 const AppError = require("./src/utils/appError");
 const globalErrorHandler = require("./src/controllers/errorController");
@@ -48,6 +50,7 @@ app.use("/api/v1/about", aboutRouter);
 app.use("/api/v1/footer", footerRoutes);
 app.use("/api/v1/locations", locationRouter);
 app.use("/api/v1/banner", bannerRouter);
+app.use("/api/v1/transportations", transportationRouter);
 
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));

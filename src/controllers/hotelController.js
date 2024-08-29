@@ -1,4 +1,6 @@
 const Hotel = require("../models/hotelModel");
+
+const HotelBooking = require("../models/hotelBookingModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 
@@ -97,6 +99,68 @@ exports.getHotelById = catchAsync(async (req, res, next) => {
     status: "success",
     data: {
       hotel,
+    },
+  });
+});
+
+exports.bookHotels = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const userId = req.user.id; // Assuming user ID is available in req.user (e.g., from authentication middleware)
+  console.log(req.body);
+  // Destructure the booking details from req.body
+  const {
+    checkInDate,
+    checkOutDate,
+    numberOfAdults,
+    numberOfChildren,
+    numberOfRooms,
+    mealPlan,
+
+    airportTransfers,
+    additionalRequest,
+    email,
+    name,
+  } = req.body;
+
+  // Create a new booking entry
+  const newBooking = await HotelBooking.create({
+    userId,
+    hotelId: id,
+    checkInDate,
+    checkOutDate,
+    numberOfAdults,
+    numberOfChildren,
+    numberOfRooms,
+    mealPlan,
+
+    airportTransfers,
+    additionalRequest,
+    email,
+    name,
+  });
+
+  // Respond with the created booking
+  res.status(201).json({
+    status: "success",
+    data: {
+      booking: newBooking,
+    },
+  });
+});
+exports.getAllHotelsBookings = catchAsync(async (req, res, next) => {
+  console.log("working");
+  // const hotelBookings = await HotelBooking.find()
+  //   .populate("userId", "name email") // Populate userId with name and email (or other fields as needed)
+  //   .populate("hotelId", "name description") // Populate hotelId with name and location (or other fields as needed)
+  //   .exec();
+
+  // console.log(hotelBookings);
+
+  res.status(200).json({
+    status: "success",
+    results: hotelBookings.length,
+    data: {
+      hotelBookings,
     },
   });
 });
