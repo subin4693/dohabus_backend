@@ -27,7 +27,7 @@ let app = express();
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://boisterous-dasik-d64956.netlify.app"],
+    origin: ["http://localhost:5173", "https://main--boisterous-dasik-d64956.netlify.app"],
     credentials: true,
   }),
 );
