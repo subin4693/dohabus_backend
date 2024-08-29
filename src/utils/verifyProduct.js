@@ -4,10 +4,6 @@ const appError = require("./appError");
 
 exports.verifyToken = catchAsync(async (req, res, next) => {
   const testToken = req.cookies.token;
-  console.log(
-    "888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888",
-  );
-  console.log(testToken);
 
   let token;
   if (testToken && testToken.startsWith("bearer")) {
@@ -15,10 +11,7 @@ exports.verifyToken = catchAsync(async (req, res, next) => {
   }
 
   if (!token) {
-    return res.status(200).json({
-      status: "success",
-      message: "You are not loggedin",
-    });
+    return next();
   }
 
   const decoded = jwt.verify(token, process.env.JWT_SECRECT);

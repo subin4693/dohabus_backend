@@ -21,12 +21,10 @@ exports.signup = catchAsync(async (req, res, next) => {
   );
 
   newUser.password = undefined;
-  var expirationDate = new Date();
-  expirationDate.setDate(expirationDate.getDate() + 30);
+  // var expirationDate = new Date();
+  // expirationDate.setDate(expirationDate.getDate() + 30);
 
-  res.cookie("token", "bearer " + token, {
-    expires: expirationDate,
-  });
+  res.cookie("token", "bearer " + token);
 
   res.status(201).json({
     status: "success",
@@ -68,12 +66,10 @@ exports.signin = catchAsync(async (req, res, next) => {
     },
   );
 
-  var expirationDate = new Date();
-  expirationDate.setDate(expirationDate.getDate() + 30);
+  // var expirationDate = new Date();
+  // expirationDate.setDate(expirationDate.getDate() + 30);
 
-  res.cookie("token", "bearer " + token, {
-    expires: expirationDate,
-  });
+  res.cookie("token", "bearer " + token);
 
   res.status(201).json({
     status: "success",

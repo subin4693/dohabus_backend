@@ -2,6 +2,8 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const Category = require("../models/categoryModel");
 const Plan = require("../models/planModel");
+const Cart = require("../models/cartModel");
+const Favourite = require("../models/favouritesModel");
 
 // Create a new plan
 
@@ -242,24 +244,64 @@ exports.getSinglePlan = catchAsync(async (req, res, next) => {
 
 // Get plans by category ID
 exports.getPlanByCategory = catchAsync(async (req, res, next) => {
+  console.log(req.params);
+  console.log(req.user);
+
   const { categoryId } = req.params;
+  const userId = req.user ? req.user.id : null;
 
-  const plans = await Plan.find({ category: categoryId });
+  // Retrieve active plans and category
+  const plansQuery = Plan.find({ category: categoryId, isActive: true });
+  const categoryQuery = Category.findById(categoryId);
 
-  const category = await Category.findById(categoryId);
+  // Initialize arrays for cart and favorites
+  let cartItems = [];
+  let favoriteItems = [];
 
-  // if (!plans || plans.length === 0) {
-  //   return next(new AppError("No plans found for this category", 404));
-  // }
+  if (userId) {
+    // Retrieve cart and favorite items with their IDs
+    cartItems = await Cart.find({ user: userId }).select("tour _id"); // Select tour and cart ID
+    favoriteItems = await Favourite.find({ user: userId }).select("tour _id"); // Select tour and fav ID
+  }
+
+  const [plans, category] = await Promise.all([plansQuery, categoryQuery]);
+
+  // If no plans found, return an error
+  if (!plans || plans.length === 0) {
+    return next(new AppError("No plans found for this category", 404));
+  }
+
+  // Map plan IDs to their respective cart and favorite IDs
+  const cartMap = new Map(cartItems.map((item) => [item.tour.toString(), item._id.toString()]));
+  const favMap = new Map(favoriteItems.map((item) => [item.tour.toString(), item._id.toString()]));
+
+  console.log(favMap.get("66cf128166a125c823fdb57c"));
+
+  const updatedPlans = plans.map((plan) => {
+    const planIdStr = plan._id.toString();
+    console.log("lan str:");
+    console.log(planIdStr);
+    favid = favMap.get(planIdStr);
+    console.log("fabic: " + favid);
+    return {
+      ...plan._doc,
+      isInCart: cartMap.has(planIdStr),
+      isInFavorites: favMap.has(planIdStr),
+      cartId: cartMap.get(planIdStr) || null,
+      favId: favMap.get(planIdStr) || null,
+    };
+  });
+  console.log(updatedPlans);
 
   res.status(200).json({
     status: "success",
     data: {
       category,
-      plans,
+      plans: updatedPlans,
     },
   });
 });
+
 exports.switchActive = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
