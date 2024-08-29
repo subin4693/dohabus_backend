@@ -50,13 +50,7 @@ app.use("/api/v1/locations", locationRouter);
 app.use("/api/v1/banner", bannerRouter);
 
 app.all("*", (req, res, next) => {
-  res.status(404).json({
-    status: "fail",
-    message: `Can't find ${req.originalUrl} on the server!`,
-  });
-
-  const error = new AppError(`Can't find ${req.originalUrl} on the server!`, 404);
-  next(err);
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
 app.get("/", (req, res) => {
