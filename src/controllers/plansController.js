@@ -230,7 +230,7 @@ exports.getSinglePlan = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const userId = req?.user ? req?.user?.id : null; // Get the user ID if available
 
-  const plan = await Plan.findById(id);
+  const plan = await Plan.findOne({ _id: id, isActive: true });
 
   if (!plan) {
     return next(new AppError("No plan found with that ID", 404));
