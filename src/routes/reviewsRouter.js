@@ -9,6 +9,7 @@ router
 	.route("/:planId")
 	.get(reviewsController.getReviews)
 	.post(verifyProduct.verifyToken, reviewsController.createReview);
-router.route("/:reviewId", reviewsController.deleteReview);
+router
+	.route("/:reviewId").delete(verify.verifyToken, reviewsController.deleteReview);
 
 module.exports = router;
