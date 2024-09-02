@@ -16,6 +16,7 @@ const adminRoutes = require("./src/routes/adminRoutes");
 const footerRoutes = require("./src/routes/footerRouter");
 const locationRouter = require("./src/routes/locationRouter");
 const bannerRouter = require("./src/routes/bannerRouter");
+const blogRouter = require("./src/routes/blogRouter");
 
 const transportationRouter = require("./src/routes/transportationRouter");
 
@@ -48,6 +49,7 @@ app.use("/api/v1/favourites", favouriteRoutes);
 app.use("/api/v1/admin", adminRoutes);
 
 app.use("/api/v1/about", aboutRouter);
+app.use("/api/v1/blogs", blogRouter);
 app.use("/api/v1/footer", footerRoutes);
 app.use("/api/v1/locations", locationRouter);
 app.use("/api/v1/banner", bannerRouter);
