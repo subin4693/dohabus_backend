@@ -7,7 +7,7 @@ exports.createCategory = catchAsync(async (req, res, next) => {
   console.log("API called successfully");
 
   const { coverImage, title, description } = req.body;
-  console.log("Form data here!!!", coverImage, title, description);
+
   if (!coverImage || !title?.en || !title?.ar || !description?.en || !description?.ar) {
     return next(
       new AppError(
@@ -16,7 +16,6 @@ exports.createCategory = catchAsync(async (req, res, next) => {
       ),
     );
   }
-  console.log("Erro2");
 
   const newCategory = await Category.create({
     coverImage,
@@ -34,7 +33,6 @@ exports.createCategory = catchAsync(async (req, res, next) => {
 
 exports.getCategories = catchAsync(async (req, res, next) => {
   const categories = await Category.find();
-  console.log("categories", categories);
 
   res.status(200).json({
     status: "success",
@@ -45,9 +43,8 @@ exports.getCategories = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteCategory = catchAsync(async (req, res, next) => {
-  console.log("Delete API called");
   const { id } = req.params;
-  console.log(id);
+
   const deletedCategory = await Category.findByIdAndDelete(id);
 
   if (!deletedCategory) {
@@ -55,7 +52,6 @@ exports.deleteCategory = catchAsync(async (req, res, next) => {
     return next(error);
   }
 
-  console.log("Deletion completed");
   res.status(200).json({
     status: "success",
     message: "Category deleted successfully",
@@ -66,9 +62,6 @@ exports.deleteCategory = catchAsync(async (req, res, next) => {
 exports.editCategory = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const { coverImage, title, description } = req.body;
-
-  console.log("ID from params:", id);
-  console.log("Request body:", { coverImage, title, description });
 
   if (!req.body) {
     return next(
@@ -84,8 +77,6 @@ exports.editCategory = catchAsync(async (req, res, next) => {
     { coverImage, title, description },
     { new: true, runValidators: true },
   );
-
-  console.log("Updated category data:", updatedCategory);
 
   if (!updatedCategory) {
     return next(new AppError("No category found with that ID", 404));

@@ -21,8 +21,8 @@ const blogsModel = new mongoose.Schema(
     },
     plan: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Plan",
-      required: [true, "Please provide a plan id."],
+      ref: "Category",
+      required: [true, "Please provide a Category id."],
     },
     comments: [
       {
@@ -33,7 +33,7 @@ const blogsModel = new mongoose.Schema(
     ],
     likes: {
       type: Number,
-      default: 1,
+      default: 0,
     },
   },
   { timestamps: true },
