@@ -5,26 +5,41 @@ const Transportation = require("../models/transportationModel");
 exports.createTransportation = catchAsync(async (req, res, next) => {
   console.log("API called successfully");
 
-  const { coverImage, title, places } = req.body;
+  const {
+    coverImage,
+    title,
+    type,
+    other,
+    passenger,
+    luggage,
+    isActive,
+  } = req.body;
 
   // Log form data for debugging
-  console.log("Form data:", coverImage, title, places);
+  console.log("Form data:", {
+    coverImage,
+    title,
+    type,
+    other,
+    passenger,
+    luggage,
+    isActive
+  });
 
   // Check if all fields, including localized strings, are provided
-  if (!coverImage || !title?.en || !title?.ar || !places) {
-    return next(
-      new AppError(
-        "All fields, including localized strings, are required to create a transportaton",
-        400,
-      ),
-    );
+  if (!coverImage || !title?.en || !title?.ar || !type?.en || !type?.ar || !other?.en || !other?.ar || !passenger || !luggage) {
+    return next(new AppError("All fields, including localized strings, are required to create a transportation", 400));
   }
 
   // Create a new transportation document
   const newTransportation = await Transportation.create({
     coverImage,
     title,
-    places,
+    type,
+    other,
+    passenger,
+    luggage,
+    isActive,
   });
 
   // Send a response back to the client
@@ -35,6 +50,9 @@ exports.createTransportation = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+
+
 exports.getTransportations = catchAsync(async (req, res, next) => {
   const transportations = await Transportation.find({ isActive: true }); // Fetch all transportation categories
   console.log("Transportations:", transportations);
@@ -46,6 +64,7 @@ exports.getTransportations = catchAsync(async (req, res, next) => {
     },
   });
 });
+
 exports.getAdminTransportations = catchAsync(async (req, res, next) => {
   const transportations = await Transportation.find(); // Fetch all transportation categories
   console.log("Transportations:", transportations);
@@ -77,41 +96,35 @@ exports.deleteTransportation = catchAsync(async (req, res, next) => {
     data: null,
   });
 });
+
 exports.editTransportation = catchAsync(async (req, res, next) => {
-  const { id } = req.params; // Extract the ID from the request parameters
-  const { coverImage, title, places } = req.body; // Extract relevant fields from the request body
+  const { id } = req.params;
+  const updateFields = req.body;
 
-  console.log("ID from params:", id);
-  console.log("Request body:", { coverImage, title, places });
+  console.log(`Updating transportation with ID: ${id}`);
+  console.log("Update fields:", updateFields);
 
-  if (!coverImage || !title?.en || !title?.ar || !places) {
-    return next(
-      new AppError(
-        "Cover image, title (in both languages), and places (in both languages) are required to update a transportation",
-        400,
-      ),
-    );
-  }
-
-  const updatedTransportation = await Transportation.findByIdAndUpdate(
+  const transportation = await Transportation.findByIdAndUpdate(
     id,
-    { coverImage, title, places }, // Update fields: cover image, title, and places
-    { new: true, runValidators: true },
+    updateFields,
+    { new: true, runValidators: true }
   );
 
-  console.log("Updated transportation data:", updatedTransportation);
-
-  if (!updatedTransportation) {
-    return next(new AppError("No transportation found with that ID", 404));
+  if (!transportation) {
+    return next(new AppError("Transportation not found", 404));
   }
+
+  // Log updated data for debugging
+  console.log("Transportation updated:", transportation);
 
   res.status(200).json({
     status: "success",
     data: {
-      transportation: updatedTransportation,
+      transportation,
     },
   });
 });
+
 
 exports.switchTransportation = catchAsync(async (req, res, next) => {
   try {
