@@ -2,14 +2,15 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const Plan = require("../models/planModel");
 const Category = require("../models/categoryModel");
+const Offer = require("../models/offerModel"); // Ensure the path is correct
 const User = require("../models/userModel");
 const Ticket = require("../models/ticketModel");
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 dotenv.config();
 dotenv.config({ path: "dohabus_backend/.env" });
 const transporter = nodemailer.createTransport({
-  service: 'Gmail',
+  service: "Gmail",
   auth: {
     user: process.env.EMAIL,
     pass: process.env.EMAIL_PASSWORD,
@@ -30,23 +31,91 @@ const signature = `
 </div>
 `;
 exports.bookTicket = catchAsync(async (req, res, next) => {
-  const { date, adultQuantity, childQuantity, session, category, plan } = req.body;
+  const {
+    date,
+    adultQuantity,
+    childQuantity,
+    session,
+    category,
+    plan,
+    firstName,
+    lastName,
+    email,
+    pickupLocation,
+    dropLocation,
+    coupon,
+  } = req.body;
   const user = req.user;
 
   try {
     const planDetails = await Plan.findById(plan);
     const planCategory = await Category.findById(category);
     const userDetails = await User.findById(user.id);
+
     if (!planDetails) {
       return next(new AppError("Invalid plan selected", 400));
     }
-    console.log("userDetails", userDetails.name)
+    console.log("userDetails", userDetails.name);
+
     const adultPrice = planDetails.adultPrice || 0;
     const childPrice = planDetails.childPrice || 0;
 
-    const totalCost = adultPrice * adultQuantity + childPrice * childQuantity;
-    const totalQuantity = adultQuantity + childQuantity;
+    let totalCost = adultPrice * adultQuantity + childQuantity * childPrice;
+    let adultDiscountAmount = 0;
+    let childDiscountAmount = 0;
+    if (coupon) {
+      const couponDetails = await Offer.findOne({ plan, couponCode: coupon, status: "active" });
 
+      if (!couponDetails) {
+        return next(new AppError("Invalid or expired coupon code", 400));
+      }
+
+      const currentDate = new Date();
+      if (currentDate < couponDetails.startingDate || currentDate > couponDetails.endingDate) {
+        return next(new AppError("Coupon code is not valid at this time", 400));
+      }
+
+      // Calculate total prices before discount
+      const totalAdultPrice = adultPrice * adultQuantity;
+      const totalChildPrice = childPrice * childQuantity;
+
+      // Calculate discount for adults
+      if (couponDetails.adultDiscountType === "percentage") {
+        adultDiscountAmount = (totalAdultPrice * couponDetails.adultDiscountPrice) / 100;
+      } else if (couponDetails.adultDiscountType === "price") {
+        adultDiscountAmount = couponDetails.adultDiscountPrice * adultQuantity;
+      }
+
+      // Calculate discount for children
+      if (couponDetails.childDiscountType === "percentage") {
+        childDiscountAmount = (totalChildPrice * couponDetails.childDiscountPrice) / 100;
+      } else if (couponDetails.childDiscountType === "price") {
+        childDiscountAmount = couponDetails.childDiscountPrice * childQuantity;
+      }
+
+      const discountedAdultPrice = totalAdultPrice - adultDiscountAmount;
+      const discountedChildPrice = totalChildPrice - childDiscountAmount;
+
+      // Calculate the total cost
+      totalCost = discountedAdultPrice + discountedChildPrice;
+    }
+    console.log({
+      user: user.id,
+      category,
+      plan,
+      price: totalCost,
+      adultQuantity,
+      childQuantity,
+      session,
+      date,
+      firstName,
+      lastName,
+      email,
+      pickupLocation,
+      dropLocation,
+      discountAmount: adultDiscountAmount + childDiscountAmount,
+      status: "Booked",
+    });
     const ticket = await Ticket.create({
       user: user.id,
       category,
@@ -56,58 +125,61 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       childQuantity,
       session,
       date,
+      firstName,
+      lastName,
+      email,
+      pickupLocation,
+      dropLocation,
+      discountAmount: adultDiscountAmount + childDiscountAmount,
       status: "Booked",
     });
-    // console.log(transporter)
-    try {
 
+    // try {
+    //   const emailContent = `
+    //     <h3 style="font-family: Arial, sans-serif; color: #333;">
+    //         Hello ${userDetails.name},
+    //     </h3>
+    //     <p style="font-family: Arial, sans-serif; color: #333;">
+    //         Thank you for purchasing tickets for ${planDetails.title.en}. We are thrilled to have you join us for this exciting event.
+    //         Your support means a lot to us, and we are committed to providing you with an unforgettable experience.
+    //         From the moment you arrive, we hope you enjoy the vibrant atmosphere, engaging performances, and the overall ambiance
+    //         that makes this event special. We look forward to seeing you and hope you have a fantastic time!
+    //     </p>
+    //     <p style="font-family: Arial, sans-serif; color: #333;">
+    //         Here are the purchase details:
+    //     </p>
+    //     <h4 style="font-family: Arial, sans-serif; color: #333;">
+    //         Tour Name: ${planDetails.title.en}
+    //     </h4>
+    //     <h4 style="font-family: Arial, sans-serif; color: #333;">
+    //         Number Of Tickets: ${totalQuantity}
+    //     </h4>
+    //     <h4 style="font-family: Arial, sans-serif; color: #333;">
+    //         Total Amount: ${totalCost} QAR
+    //     </h4>
+    //     <h4 style="font-family: Arial, sans-serif; color: #333;">
+    //         Category: ${planCategory.title.en}
+    //     </h4>
+    //     <br>
+    //     ${signature}
+    // `;
 
-      const emailContent = `
-        <h3 style="font-family: Arial, sans-serif; color: #333;">
-            Hello ${userDetails.name},
-        </h3>
-        <p style="font-family: Arial, sans-serif; color: #333;">
-            Thank you for purchasing tickets for ${planDetails.title.en}. We are thrilled to have you join us for this exciting event. 
-            Your support means a lot to us, and we are committed to providing you with an unforgettable experience. 
-            From the moment you arrive, we hope you enjoy the vibrant atmosphere, engaging performances, and the overall ambiance 
-            that makes this event special. We look forward to seeing you and hope you have a fantastic time!
-        </p>
-        <p style="font-family: Arial, sans-serif; color: #333;">
-            Here are the purchase details:
-        </p>
-        <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Tour Name: ${planDetails.title.en}
-        </h4>
-        <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Number Of Tickets: ${totalQuantity}
-        </h4>
-        <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Total Amount: ${totalCost} QAR
-        </h4>
-        <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Category: ${planCategory.title.en}
-        </h4>
-        <br>
-        ${signature}
-    `;
-
-
-      await transporter.sendMail({
-        to: user.email,
-        subject: `Hello ${userDetails.name}, Thank you for purchasing ${planDetails.title.en} tickets`,
-        html: emailContent
-      });
-      console.log("Email has been sent");
-    } catch (error) {
-      console.log(error.message);
-      return res.status(400).json({ message: error.message });
-    }
+    //   await transporter.sendMail({
+    //     to: user.email,
+    //     subject: `Hello ${userDetails.name}, Thank you for purchasing ${planDetails.title.en} tickets`,
+    //     html: emailContent,
+    //   });
+    //   console.log("Email has been sent");
+    // } catch (error) {
+    //   console.log(error.message);
+    //   return res.status(400).json({ message: error.message });
+    // }
 
     res.status(201).json({
       status: "success",
       data: {
         bookedTickets: ticket,
-        totalQuantity,
+        // totalQuantity,
         totalCost,
       },
     });

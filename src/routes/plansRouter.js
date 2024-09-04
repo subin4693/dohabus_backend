@@ -5,7 +5,7 @@ const verifyProduct = require("../utils/verifyProduct");
 
 const router = express.Router();
 // router.use(verifyAdminToken);
-
+router.route("/plan-titles").get(plansController.getAllPlanNames);
 router
   .route("/")
   .post(plansController.createNewPlans)

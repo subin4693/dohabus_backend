@@ -30,6 +30,8 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     adultPrice,
     childPrice,
     isActive,
+    isPickupRequired,
+    isDropOffRequired,
   } = req.body.formData;
 
   // Validate required fields
@@ -85,6 +87,8 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     sessions: selectedSessions,
     adultPrice,
     childPrice,
+    isPickupRequired,
+    isDropOffRequired,
   });
 
   res.status(201).json({
@@ -149,6 +153,8 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     adultPrice,
     childPrice,
     isActive,
+    isPickupRequired,
+    isDropOffRequired,
   } = req.body.formData;
 
   // Validate required fields
@@ -206,6 +212,8 @@ exports.editPlan = catchAsync(async (req, res, next) => {
       sessions: selectedSessions,
       adultPrice,
       childPrice,
+      isPickupRequired,
+      isDropOffRequired,
     },
     {
       new: true,
@@ -351,4 +359,17 @@ exports.switchActive = catchAsync(async (req, res, next) => {
       plan,
     },
   });
+});
+exports.getAllPlanNames = catchAsync(async (req, res, next) => {
+  try {
+    const plans = await Plan.find().select("title");
+    res.status(200).json({
+      status: "success",
+      data: {
+        plans,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 });

@@ -13,7 +13,7 @@ const ticketModel = new mongoose.Schema({
   },
   plan: {
     type: mongoose.Schema.Types.ObjectId,
-    required: [true, "plan id is required"],
+    required: [true, "Plan id is required"],
     ref: "Plan",
   },
   price: {
@@ -35,6 +35,28 @@ const ticketModel = new mongoose.Schema({
   date: {
     type: Date,
     required: [true, "Please provide a valid date"],
+  },
+  firstName: {
+    type: String,
+    required: [true, "First name is required"],
+  },
+  lastName: {
+    type: String,
+    required: [true, "Last name is required"],
+  },
+  email: {
+    type: String,
+    required: [true, "Email is required"],
+  },
+  pickupLocation: {
+    type: String,
+  },
+  dropLocation: {
+    type: String,
+  },
+  discountAmount: {
+    type: Number,
+    default: 0,
   },
   status: {
     type: String,

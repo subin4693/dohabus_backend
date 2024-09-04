@@ -1,40 +1,55 @@
 const mongoose = require("mongoose");
 
-const localizedString = {
-  en: {
-    type: String,
-    required: [true, "Please provide the English translation"],
-    trim: true,
-  },
-  ar: {
-    type: String,
-    required: [true, "Please provide the Arabic translation"],
-    trim: true,
-  },
-};
-
-const offerModel = new mongoose.Schema(
+const offerSchema = new mongoose.Schema(
   {
-    text: localizedString,
-    link: {
+    couponCode: {
       type: String,
-      required: [true, "Please provide the English translation"],
+      required: true,
+
       trim: true,
     },
     startingDate: {
       type: Date,
-      required: [true, "Please provide the starting date"],
-      trim: true,
+      required: true,
     },
     endingDate: {
       type: Date,
-      required: [true, "Please provide the ending date"],
-      trim: true,
+      required: true,
+    },
+    childDiscountType: {
+      type: String,
+      enum: ["percentage", "price"],
+      required: true,
+    },
+    adultDiscountType: {
+      type: String,
+      enum: ["percentage", "price"],
+      required: true,
+    },
+    childDiscountPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    adultDiscountPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    status: {
+      type: String,
+      enum: ["active", "canceled", "expired"],
+      default: "active",
+    },
+    plan: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: [true, "plan id is required"],
+      ref: "Plan",
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  },
 );
 
-const Offer = mongoose.model("Offer", offerModel);
-
-module.exports = Offer;
+module.exports = mongoose.model("Offer", offerSchema);
