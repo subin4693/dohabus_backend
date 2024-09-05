@@ -12,28 +12,42 @@ exports.getReviews = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getAllReviews = catchAsync(async (req, res, next) => {
+  const reviews = await Review.find()
+    .populate({
+      path: "user",
+      select: "name email",
+    })
+    .populate({
+      path: "plan",
+      select: "title",
+    });
+  return res.status(200).json({
+    status: "success",
+    data: reviews,
+  });
+});
 
 exports.deleteReview = catchAsync(async (req, res, next) => {
   const { reviewId } = req.params;
   const user = req.user.id;
   if (!user) {
-    return next(new AppError('User ID is required', 400));
+    return next(new AppError("User ID is required", 400));
   }
 
   const review = await Review.findById(reviewId);
 
   if (!review) {
-    return next(new AppError('Review not found', 404));
+    return next(new AppError("Review not found", 404));
   }
   if (review.user.toString() !== user) {
-    return next(new AppError('You are not authorized to delete this review', 403));
+    return next(new AppError("You are not authorized to delete this review", 403));
   }
   await Review.findByIdAndDelete(reviewId);
   return res.status(204).json({
-    status: 'success',
+    status: "success",
   });
 });
-
 
 exports.createReview = catchAsync(async (req, res, next) => {
   const { planId } = req.params; // Extract planId from URL parameters

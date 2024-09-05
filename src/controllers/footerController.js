@@ -30,7 +30,8 @@ exports.deletetFooterImages = catchAsync(async (req, res, next) => {
 
 exports.editFooterImage = catchAsync(async (req, res, next) => {
 	const { id } = req.params;
-
-	const resposne = await footer.findByIdAndUpdate(id, req.body, { new: true });
+	console.log(id);
+	console.log(req.body);
+	const resposne = await footer.findByIdAndUpdate(id, { image: req.body.imageUrl }, { new: true });
 	res.status(200).json({ status: "success", resposne });
 });

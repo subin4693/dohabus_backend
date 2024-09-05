@@ -5,11 +5,13 @@ const verifyProduct = require("../utils/verifyProduct");
 
 const router = express.Router();
 
+router.route("/all").get(reviewsController.getAllReviews);
+
 router
 	.route("/:planId")
 	.get(reviewsController.getReviews)
 	.post(verifyProduct.verifyToken, reviewsController.createReview);
-router
-	.route("/:reviewId").delete(verify.verifyToken, reviewsController.deleteReview);
+
+router.route("/:reviewId").delete(verify.verifyToken, reviewsController.deleteReview);
 
 module.exports = router;

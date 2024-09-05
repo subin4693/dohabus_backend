@@ -32,6 +32,7 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     isActive,
     isPickupRequired,
     isDropOffRequired,
+    addOn,
   } = req.body.formData;
 
   // Validate required fields
@@ -89,6 +90,7 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     childPrice,
     isPickupRequired,
     isDropOffRequired,
+    addOn,
   });
 
   res.status(201).json({
@@ -155,6 +157,7 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     isActive,
     isPickupRequired,
     isDropOffRequired,
+    addOn,
   } = req.body.formData;
 
   // Validate required fields
@@ -214,6 +217,7 @@ exports.editPlan = catchAsync(async (req, res, next) => {
       childPrice,
       isPickupRequired,
       isDropOffRequired,
+      addOn,
     },
     {
       new: true,

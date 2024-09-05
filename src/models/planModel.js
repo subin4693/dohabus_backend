@@ -26,6 +26,7 @@ const plansModel = new mongoose.Schema({
   title: localizedString,
   duration: localizedString,
   typeOfTour: localizedString,
+  addOn: [localizedString],
   transportation: localizedString,
   language: localizedString,
   description: localizedString,
