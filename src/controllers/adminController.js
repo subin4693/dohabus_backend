@@ -221,8 +221,6 @@ exports.getCarts = catchAsync(async (req, res, next) => {
   });
 });
 
-
-
 exports.getFavourites = catchAsync(async (req, res, next) => {
   const favourites = await Favourite.aggregate([
     {
@@ -324,35 +322,50 @@ exports.getPlans = catchAsync(async (req, res, next) => {
 
 exports.getUsers = catchAsync(async (req, res, next) => {
   console.log("user", req.user);
+  const superAdminCount = await User.countDocuments({ role: "super-admin" });
+
   const users = await User.find().select("name email role");
 
   res.status(200).json({
     status: "success",
     data: users,
+    superAdminCount,
   });
 });
 
 exports.promoteUser = catchAsync(async (req, res, next) => {
-  const { userId } = req.body;
-  console.log("userId", userId);
+  const { userId, role } = req.body;
+
   if (!userId) {
     return res.status(400).json({ message: "User ID is required." });
   }
 
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).select("-password");
 
   if (!user) {
     return res.status(404).json({ message: "User not found." });
   }
 
-  user.role = "admin";
+  // Check if the role is 'super-admin'
+  if (role === "super-admin") {
+    // Check the count of super-admins
+    const superAdminCount = await User.countDocuments({ role: "super-admin" });
+
+    // If the count is 3, return an error message
+    if (superAdminCount >= 3) {
+      return res.status(400).json({ message: "Cannot promote more than 3 super-admins." });
+    }
+  }
+
+  // Update the user's role
+  user.role = role;
   await user.save();
 
   res.status(200).json({ message: "User promoted successfully", user });
 });
 
 exports.demoteUser = catchAsync(async (req, res, next) => {
-  const { userId } = req.body;
+  const { userId, role } = req.body;
   console.log(userId);
 
   if (!userId) {
@@ -365,7 +378,7 @@ exports.demoteUser = catchAsync(async (req, res, next) => {
     return res.status(404).json({ message: "User not found." });
   }
 
-  user.role = "user";
+  user.role = role;
   await user.save();
 
   res.status(200).json({ message: "User demoted successfully", user });
@@ -447,9 +460,11 @@ exports.getTickets = catchAsync(async (req, res, next) => {
 exports.cancelTicket = catchAsync(async (req, res, next) => {
   try {
     const { id } = req.params;
+    console.log(req.params);
 
     // Find the ticket by its ID
     const ticket = await Ticket.findById(id);
+    console.log(ticket);
     if (!ticket) {
       return next(new AppError("Ticket not found", 404));
     }
@@ -457,6 +472,7 @@ exports.cancelTicket = catchAsync(async (req, res, next) => {
     // Update the ticket status to "Canceled"
     ticket.status = "Canceled";
     await ticket.save();
+    console.log(ticket);
 
     res.status(200).json({
       status: "success",

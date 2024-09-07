@@ -203,6 +203,7 @@ exports.getTickets = catchAsync(async (req, res, next) => {
 
 exports.deleteTicket = catchAsync(async (req, res, next) => {
   const ticketId = req.params.id;
+
   await Ticket.findByIdAndUpdate(ticketId, { status: "Canceled" });
   res.status(200).json({
     status: "success",

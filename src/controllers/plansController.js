@@ -40,20 +40,6 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     { name: "category", value: category },
     { name: "coverImage", value: coverImage },
     { name: "title", value: title },
-    { name: "duration", value: duration },
-    { name: "typeOfTour", value: typeOfTour },
-    { name: "transportation", value: transportation },
-    { name: "language", value: language },
-    { name: "description", value: description },
-    { name: "highlights", value: highlights },
-    { name: "includes", value: includes },
-    { name: "itinerary", value: itinerary },
-    { name: "galleryImages", value: galleryImages },
-
-    { name: "availableDays", value: availableDays },
-    { name: "selectedSessions", value: selectedSessions },
-    { name: "adultPrice", value: adultPrice },
-    { name: "childPrice", value: childPrice },
   ];
 
   for (const field of requiredFields) {

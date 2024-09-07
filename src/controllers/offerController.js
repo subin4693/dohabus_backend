@@ -4,14 +4,24 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 
 exports.createOffer = catchAsync(async (req, res, next) => {
-  const newOffer = await Offer.create(req.body);
+  const { plan, ...offerData } = req.body; // Extract plan array and the rest of the offer data
+  console.log(req.body);
+  if (!plan || plan.length === 0) {
+    return next(new AppError("No plan provided", 400));
+  }
 
-  const data = await newOffer.populate("plan");
-  console.log(data);
+  // Loop over each plan and create an offer for each plan
+  const createdOffers = await Promise.all(
+    plan.map(async (planId) => {
+      const newOffer = await Offer.create({ ...offerData, plan: planId });
+      return await newOffer.populate("plan"); // Populate the plan for each offer
+    }),
+  );
+
   res.status(201).json({
     status: "success",
     data: {
-      offer: data,
+      offers: createdOffers, // Return all the created offers
     },
   });
 });
