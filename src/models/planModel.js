@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
-const localizedString = {
+// Required localized string schema
+const localizedStringRequired = {
   en: {
     type: String,
     required: [true, "Please provide the English translation"],
@@ -13,6 +14,33 @@ const localizedString = {
   },
 };
 
+// Optional localized string schema
+const localizedStringOptional = {
+  en: {
+    type: String,
+    required: false,
+    trim: true,
+  },
+  ar: {
+    type: String,
+    required: false,
+    trim: true,
+  },
+};
+
+// Pricing schema for dynamic pricing data
+const pricingSchema = new mongoose.Schema({
+  pax: {
+    type: Number,
+    required: [true, "Number of pax is required"],
+  },
+  price: {
+    type: Number,
+    required: [true, "Price is required"],
+  },
+});
+
+// Define the Plan schema
 const plansModel = new mongoose.Schema({
   category: {
     type: mongoose.Schema.Types.ObjectId,
@@ -23,49 +51,64 @@ const plansModel = new mongoose.Schema({
     type: String,
     required: [true, "Please provide cover image for tour"],
   },
-  title: localizedString,
-  duration: localizedString,
-  typeOfTour: localizedString,
-  addOn: [localizedString],
-  transportation: localizedString,
-  language: localizedString,
-  description: localizedString,
-  highlights: [localizedString],
-  includes: [localizedString],
-  itinerary: [localizedString],
-  knowBeforeYouGo: [localizedString],
+  title: localizedStringRequired, // Required
+  duration: localizedStringOptional, // Optional
+  typeOfTour: localizedStringOptional, // Optional
+  addOn: [
+    {
+      en: {
+        type: String,
+
+        trim: true,
+      },
+      ar: {
+        type: String,
+
+        trim: true,
+      },
+      price: {
+        type: Number,
+      },
+    },
+  ],
+  transportation: localizedStringOptional, // Optional
+  language: localizedStringOptional, // Optional
+  description: localizedStringRequired, // Required
+  highlights: [localizedStringOptional], // Optional
+  includes: [localizedStringOptional], // Optional
+  itinerary: [localizedStringOptional], // Optional
+  knowBeforeYouGo: [localizedStringOptional], // Optional
   faq: [
     {
-      question: localizedString,
-      answer: localizedString,
+      question: localizedStringOptional, // Optional
+      answer: localizedStringOptional, // Optional
     },
   ],
-
-  galleryimages: [
-    {
-      type: String,
-    },
-  ], //["image url1","imageurl2"]
-  galleryvideos: [
+  galleryImages: [
     {
       type: String,
     },
   ],
-  availableDays: [{ type: Number }], //[1,2,3,4]
+  galleryVideos: [
+    {
+      type: String,
+    },
+  ],
+  availableDays: [{ type: Number }],
   sessions: [
     {
       type: String,
-
       trim: true,
     },
-  ], //[8:00Am, 12:00pm]
-
+  ],
   adultPrice: {
     type: Number,
-  }, //400
+  },
   childPrice: {
     type: Number,
-  }, //2500
+  },
+  adultData: [pricingSchema],
+  childData: [pricingSchema],
   isActive: {
     type: Boolean,
     default: true,
@@ -78,7 +121,12 @@ const plansModel = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  limit: {
+    type: Number,
+    default: 0,
+  },
 });
-const Plan = new mongoose.model("Plan", plansModel);
+
+const Plan = mongoose.model("Plan", plansModel);
 
 module.exports = Plan;

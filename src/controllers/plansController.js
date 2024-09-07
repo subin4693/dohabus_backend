@@ -33,13 +33,19 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     isPickupRequired,
     isDropOffRequired,
     addOn,
-  } = req.body.formData;
+    adultData,
+    childData,
+    limit,
+  } = req.body;
 
+  console.log(category);
+  console.log(req.body);
   // Validate required fields
   const requiredFields = [
     { name: "category", value: category },
     { name: "coverImage", value: coverImage },
     { name: "title", value: title },
+    { name: "description", value: description },
   ];
 
   for (const field of requiredFields) {
@@ -51,6 +57,26 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     ) {
       return next(new AppError(`Field ${field.name} is required`, 400));
     }
+  }
+  const hasAdultPrice = adultPrice !== undefined && adultPrice !== null && adultPrice !== "";
+  const hasChildPrice = childPrice !== undefined && childPrice !== null && childPrice !== "";
+  const hasAdultData =
+    adultData && adultData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
+  const hasChildData =
+    childData && childData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
+
+  if ((hasAdultPrice || hasChildPrice) && (hasAdultData || hasChildData)) {
+    return next(
+      new AppError("Provide either single price fields or detailed pricing data, not both.", 400),
+    );
+  }
+
+  if ((hasAdultPrice && !hasChildPrice) || (!hasAdultPrice && hasChildPrice)) {
+    return next(new AppError("Both adultPrice and childPrice must be provided together.", 400));
+  }
+
+  if ((hasAdultData && !hasChildData) || (!hasAdultData && hasChildData)) {
+    return next(new AppError("Both adultData and childData must be provided together.", 400));
   }
 
   // Create the plan
@@ -68,8 +94,8 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     itinerary,
     knowBeforeYouGo,
     faq,
-    galleryimages: galleryImages,
-    galleryvideos: galleryVideos,
+    galleryImages,
+    galleryVideos,
     availableDays,
     sessions: selectedSessions,
     adultPrice,
@@ -77,6 +103,9 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     isPickupRequired,
     isDropOffRequired,
     addOn,
+    adultData,
+    childData,
+    limit,
   });
 
   res.status(201).json({
@@ -116,7 +145,6 @@ exports.deletePlan = catchAsync(async (req, res, next) => {
   });
 });
 
-// Update a plan by ID
 exports.editPlan = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
@@ -143,7 +171,10 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     isActive,
     isPickupRequired,
     isDropOffRequired,
-    addOn,
+    addOn, // Use "addon" instead of "addOn"
+    adultData, // New field for detailed adult pricing
+    childData, // New field for detailed child pricing
+    limit,
   } = req.body.formData;
 
   // Validate required fields
@@ -151,20 +182,7 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     { name: "category", value: category },
     { name: "coverImage", value: coverImage },
     { name: "title", value: title },
-    { name: "duration", value: duration },
-    { name: "typeOfTour", value: typeOfTour },
-    { name: "transportation", value: transportation },
-    { name: "language", value: language },
     { name: "description", value: description },
-    { name: "highlights", value: highlights },
-    { name: "includes", value: includes },
-    { name: "itinerary", value: itinerary },
-    { name: "galleryImages", value: galleryImages },
-
-    { name: "availableDays", value: availableDays },
-    { name: "selectedSessions", value: selectedSessions },
-    { name: "adultPrice", value: adultPrice },
-    { name: "childPrice", value: childPrice },
   ];
 
   for (const field of requiredFields) {
@@ -178,38 +196,71 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     }
   }
 
+  // Ensure only one type of pricing data is provided
+  const hasAdultPrice = adultPrice !== undefined && adultPrice !== null && adultPrice !== "";
+  const hasChildPrice = childPrice !== undefined && childPrice !== null && childPrice !== "";
+  const hasAdultData =
+    adultData && adultData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
+  const hasChildData =
+    childData && childData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
+
+  if ((hasAdultPrice || hasChildPrice) && (hasAdultData || hasChildData)) {
+    return next(
+      new AppError("Provide either single price fields or detailed pricing data, not both.", 400),
+    );
+  }
+
+  if ((hasAdultPrice && !hasChildPrice) || (!hasAdultPrice && hasChildPrice)) {
+    return next(new AppError("Both adultPrice and childPrice must be provided together.", 400));
+  }
+
+  if ((hasAdultData && !hasChildData) || (!hasAdultData && hasChildData)) {
+    return next(new AppError("Both adultData and childData must be provided together.", 400));
+  }
+
+  // Prepare the update data, conditionally including pricing data
+  const updateData = {
+    category,
+    coverImage,
+    title,
+    duration,
+    typeOfTour,
+    transportation,
+    language,
+    description,
+    highlights,
+    includes,
+    itinerary,
+    knowBeforeYouGo,
+    faq,
+    galleryImages,
+    galleryVideos,
+    availableDays,
+    sessions: selectedSessions,
+    isPickupRequired,
+    isDropOffRequired,
+    addOn, // Changed to match the request
+    limit,
+    ...(hasAdultData && { adultData }),
+    ...(hasChildData && { childData }),
+    ...(hasAdultPrice && { adultPrice }),
+    ...(hasChildPrice && { childPrice }),
+  };
+
+  // Handle the case where the user switches from one type of pricing data to the other
+  if (hasAdultData || hasChildData) {
+    // If detailed pricing data is provided, remove the single price fields
+    updateData.$unset = { adultPrice: "", childPrice: "" };
+  } else if (hasAdultPrice || hasChildPrice) {
+    // If single price fields are provided, remove the detailed pricing data
+    updateData.$unset = { adultData: "", childData: "" };
+  }
+
   // Update the plan
-  const updatedPlan = await Plan.findByIdAndUpdate(
-    id,
-    {
-      category,
-      coverImage,
-      title,
-      duration,
-      typeOfTour,
-      transportation,
-      language,
-      description,
-      highlights,
-      includes,
-      itinerary,
-      knowBeforeYouGo,
-      faq,
-      galleryimages: galleryImages,
-      galleryvideos: galleryVideos,
-      availableDays,
-      sessions: selectedSessions,
-      adultPrice,
-      childPrice,
-      isPickupRequired,
-      isDropOffRequired,
-      addOn,
-    },
-    {
-      new: true,
-      runValidators: true,
-    },
-  );
+  const updatedPlan = await Plan.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  });
 
   if (!updatedPlan) {
     return next(new AppError("No plan found with that ID", 404));
@@ -222,7 +273,6 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     },
   });
 });
-
 // Get a single plan by ID
 exports.getSinglePlan = catchAsync(async (req, res, next) => {
   const { id } = req.params;

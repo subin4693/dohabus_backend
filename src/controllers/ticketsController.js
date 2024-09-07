@@ -250,3 +250,61 @@ exports.editTicket = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.getTicketCounts = catchAsync(async (req, res, next) => {
+  try {
+    const { date, planId } = req.body;
+
+    // Check if date and planId are provided
+    if (!date || !planId) {
+      return res.status(400).json({ message: "Date and Plan ID are required" });
+    }
+
+    // Convert the provided date to a JavaScript Date object
+    const targetDate = new Date(date);
+
+    // Find the plan to get available sessions and limit
+    const plan = await Plan.findById(planId);
+
+    if (!plan) {
+      return res.status(404).json({ message: "Plan not found" });
+    }
+
+    // Get the limit from the plan (0 means no limit)
+    const sessionLimit = plan.limit;
+
+    // Initialize the session counts with 0 for each session
+    const sessionCounts = {};
+    const sessionStatus = {}; // This will hold the status of each session (full or available)
+    plan.sessions.forEach((session) => {
+      sessionCounts[session] = 0;
+      sessionStatus[session] = "Available"; // Default status
+    });
+
+    // Find tickets for the given date and planId
+    const tickets = await Ticket.find({
+      plan: planId,
+      date: targetDate,
+      status: "Booked",
+    });
+
+    // Count the tickets for each session
+    tickets.forEach((ticket) => {
+      if (sessionCounts.hasOwnProperty(ticket.session)) {
+        sessionCounts[ticket.session] += ticket.adultQuantity + ticket.childQuantity;
+      }
+    });
+
+    // Check the counts against the limit for each session
+    plan.sessions.forEach((session) => {
+      if (sessionLimit > 0 && sessionCounts[session] >= sessionLimit) {
+        sessionStatus[session] = "Full";
+      }
+    });
+
+    return res.status(200).json({ sessionCounts, sessionStatus });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+});
