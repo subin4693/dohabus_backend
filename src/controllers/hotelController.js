@@ -105,8 +105,8 @@ exports.getHotelById = catchAsync(async (req, res, next) => {
 
 exports.bookHotels = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  const userId = req.user.id; // Assuming user ID is available in req.user (e.g., from authentication middleware)
-  console.log(req.body);
+  const userId = req.user.id;
+  console.log(userId, req.body);
   // Destructure the booking details from req.body
   const {
     checkInDate,
@@ -147,20 +147,33 @@ exports.bookHotels = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+
 exports.getAllHotelsBookings = catchAsync(async (req, res, next) => {
-  console.log("working");
-  // const hotelBookings = await HotelBooking.find()
-  //   .populate("userId", "name email") // Populate userId with name and email (or other fields as needed)
-  //   .populate("hotelId", "name description") // Populate hotelId with name and location (or other fields as needed)
-  //   .exec();
+  console.log("Working");
+  try {
+    const hotelBookings = await HotelBooking.find()
+      .populate("userId", "name email") // Include user name and email
+      .populate({
+        path: "hotelId",
+        select: "title description", // Include hotel name and description
+        match: { _id: { $exists: true, $type: "objectId" } }
+      });
 
-  // console.log(hotelBookings);
+    if (!hotelBookings) {
+      return next(new Error("No hotel bookings found."));
+    }
 
-  res.status(200).json({
-    status: "success",
-    results: hotelBookings.length,
-    data: {
-      hotelBookings,
-    },
-  });
+    res.status(200).json({
+      status: "success",
+      results: hotelBookings.length,
+      data: {
+        hotelBookings,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
 });
+
+

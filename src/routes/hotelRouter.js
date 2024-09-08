@@ -2,6 +2,11 @@ const express = require("express");
 const router = express.Router();
 const hotelController = require("../controllers/hotelController");
 const verify = require("../utils/verifyToken");
+
+router
+  .route("/bookings")
+  .get(hotelController.getAllHotelsBookings);
+
 router
   .route("/")
   .post(hotelController.createHotel)
@@ -14,9 +19,6 @@ router
   .delete(hotelController.deleteHotel)
   .post(verify.verifyToken, hotelController.bookHotels);
 
-router
-  .route("/bookings")
 
-  .get(hotelController.getAllHotelsBookings);
 
 module.exports = router;
