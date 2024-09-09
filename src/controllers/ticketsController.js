@@ -44,23 +44,54 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     pickupLocation,
     dropLocation,
     coupon,
+    addons,
   } = req.body;
-  const user = req.user;
 
   try {
     const planDetails = await Plan.findById(plan);
     const planCategory = await Category.findById(category);
-    const userDetails = await User.findById(user.id);
+    const userDetails = { name: firstName + lastName };
 
     if (!planDetails) {
       return next(new AppError("Invalid plan selected", 400));
     }
     console.log("userDetails", userDetails.name);
+    const { adultPrice, childPrice, adultData, childData } = planDetails;
+    let totalAdultPrice = 0,
+      totalChildPrice = 0;
 
-    const adultPrice = planDetails.adultPrice || 0;
-    const childPrice = planDetails.childPrice || 0;
+    if (adultPrice || childPrice) {
+      totalAdultPrice = adultPrice * adultQuantity || 0;
+      totalChildPrice = childPrice * childQuantity || 0;
+    } else {
+      // Case 2: Calculate prices based on adultData and childData if adultPrice and childPrice are not present
 
-    let totalCost = adultPrice * adultQuantity + childQuantity * childPrice;
+      // Adult Data Calculation
+      if (adultData && adultQuantity > 0) {
+        const sortedAdultData = adultData.sort((a, b) => a.pax - b.pax); // Sort by pax ascending
+        const selectedAdultData = sortedAdultData
+          .filter((adult) => adult.pax <= adultQuantity)
+          .pop(); // Get the closest pax <= adultQuantity
+
+        totalAdultPrice = selectedAdultData ? selectedAdultData.price * adultQuantity : 0; // Use the selected price and multiply by adultQuantity
+      }
+
+      // Child Data Calculation
+      if (childData && childQuantity > 0) {
+        const sortedChildData = childData.sort((a, b) => a.pax - b.pax); // Sort by pax ascending
+        const selectedChildData = sortedChildData
+          .filter((child) => child.pax <= childQuantity)
+          .pop(); // Get the closest pax <= childQuantity
+
+        totalChildPrice = selectedChildData ? selectedChildData.price * childQuantity : 0; // Use the selected price and multiply by childQuantity
+      }
+    }
+
+    console.log(totalAdultPrice);
+    console.log(totalChildPrice);
+
+    let totalCost = totalAdultPrice + totalChildPrice;
+    console.log("totlal cost" + totalCost);
     let adultDiscountAmount = 0;
     let childDiscountAmount = 0;
     if (coupon) {
@@ -76,36 +107,58 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       }
 
       // Calculate total prices before discount
-      const totalAdultPrice = adultPrice * adultQuantity;
-      const totalChildPrice = childPrice * childQuantity;
 
       // Calculate discount for adults
       if (couponDetails.adultDiscountType === "percentage") {
         adultDiscountAmount = (totalAdultPrice * couponDetails.adultDiscountPrice) / 100;
       } else if (couponDetails.adultDiscountType === "price") {
-        adultDiscountAmount = couponDetails.adultDiscountPrice * adultQuantity;
+        adultDiscountAmount = couponDetails.adultDiscountPrice;
+        console.log("adult discount amount" + adultDiscountAmount);
       }
 
       // Calculate discount for children
       if (couponDetails.childDiscountType === "percentage") {
         childDiscountAmount = (totalChildPrice * couponDetails.childDiscountPrice) / 100;
       } else if (couponDetails.childDiscountType === "price") {
-        childDiscountAmount = couponDetails.childDiscountPrice * childQuantity;
+        childDiscountAmount = couponDetails.childDiscountPrice;
       }
 
-      const discountedAdultPrice = totalAdultPrice - adultDiscountAmount;
-      const discountedChildPrice = totalChildPrice - childDiscountAmount;
+      const discountedAdultPrice = totalAdultPrice - adultDiscountAmount || 0;
+      const discountedChildPrice = totalChildPrice - childDiscountAmount || 0;
 
       // Calculate the total cost
       totalCost = discountedAdultPrice + discountedChildPrice;
+
+      console.log(totalAdultPrice);
+      console.log(totalChildPrice);
+      console.log(discountedAdultPrice);
+      console.log(discountedChildPrice);
+      console.log(totalCost);
+      console.log(adultDiscountAmount + "-" + childDiscountAmount);
     }
+    let addOnTotalPrice = 0;
+    if (addons?.length > 0 && planDetails?.addOn?.length > 0) {
+      addons.forEach((addOnId) => {
+        const matchingAddOn = planDetails?.addOn?.find((addOn) => addOn._id == addOnId);
+        if (matchingAddOn) {
+          addOnTotalPrice += matchingAddOn.price;
+        }
+      });
+
+      // Multiply the add-on total by the adultCount and childCount
+
+      addOnTotalPrice = addOnTotalPrice * (adultQuantity + childQuantity);
+      console.log(addOnTotalPrice);
+      console.log("total cost" + totalCost);
+    }
+
     console.log({
-      user: user.id,
+      user: userDetails.name,
       category,
       plan,
-      price: totalCost,
-      adultQuantity,
-      childQuantity,
+      price: totalCost + addOnTotalPrice || 0,
+      adultQuantity: adultQuantity || 0,
+      childQuantity: childQuantity || 0,
       session,
       date,
       firstName,
@@ -113,16 +166,17 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       email,
       pickupLocation,
       dropLocation,
-      discountAmount: adultDiscountAmount + childDiscountAmount,
+      discountAmount: adultDiscountAmount + childDiscountAmount || 0,
       status: "Booked",
     });
+
     const ticket = await Ticket.create({
-      user: user.id,
+      user: userDetails.name,
       category,
       plan,
-      price: totalCost,
-      adultQuantity,
-      childQuantity,
+      price: totalCost + addOnTotalPrice || 0,
+      adultQuantity: adultQuantity || 0,
+      childQuantity: childQuantity || 0,
       session,
       date,
       firstName,
@@ -130,7 +184,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       email,
       pickupLocation,
       dropLocation,
-      discountAmount: adultDiscountAmount + childDiscountAmount,
+      discountAmount: adultDiscountAmount + childDiscountAmount || 0,
       status: "Booked",
     });
 

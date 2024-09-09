@@ -389,7 +389,7 @@ exports.getTickets = catchAsync(async (req, res, next) => {
     // Get today's date in ISO format without the time portion
     const today = new Date().setHours(0, 0, 0, 0);
 
-    // Aggregation pipeline to join tickets with users, plans, and categories
+    // Aggregation pipeline to join tickets with plans and categories
     const tickets = await Ticket.aggregate([
       {
         $match: {
@@ -409,17 +409,6 @@ exports.getTickets = catchAsync(async (req, res, next) => {
       },
       {
         $lookup: {
-          from: "users", // Join with users collection
-          localField: "user",
-          foreignField: "_id",
-          as: "userDetails",
-        },
-      },
-      {
-        $unwind: "$userDetails", // Deconstruct array field userDetails
-      },
-      {
-        $lookup: {
           from: "categories", // Join with categories collection
           localField: "category",
           foreignField: "_id",
@@ -435,8 +424,7 @@ exports.getTickets = catchAsync(async (req, res, next) => {
           "plan.coverImage": "$planDetails.coverImage",
           "plan.title": "$planDetails.title",
           "plan.description": "$planDetails.description",
-          "user.name": "$userDetails.name",
-          "user.email": "$userDetails.email",
+          "user.name": "$user", // Use the string user field directly
           "category.title": "$categoryDetails.title", // Include category title
           totalPrice: "$price",
           adultQuantity: "$adultQuantity",

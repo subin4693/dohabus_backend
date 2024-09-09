@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const ticketModel = new mongoose.Schema({
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     required: [true, "User id is required"],
     ref: "User",
   },

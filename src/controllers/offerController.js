@@ -80,7 +80,11 @@ exports.deleteOffer = catchAsync(async (req, res, next) => {
 
 exports.checkOffer = catchAsync(async (req, res, next) => {
   try {
-    const { couponCode, planId, childCount, adultCount } = req.body;
+    const { couponCode, planId, childCount, adultCount, addons } = req.body;
+    console.log("***");
+    console.log(addons);
+
+    console.log("***");
 
     const plan = await Plan.findById(planId);
     if (!plan) {
@@ -90,9 +94,15 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       });
     }
 
-    const { childPrice, adultPrice } = plan;
+    const { childPrice, adultPrice, adultData, childData, addOn } = plan;
 
-    const coupon = await Offer.findOne({ couponCode: couponCode, plan: planId, status: "active" });
+    const coupon = await Offer.findOne({
+      couponCode: couponCode,
+      plan: { $in: [planId] }, // Check if planId is in the plan array
+      status: "active",
+    });
+
+    console.log(coupon);
 
     if (!coupon) {
       return res.status(400).json({
@@ -107,9 +117,35 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
         message: "Coupon code is not valid at this time",
       });
     }
+    let addOnTotalPrice = 0;
+    let totalAdultPrice = 0,
+      totalChildPrice = 0;
 
-    const totalAdultPrice = adultPrice * adultCount;
-    const totalChildPrice = childPrice * childCount;
+    if (adultPrice || childPrice) {
+      totalAdultPrice = adultPrice * adultCount || 0;
+      totalChildPrice = childPrice * childCount || 0;
+    } else {
+      // Case 2: Calculate based on adultData and childData if prices are not present
+
+      // Adult Data Calculation
+      if (adultData && adultCount > 0) {
+        const sortedAdultData = adultData.sort((a, b) => a.pax - b.pax); // Sort by pax ascending
+        const selectedAdultData = sortedAdultData.filter((adult) => adult.pax <= adultCount).pop(); // Get the closest pax <= adultCount
+
+        totalAdultPrice = selectedAdultData ? selectedAdultData.price * adultCount : 0; // Use the selected price and multiply by the count
+      }
+
+      // Child Data Calculation
+      if (childData && childCount > 0) {
+        const sortedChildData = childData.sort((a, b) => a.pax - b.pax); // Sort by pax ascending
+        const selectedChildData = sortedChildData.filter((child) => child.pax <= childCount).pop(); // Get the closest pax <= childCount
+
+        totalChildPrice = selectedChildData ? selectedChildData.price * childCount : 0; // Use the selected price and multiply by the count
+      }
+    }
+
+    // totalAdultPrice = adultPrice * adultCount;
+    // totalChildPrice = childPrice * childCount;
 
     let adultDiscountAmount = 0;
 
@@ -117,7 +153,6 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       adultDiscountAmount = (totalAdultPrice * (100 - coupon.adultDiscountPrice)) / 100;
 
       // adultDiscountAmount = (totalAdultPrice * coupon.adultDiscountPrice) / 100;
-      console.log("working fine");
     } else if (adultCount > 0 && coupon.adultDiscountType === "price") {
       adultDiscountAmount = coupon.adultDiscountPrice;
     }
@@ -130,15 +165,36 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
     } else if (childCount > 0 && coupon.childDiscountType === "price") {
       childDiscountAmount = coupon.childDiscountPrice;
     }
+
+    if (addons?.length > 0) {
+      console.log(addons);
+
+      // Loop through add-on IDs and find matches in data.addOn
+      addons.forEach((addOnId) => {
+        const matchingAddOn = addOn?.find((addOn) => addOn._id == addOnId);
+        if (matchingAddOn) {
+          // Add the price of the matched add-on
+          addOnTotalPrice += matchingAddOn.price;
+        }
+      });
+
+      // Multiply the add-on total by the adultCount and childCount
+      addOnTotalPrice = addOnTotalPrice * (adultCount + childCount);
+      console.log("---" + addons);
+    }
+
     console.log(adultDiscountAmount);
+    console.log(childDiscountAmount);
+    console.log("total adultPrice: " + totalAdultPrice);
+    console.log("total chidprice : " + totalChildPrice);
 
     const totalDiscountAmount = adultDiscountAmount + childDiscountAmount;
     const totalPrice = totalAdultPrice + totalChildPrice;
     const discountedPrice = totalPrice - totalDiscountAmount;
 
     console.log({
-      discountedPrice: Math.max(0, discountedPrice), // Ensure price is not negative
-      originalPrice: totalPrice,
+      discountedPrice: Math.max(0, discountedPrice + addOnTotalPrice), // Ensure price is not negative
+      originalPrice: totalPrice + addOnTotalPrice,
       totalDiscountAmount,
       adultDiscountAmount,
       childDiscountAmount,
@@ -146,8 +202,8 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
     res.status(200).json({
       status: "success",
       data: {
-        discountedPrice: Math.max(0, discountedPrice), // Ensure price is not negative
-        originalPrice: totalPrice,
+        discountedPrice: Math.max(0, discountedPrice + addOnTotalPrice), // Ensure price is not negative
+        originalPrice: totalPrice + addOnTotalPrice,
         totalDiscountAmount,
         adultDiscountAmount,
         childDiscountAmount,

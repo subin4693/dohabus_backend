@@ -4,11 +4,11 @@ const ticketsController = require("../controllers/ticketsController");
 
 const router = express.Router();
 
-router.route("/post").get(ticketsController.getTicketCounts);
+router.route("/counts").post(ticketsController.getTicketCounts);
 
 router
   .route("/")
-  .post(verify.verifyToken, ticketsController.bookTicket)
+  .post(ticketsController.bookTicket)
   .get(verify.verifyToken, ticketsController.getTickets);
 
 router

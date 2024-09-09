@@ -9,7 +9,7 @@ router
   .get(offerController.getOffer)
   .post(offerController.createOffer);
 
-router.route("/apply-discount").post(verify.verifyToken, offerController.checkOffer);
+router.route("/apply-discount").post(offerController.checkOffer);
 
 router
   .route("/:id")
