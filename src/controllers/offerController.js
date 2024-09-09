@@ -80,7 +80,8 @@ exports.deleteOffer = catchAsync(async (req, res, next) => {
 
 exports.checkOffer = catchAsync(async (req, res, next) => {
   try {
-    const { couponCode, planId, childCount, adultCount, addons } = req.body;
+    const { couponCode, planId, childCount = 0, adultCount = 0, addons = [] } = req.body;
+
     console.log("***");
     console.log(addons);
 
@@ -181,6 +182,7 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       // Multiply the add-on total by the adultCount and childCount
       addOnTotalPrice = addOnTotalPrice * (adultCount + childCount);
       console.log("---" + addons);
+      console.log("adult and child count" + adultCount + "" + childCount);
     }
 
     console.log(adultDiscountAmount);
@@ -191,7 +193,8 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
     const totalDiscountAmount = adultDiscountAmount + childDiscountAmount;
     const totalPrice = totalAdultPrice + totalChildPrice;
     const discountedPrice = totalPrice - totalDiscountAmount;
-
+    console.log("total price " + totalPrice);
+    console.log("addon total price " + addOnTotalPrice);
     console.log({
       discountedPrice: Math.max(0, discountedPrice + addOnTotalPrice), // Ensure price is not negative
       originalPrice: totalPrice + addOnTotalPrice,
