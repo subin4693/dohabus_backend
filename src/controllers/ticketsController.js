@@ -245,6 +245,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 
 exports.getTickets = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
+  console.log(userId)
   const tickets = await Ticket.find({ user: userId });
   console.log(tickets);
   res.status(200).json({
@@ -361,4 +362,27 @@ exports.getTicketCounts = catchAsync(async (req, res, next) => {
     console.error(error);
     return res.status(500).json({ message: "Server Error" });
   }
+});
+
+
+exports.getTicketById = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const ticket = await Ticket.findById(id);
+  const plan = await Plan.findById(ticket.plan);
+  const planCategory = await Category.findById(ticket.category
+    );
+  // console.log(plan)
+
+  if (!ticket) {
+    return next(new AppError("Ticket not found", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      ticket,
+      plan,
+      planCategory
+    },
+  });
 });

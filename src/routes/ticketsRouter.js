@@ -13,7 +13,9 @@ router
 
 router
   .route("/:id")
+  .get(ticketsController.getTicketById)
   .delete(verify.verifyToken, ticketsController.deleteTicket)
   .put(verify.verifyToken, ticketsController.editTicket);
+
 
 module.exports = router;
