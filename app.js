@@ -18,6 +18,7 @@ const locationRouter = require("./src/routes/locationRouter");
 const bannerRouter = require("./src/routes/bannerRouter");
 const blogRouter = require("./src/routes/blogRouter");
 const offerRouter = require("./src/routes/offerRouter");
+const offerbannerRouter = require("./src/routes/offerbannerRouter");
 
 const transportationRouter = require("./src/routes/transportationRouter");
 
@@ -57,6 +58,7 @@ app.use("/api/v1/banner", bannerRouter);
 app.use("/api/v1/transportations", transportationRouter);
 
 app.use("/api/v1/offers", offerRouter);
+app.use("/api/v1/offerbanner", offerbannerRouter);
 
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
