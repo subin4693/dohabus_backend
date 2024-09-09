@@ -21,13 +21,14 @@ const offerRouter = require("./src/routes/offerRouter");
 const offerbannerRouter = require("./src/routes/offerbannerRouter");
 
 const transportationRouter = require("./src/routes/transportationRouter");
-
+const cron = require("node-cron");
 const cors = require("cors");
 const AppError = require("./src/utils/appError");
 const globalErrorHandler = require("./src/controllers/errorController");
 
+const { sendGmail } = require("./scheduler");
 let app = express();
-
+let weekCounter = 0;
 app.use(
   cors({
     origin: ["http://localhost:5173", "https://main--boisterous-dasik-d64956.netlify.app"],
@@ -38,6 +39,10 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// cron.schedule("0 9 * * *", () => {
+//   console.log("Scheduled called once a day at 9 AM");
+//   sendGmail();
+// });
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/categorys", categoryRouter);
 app.use("/api/v1/plans", planRouter);
