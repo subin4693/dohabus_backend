@@ -5,11 +5,13 @@ const ticketsController = require("../controllers/ticketsController");
 const router = express.Router();
 
 router.route("/counts").post(ticketsController.getTicketCounts);
+router.route("/all").get(ticketsController.getAllTickets);
 
 router
   .route("/")
+  .get(verify.verifyToken, ticketsController.getTickets)
   .post(ticketsController.bookTicket)
-  .get(verify.verifyToken, ticketsController.getTickets);
+
 
 router
   .route("/:id")

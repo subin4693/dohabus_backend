@@ -256,6 +256,28 @@ exports.getTickets = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getAllTickets = catchAsync(async (req, res, next) => {
+  const tickets = await Ticket.find()
+    .populate({
+      path: 'plan', // Field in Ticket schema that references the Plan model
+      select: 'title coverImage', // Select the fields you want from the Plan model
+    })
+    .populate({
+      path: 'category', // Field in Ticket schema that references the Category model
+      select: 'title description', // Select the fields you want from the Category model
+    })
+    .select('firstName lastName email category plan price adultQuantity childQuantity date status'); // Including firstName and lastName in the ticket query
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      tickets, // Tickets now include firstName, lastName, and other fields
+    },
+  });
+});
+
+
+
 exports.deleteTicket = catchAsync(async (req, res, next) => {
   const ticketId = req.params.id;
 
@@ -370,7 +392,7 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
   const ticket = await Ticket.findById(id);
   const plan = await Plan.findById(ticket.plan);
   const planCategory = await Category.findById(ticket.category
-    );
+  );
   // console.log(plan)
 
   if (!ticket) {
