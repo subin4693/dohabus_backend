@@ -13,7 +13,7 @@ exports.getReviews = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllReviews = catchAsync(async (req, res, next) => {
-  const reviews = await Review.find()
+  const reviews = await Review.find({ imageURL: { $exists: true, $ne: null } }) // Filter reviews that have an imageURL
     .populate({
       path: "user",
       select: "name email",
@@ -22,6 +22,7 @@ exports.getAllReviews = catchAsync(async (req, res, next) => {
       path: "plan",
       select: "title",
     });
+  console.log(reviews);
   return res.status(200).json({
     status: "success",
     data: reviews,
