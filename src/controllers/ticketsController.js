@@ -47,6 +47,10 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     addons,
   } = req.body;
 
+
+  console.log("addons", addons)
+
+
   try {
     const planDetails = await Plan.findById(plan);
     const planCategory = await Category.findById(category);
@@ -137,18 +141,20 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       console.log(adultDiscountAmount + "-" + childDiscountAmount);
     }
     let addOnTotalPrice = 0;
+    let addonFeatures = []
     if (addons?.length > 0 && planDetails?.addOn?.length > 0) {
       addons.forEach((addOnId) => {
         const matchingAddOn = planDetails?.addOn?.find((addOn) => addOn._id == addOnId);
+        addonFeatures.push(matchingAddOn?.en);
         if (matchingAddOn) {
           addOnTotalPrice += matchingAddOn.price;
         }
       });
-
+      console.log("addOnTotalPrice+++++++++++1", addOnTotalPrice);
       // Multiply the add-on total by the adultCount and childCount
 
-      addOnTotalPrice = addOnTotalPrice * (adultQuantity + childQuantity);
-      console.log(addOnTotalPrice);
+      addOnTotalPrice = addOnTotalPrice * ( adultQuantity || 0 + childQuantity || 0);
+      console.log("addOnTotalPrice+++++++++++", addOnTotalPrice,);
       console.log("total cost" + totalCost);
     }
 
@@ -168,8 +174,11 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       dropLocation,
       discountAmount: adultDiscountAmount + childDiscountAmount || 0,
       status: "Booked",
+      addonFeatures
     });
 
+    let allcost = totalCost + addOnTotalPrice
+    console.log("Cost?????????????????????/", allcost)
     const ticket = await Ticket.create({
       user: userDetails.name,
       category,
@@ -185,6 +194,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       pickupLocation,
       dropLocation,
       discountAmount: adultDiscountAmount + childDiscountAmount || 0,
+      addonFeatures,
       status: "Booked",
     });
 
@@ -259,19 +269,19 @@ exports.getTickets = catchAsync(async (req, res, next) => {
 exports.getAllTickets = catchAsync(async (req, res, next) => {
   const tickets = await Ticket.find()
     .populate({
-      path: 'plan', // Field in Ticket schema that references the Plan model
-      select: 'title coverImage', // Select the fields you want from the Plan model
+      path: 'plan',
+      select: 'title coverImage',
     })
     .populate({
-      path: 'category', // Field in Ticket schema that references the Category model
-      select: 'title description', // Select the fields you want from the Category model
+      path: 'category',
+      select: 'title description',
     })
     .select('firstName lastName email category plan price adultQuantity childQuantity date status'); // Including firstName and lastName in the ticket query
 
   res.status(200).json({
     status: "success",
     data: {
-      tickets, // Tickets now include firstName, lastName, and other fields
+      tickets,
     },
   });
 });

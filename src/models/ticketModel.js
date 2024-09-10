@@ -58,11 +58,16 @@ const ticketModel = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  addonFeatures: {
+    type: [String],
+    default: [],
+  },
   status: {
     type: String,
     enum: ["Booked", "Canceled"],
     default: "Booked",
   },
+
 });
 const Ticket = new mongoose.model("Ticket", ticketModel);
 
