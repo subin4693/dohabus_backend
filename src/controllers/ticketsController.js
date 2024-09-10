@@ -47,9 +47,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     addons,
   } = req.body;
 
-
-  console.log("addons", addons)
-
+  console.log("addons", addons);
 
   try {
     const planDetails = await Plan.findById(plan);
@@ -61,6 +59,29 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     }
     console.log("userDetails", userDetails.name);
     const { adultPrice, childPrice, adultData, childData } = planDetails;
+    const sessionLimit = planDetails.limit;
+
+    const targetDate = new Date(date);
+    const tickets = await Ticket.find({
+      plan: plan,
+      session: session,
+      date: targetDate,
+      status: "Booked",
+    });
+
+    let totalBookedTickets = 0;
+    tickets.forEach((ticket) => {
+      totalBookedTickets += ticket.adultQuantity + ticket.childQuantity;
+    });
+
+    const totalNewTickets = adultQuantity + childQuantity;
+    if (sessionLimit > 0 && totalBookedTickets + totalNewTickets > sessionLimit) {
+      const availableTickets = sessionLimit - totalBookedTickets;
+      return res.status(400).json({
+        message: `Only ${availableTickets} tickets are available for this session.`,
+      });
+    }
+
     let totalAdultPrice = 0,
       totalChildPrice = 0;
 
@@ -141,7 +162,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       console.log(adultDiscountAmount + "-" + childDiscountAmount);
     }
     let addOnTotalPrice = 0;
-    let addonFeatures = []
+    let addonFeatures = [];
     if (addons?.length > 0 && planDetails?.addOn?.length > 0) {
       addons.forEach((addOnId) => {
         const matchingAddOn = planDetails?.addOn?.find((addOn) => addOn._id == addOnId);
@@ -153,8 +174,8 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       console.log("addOnTotalPrice+++++++++++1", addOnTotalPrice);
       // Multiply the add-on total by the adultCount and childCount
 
-      addOnTotalPrice = addOnTotalPrice * ( adultQuantity || 0 + childQuantity || 0);
-      console.log("addOnTotalPrice+++++++++++", addOnTotalPrice,);
+      addOnTotalPrice = addOnTotalPrice * (adultQuantity || 0 + childQuantity || 0);
+      console.log("addOnTotalPrice+++++++++++", addOnTotalPrice);
       console.log("total cost" + totalCost);
     }
 
@@ -174,11 +195,11 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       dropLocation,
       discountAmount: adultDiscountAmount + childDiscountAmount || 0,
       status: "Booked",
-      addonFeatures
+      addonFeatures,
     });
 
-    let allcost = totalCost + addOnTotalPrice
-    console.log("Cost?????????????????????/", allcost)
+    let allcost = totalCost + addOnTotalPrice;
+    console.log("Cost?????????????????????/", allcost);
     const ticket = await Ticket.create({
       user: userDetails.name,
       category,
@@ -255,7 +276,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 
 exports.getTickets = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
-  console.log(userId)
+  console.log(userId);
   const tickets = await Ticket.find({ user: userId });
   console.log(tickets);
   res.status(200).json({
@@ -269,14 +290,14 @@ exports.getTickets = catchAsync(async (req, res, next) => {
 exports.getAllTickets = catchAsync(async (req, res, next) => {
   const tickets = await Ticket.find()
     .populate({
-      path: 'plan',
-      select: 'title coverImage',
+      path: "plan",
+      select: "title coverImage",
     })
     .populate({
-      path: 'category',
-      select: 'title description',
+      path: "category",
+      select: "title description",
     })
-    .select('firstName lastName email category plan price adultQuantity childQuantity date status'); // Including firstName and lastName in the ticket query
+    .select("firstName lastName email category plan price adultQuantity childQuantity date status"); // Including firstName and lastName in the ticket query
 
   res.status(200).json({
     status: "success",
@@ -285,8 +306,6 @@ exports.getAllTickets = catchAsync(async (req, res, next) => {
     },
   });
 });
-
-
 
 exports.deleteTicket = catchAsync(async (req, res, next) => {
   const ticketId = req.params.id;
@@ -396,13 +415,11 @@ exports.getTicketCounts = catchAsync(async (req, res, next) => {
   }
 });
 
-
 exports.getTicketById = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const ticket = await Ticket.findById(id);
   const plan = await Plan.findById(ticket.plan);
-  const planCategory = await Category.findById(ticket.category
-  );
+  const planCategory = await Category.findById(ticket.category);
   // console.log(plan)
 
   if (!ticket) {
@@ -414,7 +431,7 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
     data: {
       ticket,
       plan,
-      planCategory
+      planCategory,
     },
   });
 });
