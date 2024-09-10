@@ -33,8 +33,8 @@ const signature = `
 exports.bookTicket = catchAsync(async (req, res, next) => {
   const {
     date,
-    adultQuantity,
-    childQuantity,
+    adultQuantity = 0,
+    childQuantity = 0,
     session,
     category,
     plan,
@@ -75,6 +75,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     });
 
     const totalNewTickets = adultQuantity + childQuantity;
+
     if (sessionLimit > 0 && totalBookedTickets + totalNewTickets > sessionLimit) {
       const availableTickets = sessionLimit - totalBookedTickets;
       return res.status(400).json({
@@ -134,17 +135,17 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       // Calculate total prices before discount
 
       // Calculate discount for adults
-      if (couponDetails.adultDiscountType === "percentage") {
+      if (couponDetails.adultDiscountType === "percentage" && adultQuantity > 0) {
         adultDiscountAmount = (totalAdultPrice * couponDetails.adultDiscountPrice) / 100;
-      } else if (couponDetails.adultDiscountType === "price") {
+      } else if (couponDetails.adultDiscountType === "price" && adultQuantity > 0) {
         adultDiscountAmount = couponDetails.adultDiscountPrice;
         console.log("adult discount amount" + adultDiscountAmount);
       }
 
       // Calculate discount for children
-      if (couponDetails.childDiscountType === "percentage") {
+      if (couponDetails.childDiscountType === "percentage" && childQuantity > 0) {
         childDiscountAmount = (totalChildPrice * couponDetails.childDiscountPrice) / 100;
-      } else if (couponDetails.childDiscountType === "price") {
+      } else if (couponDetails.childDiscountType === "price" && childQuantity > 0) {
         childDiscountAmount = couponDetails.childDiscountPrice;
       }
 
@@ -173,8 +174,10 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       });
       console.log("addOnTotalPrice+++++++++++1", addOnTotalPrice);
       // Multiply the add-on total by the adultCount and childCount
-
-      addOnTotalPrice = addOnTotalPrice * (adultQuantity || 0 + childQuantity || 0);
+      let tt = 0;
+      if (childQuantity && childQuantity > 0) tt += childQuantity;
+      if (adultQuantity && adultQuantity > 0) tt += adultQuantity;
+      addOnTotalPrice = addOnTotalPrice * tt;
       console.log("addOnTotalPrice+++++++++++", addOnTotalPrice);
       console.log("total cost" + totalCost);
     }
@@ -297,7 +300,9 @@ exports.getAllTickets = catchAsync(async (req, res, next) => {
       path: "category",
       select: "title description",
     })
-    .select("firstName lastName email category plan price adultQuantity childQuantity date status"); // Including firstName and lastName in the ticket query
+    .select(
+      "firstName lastName email category plan price adultQuantity childQuantity date status pickupLocation dropLocation",
+    ); // Including firstName and lastName in the ticket query
 
   res.status(200).json({
     status: "success",
