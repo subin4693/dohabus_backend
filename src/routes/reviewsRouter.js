@@ -1,17 +1,18 @@
-const express = require("express");
-const verify = require("../utils/verifyToken");
-const reviewsController = require("../controllers/reviewsController");
-const verifyProduct = require("../utils/verifyProduct");
+const express = require('express');
+const verify = require('../utils/verifyToken'); 
+const subscriberController = require('../controllers/subscriberController');
 
 const router = express.Router();
 
-router.route("/all").get(reviewsController.getAllReviews);
+router.route("/all").get(subscriberController.getAllSubscribers);
 
 router
-	.route("/:planId")
-	.get(reviewsController.getReviews)
-	.post(verifyProduct.verifyToken, reviewsController.createReview);
+  .route("/create")
+  .post(verify.verifyToken, subscriberController.createSubscriber);
 
-router.route("/:reviewId").delete(verify.verifyToken, reviewsController.deleteReview);
+router
+  .route("/:id")
+  .patch(verify.verifyToken, subscriberController.editSubscriber)
+  .delete(verify.verifyToken, subscriberController.deleteSubscriber);
 
 module.exports = router;

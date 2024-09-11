@@ -17,6 +17,7 @@ const footerRoutes = require("./src/routes/footerRouter");
 const locationRouter = require("./src/routes/locationRouter");
 const bannerRouter = require("./src/routes/bannerRouter");
 const blogRouter = require("./src/routes/blogRouter");
+const subscriberRoute = require("./src/routes/subscriberRouter");
 const offerRouter = require("./src/routes/offerRouter");
 const offerbannerRouter = require("./src/routes/offerbannerRouter");
 
@@ -57,6 +58,7 @@ app.use("/api/v1/admin", adminRoutes);
 
 app.use("/api/v1/about", aboutRouter);
 app.use("/api/v1/blogs", blogRouter);
+app.use("/api/v1/subscribe", subscriberRoute);
 app.use("/api/v1/footer", footerRoutes);
 app.use("/api/v1/locations", locationRouter);
 app.use("/api/v1/banner", bannerRouter);
