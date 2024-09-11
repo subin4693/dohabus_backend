@@ -23,7 +23,7 @@ const signature = `
     </div>
     <div style="display: flex; justify-content: center; align-items: center; margin-top: 10px; padding: 10px;">
     <div style="display: flex; align-items: center;">
-        <img src="https://dohabus.com/wp-content/uploads/2020/04/Doha-Bus-Logo.png" alt="Signature Image" style="width: 100px; height: 100px; margin-right: 10px;">
+        <img src="https://eng.dohabus.com/English/images/LOGOFOOTER.png" alt="Signature Image" style="width: 100px; height: 100px; margin-right: 10px; object-fit: cover;">
         <h1 style="color: yellow; font-size: 2rem; margin: 0;">
             <b>Doha Bus</b>
         </h1>
@@ -222,46 +222,48 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       status: "Booked",
     });
 
-    // try {
-    //   const emailContent = `
-    //     <h3 style="font-family: Arial, sans-serif; color: #333;">
-    //         Hello ${userDetails.name},
-    //     </h3>
-    //     <p style="font-family: Arial, sans-serif; color: #333;">
-    //         Thank you for purchasing tickets for ${planDetails.title.en}. We are thrilled to have you join us for this exciting event.
-    //         Your support means a lot to us, and we are committed to providing you with an unforgettable experience.
-    //         From the moment you arrive, we hope you enjoy the vibrant atmosphere, engaging performances, and the overall ambiance
-    //         that makes this event special. We look forward to seeing you and hope you have a fantastic time!
-    //     </p>
-    //     <p style="font-family: Arial, sans-serif; color: #333;">
-    //         Here are the purchase details:
-    //     </p>
-    //     <h4 style="font-family: Arial, sans-serif; color: #333;">
-    //         Tour Name: ${planDetails.title.en}
-    //     </h4>
-    //     <h4 style="font-family: Arial, sans-serif; color: #333;">
-    //         Number Of Tickets: ${tt}
-    //     </h4>
-    //     <h4 style="font-family: Arial, sans-serif; color: #333;">
-    //         Total Amount: ${totalCost} QAR
-    //     </h4>
-    //     <h4 style="font-family: Arial, sans-serif; color: #333;">
-    //         Category: ${planCategory.title.en}
-    //     </h4>
-    //     <br>
-    //     ${signature}
-    // `;
+    try {
+      const emailContent = `
+        <h3 style="font-family: Arial, sans-serif; color: #333;">
+            Hello ${userDetails.name},
+        </h3>
+        <p style="font-family: Arial, sans-serif; color: #333;">
+            Thank you for purchasing tickets for ${
+              planDetails.title.en
+            }. We are thrilled to have you join us for this exciting event.
+            Your support means a lot to us, and we are committed to providing you with an unforgettable experience.
+            From the moment you arrive, we hope you enjoy the vibrant atmosphere, engaging performances, and the overall ambiance
+            that makes this event special. We look forward to seeing you and hope you have a fantastic time!
+        </p>
+        <p style="font-family: Arial, sans-serif; color: #333;">
+            Here are the purchase details:
+        </p>
+        <h4 style="font-family: Arial, sans-serif; color: #333;">
+            Tour Name: ${planDetails.title.en}
+        </h4>
+        <h4 style="font-family: Arial, sans-serif; color: #333;">
+            Number Of Tickets: ${adultQuantity + childQuantity}
+        </h4>
+        <h4 style="font-family: Arial, sans-serif; color: #333;">
+            Total Amount: ${allcost} QAR
+        </h4>
+        <h4 style="font-family: Arial, sans-serif; color: #333;">
+            Category: ${planCategory.title.en}
+        </h4>
+        <br>
+        ${signature}
+    `;
 
-    //   await transporter.sendMail({
-    //     to: user.email,
-    //     subject: `Hello ${userDetails.name}, Thank you for purchasing ${planDetails.title.en} tickets`,
-    //     html: emailContent,
-    //   });
-    //   console.log("Email has been sent");
-    // } catch (error) {
-    //   console.log(error.message);
-    //   return res.status(400).json({ message: error.message });
-    // }
+      await transporter.sendMail({
+        to: email,
+        subject: `Hello ${userDetails.name}, Thank you for purchasing ${planDetails.title.en} tickets`,
+        html: emailContent,
+      });
+      console.log("Email has been sent");
+    } catch (error) {
+      console.log(error.message);
+      return res.status(400).json({ message: error.message });
+    }
 
     res.status(201).json({
       status: "success",
