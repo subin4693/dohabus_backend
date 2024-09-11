@@ -99,7 +99,7 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
 
     const coupon = await Offer.findOne({
       couponCode: couponCode,
-      plan: { $in: [planId] }, // Check if planId is in the plan array
+      plan: planId, // Check if planId is in the plan array
       status: "active",
     });
 
@@ -151,7 +151,7 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
     let adultDiscountAmount = 0;
 
     if (adultCount > 0 && coupon.adultDiscountType === "percentage") {
-      adultDiscountAmount = (totalAdultPrice * (100 - coupon.adultDiscountPrice)) / 100;
+      adultDiscountAmount = (totalAdultPrice * coupon.adultDiscountPrice) / 100;
 
       // adultDiscountAmount = (totalAdultPrice * coupon.adultDiscountPrice) / 100;
     } else if (adultCount > 0 && coupon.adultDiscountType === "price") {
@@ -160,7 +160,8 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
 
     let childDiscountAmount = 0;
     if (childCount > 0 && coupon.childDiscountType === "percentage") {
-      childDiscountAmount = (totalChildPrice * (100 - coupon.childDiscountPrice)) / 100;
+      childDiscountAmount = (totalChildPrice * coupon.childDiscountPrice) / 100;
+
       console.log(childDiscountAmount);
       // childDiscountAmount = (totalChildPrice * coupon.childDiscountPrice) / 100;
     } else if (childCount > 0 && coupon.childDiscountType === "price") {
