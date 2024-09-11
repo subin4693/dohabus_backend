@@ -22,11 +22,11 @@ const signature = `
         <p style="font-family: Arial, sans-serif; color: #333;"><b>Doha Bus</b></p>
     </div>
     <div style="display: flex; justify-content: center; align-items: center; margin-top: 10px; padding: 10px;">
-    <div style="display: flex; align-items: center;">
-        <img src="https://eng.dohabus.com/English/images/LOGOFOOTER.png" alt="Signature Image" style="width: 100px; height: 100px; margin-right: 10px; object-fit: cover;">
-        <h1 style="color: yellow; font-size: 2rem; margin: 0;">
-            <b>Doha Bus</b>
-        </h1>
+    <div style="display: flex; align-items: center; justify-content:center;">
+       <div> <img src="https://eng.dohabus.com/English/images/LOGOFOOTER.png" alt="Signature Image" style="width: 100px; height: 100px; margin-right: 10px; object-fit: cover;"></div>
+       <div> <h1 style="color: yellow; font-size: 2rem; margin: 0;">
+       <b>Doha Bus</b>
+   </h1></div>
     </div>
 </div>
 `;
