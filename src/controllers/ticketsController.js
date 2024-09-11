@@ -23,7 +23,7 @@ const signature = `
     </div>
     <div style="display: flex; justify-content: center; align-items: center; margin-top: 10px; padding: 10px;">
     <div style="display: flex; align-items: center;">
-        <img src="https://dohabus.com/wp-content/uploads/2020/04/Doha-Bus-Logo.png" alt="Signature Image" style="width: 100px; height: 100px; margin-right: 10px;">
+        <img src="https://eng.dohabus.com/English/images/LOGOFOOTER.png" alt="Signature Image" style="width: 100px; height: 100px; margin-right: 10px; object-fit: cover;">
         <h1 style="color: yellow; font-size: 2rem; margin: 0;">
             <b>Doha Bus</b>
         </h1>
@@ -240,10 +240,10 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
             Tour Name: ${planDetails.title.en}
         </h4>
         <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Number Of Tickets: ${totalQuantity}
+            Number Of Tickets: ${adultQuantity+childQuantity}
         </h4>
         <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Total Amount: ${totalCost} QAR
+            Total Amount: ${allcost} QAR
         </h4>
         <h4 style="font-family: Arial, sans-serif; color: #333;">
             Category: ${planCategory.title.en}
@@ -253,7 +253,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     `;
 
       await transporter.sendMail({
-        to: user.email,
+        to: email,
         subject: `Hello ${userDetails.name}, Thank you for purchasing ${planDetails.title.en} tickets`,
         html: emailContent,
       });
