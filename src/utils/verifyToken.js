@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const catchAsync = require("./catchAsync");
 const appError = require("./appError");
-const User = require("../models/userModel")
+const User = require("../models/userModel");
 
 exports.verifyToken = catchAsync(async (req, res, next) => {
   const testToken = req.cookies.token;
@@ -19,7 +19,7 @@ exports.verifyToken = catchAsync(async (req, res, next) => {
   }
 
   const decoded = jwt.verify(token, process.env.JWT_SECRECT);
-  const name = await User.findById(decoded.id)
+  const name = await User.findById(decoded.id);
   req.user = {
     name: name.name,
     id: decoded.id,

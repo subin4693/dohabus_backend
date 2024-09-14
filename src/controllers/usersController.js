@@ -38,7 +38,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 exports.signin = catchAsync(async (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
-
+  console.log(req.body);
   if (!email || !password) {
     const error = new AppError("Please enter mail id and password for login", 400);
     return next(error);
@@ -66,8 +66,8 @@ exports.signin = catchAsync(async (req, res, next) => {
     },
   );
 
-  // var expirationDate = new Date();
-  // expirationDate.setDate(expirationDate.getDate() + 30);
+  var expirationDate = new Date();
+  expirationDate.setDate(expirationDate.getDate() + 30);
 
   res.cookie("token", "bearer " + token);
 

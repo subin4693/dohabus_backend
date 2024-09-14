@@ -3,6 +3,8 @@ const catchAsync = require("./catchAsync");
 const appError = require("./appError");
 
 exports.verifyAdminToken = catchAsync(async (req, res, next) => {
+  console.log("product verify token called");
+
   const testToken = req.cookies.token;
 
   let token;
@@ -19,7 +21,7 @@ exports.verifyAdminToken = catchAsync(async (req, res, next) => {
 
   const decoded = jwt.verify(token, process.env.JWT_SECRECT);
 
-  if (decoded.role !== 'admin') {
+  if (decoded.role !== "admin") {
     return res.status(403).json({
       status: "fail",
       message: "You do not have permission to perform this action",

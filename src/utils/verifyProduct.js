@@ -3,6 +3,7 @@ const catchAsync = require("./catchAsync");
 const appError = require("./appError");
 
 exports.verifyToken = catchAsync(async (req, res, next) => {
+  console.log("product verify token called");
   const testToken = req.cookies.token;
 
   let token;

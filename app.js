@@ -34,8 +34,33 @@ app.use(
   cors({
     origin: ["http://localhost:5173", "https://main--boisterous-dasik-d64956.netlify.app"],
     credentials: true,
+    sameSite: "none",
   }),
 );
+
+// const allowedOrigins = [
+//   "http://localhost:5173",
+//   "https://main--boisterous-dasik-d64956.netlify.app",
+// ];
+
+// app.use((req, res, next) => {
+//   const origin = req.headers.origin;
+//   if (allowedOrigins.includes(origin)) {
+//     res.header("Access-Control-Allow-Origin", origin);
+//   }
+//   res.header("Access-Control-Allow-Credentials", "true");
+//   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+//   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization,token, cookies");
+//   next();
+// });
+
+// app.options("*", (req, res) => {
+//   res.header("Access-Control-Allow-Origin", req.headers.origin);
+//   res.header("Access-Control-Allow-Credentials", "true");
+//   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+//   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, token, cookies");
+//   res.sendStatus(200);
+// });
 
 app.use(express.json());
 app.use(cookieParser());
