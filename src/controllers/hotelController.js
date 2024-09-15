@@ -104,10 +104,13 @@ exports.getHotelById = catchAsync(async (req, res, next) => {
 });
 
 exports.bookHotels = catchAsync(async (req, res, next) => {
+  console.log("1");
+  
   const { id } = req.params;
-  const userId = req.user.id;
-  console.log(userId, req.body);
-  // Destructure the booking details from req.body
+  const userId = req.user ? req.user.id : null;
+  
+  console.log("userId", userId);
+
   const {
     checkInDate,
     checkOutDate,
@@ -115,16 +118,16 @@ exports.bookHotels = catchAsync(async (req, res, next) => {
     numberOfChildren,
     numberOfRooms,
     mealPlan,
-
     airportTransfers,
     additionalRequest,
     email,
     name,
   } = req.body;
 
-  // Create a new booking entry
-  const newBooking = await HotelBooking.create({
-    userId,
+  console.log("done 1");
+
+  // Create booking object with or without userId
+  const newBookingData = {
     hotelId: id,
     checkInDate,
     checkOutDate,
@@ -132,12 +135,19 @@ exports.bookHotels = catchAsync(async (req, res, next) => {
     numberOfChildren,
     numberOfRooms,
     mealPlan,
-
     airportTransfers,
     additionalRequest,
     email,
     name,
-  });
+  };
+
+  if (userId) {
+    newBookingData.userId = userId; 
+  }
+
+  const newBooking = await HotelBooking.create(newBookingData);
+
+  console.log("done 2");
 
   // Respond with the created booking
   res.status(201).json({
@@ -147,6 +157,7 @@ exports.bookHotels = catchAsync(async (req, res, next) => {
     },
   });
 });
+
 
 
 exports.getAllHotelsBookings = catchAsync(async (req, res, next) => {

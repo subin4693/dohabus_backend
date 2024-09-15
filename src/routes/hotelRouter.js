@@ -17,7 +17,7 @@ router
   .get(hotelController.getHotelById)
   .put(hotelController.updateHotel)
   .delete(hotelController.deleteHotel)
-  .post(verify.verifyToken, hotelController.bookHotels);
+  .post(hotelController.bookHotels);
 
 
 
