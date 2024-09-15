@@ -43,7 +43,7 @@ exports.signin = catchAsync(async (req, res, next) => {
     const error = new AppError("Please enter mail id and password for login", 400);
     return next(error);
   }
-
+ 
   const user = await User.findOne({ email });
 
   if (!user) {
