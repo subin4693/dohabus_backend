@@ -228,9 +228,8 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
             Hello ${userDetails.name},
         </h3>
         <p style="font-family: Arial, sans-serif; color: #333;">
-            Thank you for purchasing tickets for ${
-              planDetails.title.en
-            }. We are thrilled to have you join us for this exciting event.
+            Thank you for purchasing tickets for ${planDetails.title.en
+        }. We are thrilled to have you join us for this exciting event.
             Your support means a lot to us, and we are committed to providing you with an unforgettable experience.
             From the moment you arrive, we hope you enjoy the vibrant atmosphere, engaging performances, and the overall ambiance
             that makes this event special. We look forward to seeing you and hope you have a fantastic time!
@@ -253,11 +252,48 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         <br>
         ${signature}
     `;
+      const emailContentFordohabus = `
+    <h3 style="font-family: Arial, sans-serif; color: #333;">
+        Dear DohaBus Team,
+    </h3>
+    <p style="font-family: Arial, sans-serif; color: #333;">
+        We would like to inform you that a new booking has been made on your website by ${userDetails.name}.
+    </p>
+    <p style="font-family: Arial, sans-serif; color: #333;">
+        Below are the details of the purchase:
+    </p>
+    <h4 style="font-family: Arial, sans-serif; color: #333;">
+        Tour Name: ${planDetails.title.en}
+    </h4>
+    <h4 style="font-family: Arial, sans-serif; color: #333;">
+        Number Of Tickets: ${adultQuantity + childQuantity}
+    </h4>
+    <h4 style="font-family: Arial, sans-serif; color: #333;">
+        Total Amount: ${allcost} QAR
+    </h4>
+    <h4 style="font-family: Arial, sans-serif; color: #333;">
+        Category: ${planCategory.title.en}
+    </h4>
+    <p style="font-family: Arial, sans-serif; color: #333;">
+        Please ensure all necessary arrangements are made to accommodate this booking. Feel free to reach out if any further details are required.
+    </p>
+    <p style="font-family: Arial, sans-serif; color: #333;">
+        Thank you for your attention.
+    </p>
+    <br>
+    ${signature}
+  `;
+
 
       await transporter.sendMail({
         to: email,
         subject: `Hello ${userDetails.name}, Thank you for purchasing ${planDetails.title.en} tickets`,
         html: emailContent,
+      });
+      await transporter.sendMail({
+        to: process.env.COMPANY_EMAIL,
+        subject: `Ticket Booked By ${userDetails.name},Plan ${planDetails.title.en} tickets`,
+        html: emailContentFordohabus,
       });
       console.log("Email has been sent");
     } catch (error) {
@@ -437,7 +473,7 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
     status: "success",
     data: {
       ticket,
-       plan,
+      plan,
       planCategory,
     },
   });
