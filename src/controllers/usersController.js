@@ -7,11 +7,11 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 exports.signup = catchAsync(async (req, res, next) => {
-  const { email, name, password } = req.body;
+  const { email, name, password,number } = req.body;
 
   const hashed = await bcryptjs.hash(password, 8);
 
-  const newUser = await User.create({ email, name, password: hashed });
+  const newUser = await User.create({ email, name, password: hashed,number });
   const token = jwt.sign(
     { id: newUser._id, role: newUser.role, email: newUser.email },
     process.env.JWT_SECRECT,
@@ -43,7 +43,7 @@ exports.signin = catchAsync(async (req, res, next) => {
     const error = new AppError("Please enter mail id and password for login", 400);
     return next(error);
   }
-
+ 
   const user = await User.findOne({ email });
 
   if (!user) {
@@ -103,6 +103,7 @@ exports.verify = catchAsync(async (req, res, next) => {
     name: user.name,
     email: user.email,
     role: user.role,
+    number:user.number
     // ...other properties
   };
 

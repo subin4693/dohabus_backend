@@ -324,7 +324,7 @@ exports.getUsers = catchAsync(async (req, res, next) => {
   console.log("user", req.user);
   const superAdminCount = await User.countDocuments({ role: "super-admin" });
 
-  const users = await User.find().select("name email role");
+  const users = await User.find().select("name email role number");
 
   res.status(200).json({
     status: "success",
@@ -424,11 +424,13 @@ exports.getTickets = catchAsync(async (req, res, next) => {
           "plan.coverImage": "$planDetails.coverImage",
           "plan.title": "$planDetails.title",
           "plan.description": "$planDetails.description",
-          "user.name": "$user", // Use the string user field directly
+          "user.name": "$user",
+            // Use the string user field directly
           "category.title": "$categoryDetails.title", // Include category title
           totalPrice: "$price",
           adultQuantity: "$adultQuantity",
           childQuantity: "$childQuantity",
+          number: "$number",
           status: 1, // Include the ticket status
         },
       },

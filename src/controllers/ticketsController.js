@@ -45,6 +45,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     dropLocation,
     coupon,
     addons,
+    number
   } = req.body;
 
   console.log("addons", addons);
@@ -199,6 +200,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       discountAmount: adultDiscountAmount + childDiscountAmount || 0,
       status: "Booked",
       addonFeatures,
+      number
     });
 
     let allcost = totalCost + addOnTotalPrice;
@@ -220,6 +222,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       discountAmount: adultDiscountAmount + childDiscountAmount || 0,
       addonFeatures,
       status: "Booked",
+      number
     });
 
     try {
@@ -448,6 +451,8 @@ exports.getTicketCounts = catchAsync(async (req, res, next) => {
     plan.sessions.forEach((session) => {
       if (sessionLimit > 0 && sessionCounts[session] >= sessionLimit) {
         sessionStatus[session] = "Full";
+      } else if (sessionLimit > 0 && sessionCounts[session] >= sessionLimit / 2) {
+        sessionStatus[session] = "Filling Up";  
       }
     });
 

@@ -22,6 +22,7 @@ const subscriberRoute = require("./src/routes/subscriberRouter");
 const offerRouter = require("./src/routes/offerRouter");
 const offerbannerRouter = require("./src/routes/offerbannerRouter");
 const couriesRouter = require("./src/routes/couriseRouter")
+const populorCouriesRouter = require('./src/routes/populorcouriseRouter')
 
 const transportationRouter = require("./src/routes/transportationRouter");
 const cron = require("node-cron");
@@ -71,6 +72,8 @@ app.use("/api/v1/offers", offerRouter);
 app.use("/api/v1/offerbanner", offerbannerRouter);
 
 app.use("/api/v1/couries", couriesRouter);
+app.use("/api/v1/populor-couries", populorCouriesRouter);
+
 
 
 app.all("*", (req, res, next) => {

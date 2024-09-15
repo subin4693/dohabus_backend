@@ -21,6 +21,11 @@ const userSchema = new mongoose.Schema(
       required: [true, "Please enter a password."],
       minlength: 8,
     },
+    number:{
+      type:String,
+      required:[true,"Please enter a number"],
+      
+    },
     role: {
       type: String,
       enum: ["user", "admin", "super-admin"],
