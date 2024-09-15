@@ -62,6 +62,10 @@ const ticketModel = new mongoose.Schema({
     type: [String],
     default: [],
   },
+  number:{
+    type:String,
+    required: [true, "Mobile number is required"]
+  },
   status: {
     type: String,
     enum: ["Booked", "Canceled"],
