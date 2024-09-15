@@ -437,7 +437,7 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
     status: "success",
     data: {
       ticket,
-      plan,
+       plan,
       planCategory,
     },
   });

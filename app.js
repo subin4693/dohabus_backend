@@ -14,12 +14,14 @@ const hotelRouter = require("./src/routes/hotelRouter");
 const favouriteRoutes = require("./src/routes/favouriteRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
 const footerRoutes = require("./src/routes/footerRouter");
+const awardRoutes = require("./src/routes/awardRouter");
 const locationRouter = require("./src/routes/locationRouter");
 const bannerRouter = require("./src/routes/bannerRouter");
 const blogRouter = require("./src/routes/blogRouter");
 const subscriberRoute = require("./src/routes/subscriberRouter");
 const offerRouter = require("./src/routes/offerRouter");
 const offerbannerRouter = require("./src/routes/offerbannerRouter");
+const couriesRouter = require("./src/routes/couriseRouter")
 
 const transportationRouter = require("./src/routes/transportationRouter");
 const cron = require("node-cron");
@@ -34,33 +36,8 @@ app.use(
   cors({
     origin: ["http://localhost:5173", "https://main--boisterous-dasik-d64956.netlify.app"],
     credentials: true,
-    sameSite: "none",
   }),
 );
-
-// const allowedOrigins = [
-//   "http://localhost:5173",
-//   "https://main--boisterous-dasik-d64956.netlify.app",
-// ];
-
-// app.use((req, res, next) => {
-//   const origin = req.headers.origin;
-//   if (allowedOrigins.includes(origin)) {
-//     res.header("Access-Control-Allow-Origin", origin);
-//   }
-//   res.header("Access-Control-Allow-Credentials", "true");
-//   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-//   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization,token, cookies");
-//   next();
-// });
-
-// app.options("*", (req, res) => {
-//   res.header("Access-Control-Allow-Origin", req.headers.origin);
-//   res.header("Access-Control-Allow-Credentials", "true");
-//   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-//   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, token, cookies");
-//   res.sendStatus(200);
-// });
 
 app.use(express.json());
 app.use(cookieParser());
@@ -85,12 +62,16 @@ app.use("/api/v1/about", aboutRouter);
 app.use("/api/v1/blogs", blogRouter);
 app.use("/api/v1/subscribe", subscriberRoute);
 app.use("/api/v1/footer", footerRoutes);
+app.use("/api/v1/award", awardRoutes);
 app.use("/api/v1/locations", locationRouter);
 app.use("/api/v1/banner", bannerRouter);
 app.use("/api/v1/transportations", transportationRouter);
 
 app.use("/api/v1/offers", offerRouter);
 app.use("/api/v1/offerbanner", offerbannerRouter);
+
+app.use("/api/v1/couries", couriesRouter);
+
 
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
