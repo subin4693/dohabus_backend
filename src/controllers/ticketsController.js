@@ -415,6 +415,8 @@ exports.getTicketCounts = catchAsync(async (req, res, next) => {
     plan.sessions.forEach((session) => {
       if (sessionLimit > 0 && sessionCounts[session] >= sessionLimit) {
         sessionStatus[session] = "Full";
+      } else if (sessionLimit > 0 && sessionCounts[session] >= sessionLimit / 2) {
+        sessionStatus[session] = "Filling Up";  
       }
     });
 
