@@ -16,6 +16,11 @@ const localizedString = {
 const locationModel = new mongoose.Schema(
   {
     title: localizedString,
+    url: {
+      type: String,
+      trim: true,
+      required: [true, "Please provide the URL"],
+    },
     dates: [
       {
         day: localizedString,

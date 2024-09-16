@@ -3,7 +3,24 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 
 exports.createLocation = catchAsync(async (req, res, next) => {
-  const newLocation = await location.create(req.body);
+  const { title, dates, url } = req.body;
+
+  if (!title || !dates || !url) {
+    return res.status(400).json({
+      status: "fail",
+      message: "Please provide all required fields (title, dates, and url).",
+    });
+  }
+
+
+  const newLocation = await location.create({
+    title,
+    dates,
+    url,
+  });
+
+
+
   res.status(201).json({
     status: "success",
     data: {
