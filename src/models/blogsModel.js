@@ -14,15 +14,11 @@ const blogsModel = new mongoose.Schema(
       type: String,
       required: [true, "Please provide a valid link"],
     },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: [true, "Please provide a userId."],
-    },
+    
     plan: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-      required: [true, "Please provide a Category id."],
+    
     },
     comments: [
       {
