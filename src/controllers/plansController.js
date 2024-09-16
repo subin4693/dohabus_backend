@@ -285,6 +285,8 @@ exports.getSinglePlan = catchAsync(async (req, res, next) => {
   }
 
   let canWriteReview = false; // Default to false
+  let cartId = false;
+  let favId = false;
 
   if (userId) {
     // Check if the user has a booked ticket for the plan with a future date
@@ -294,7 +296,12 @@ exports.getSinglePlan = catchAsync(async (req, res, next) => {
       status: "Booked",
       date: { $lt: Date.now() },
     });
-    console.log(ticket);
+
+    const cart = await Cart.findOne({ tour: plan._id, user: userId });
+
+    const fav = await Favourite.findOne({ tour: plan._id, user: userId });
+    if (cart) cartId = cart._id;
+    if (fav) favId = fav._id;
 
     if (ticket) {
       canWriteReview = true; // Set to true if such a ticket is found
@@ -305,7 +312,9 @@ exports.getSinglePlan = catchAsync(async (req, res, next) => {
     status: "success",
     data: {
       plan,
-      canWriteReview, // Add this field to the response
+      canWriteReview,
+      fav: favId,
+      cart: cartId,
     },
   });
 });
