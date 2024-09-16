@@ -252,6 +252,12 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         <h4 style="font-family: Arial, sans-serif; color: #333;">
             Category: ${planCategory.title.en}
         </h4>
+
+        <p style="font-family: Arial, sans-serif; color: #333;">
+        We greatly value your recent experience with us. If you were pleased with our service, we would be honored if you could share your feedback by leaving a review on TripAdvisor. Your insights are invaluable in helping us continue to provide excellent service.<br>
+        [https://www.tripadvisor.com/Attraction_Review-g294009-d6215547-Reviews-Doha_Bus-Doha.html]
+        </p>
+    
         <br>
         ${signature}
     `;
@@ -452,7 +458,7 @@ exports.getTicketCounts = catchAsync(async (req, res, next) => {
       if (sessionLimit > 0 && sessionCounts[session] >= sessionLimit) {
         sessionStatus[session] = "Full";
       } else if (sessionLimit > 0 && sessionCounts[session] >= sessionLimit / 2) {
-        sessionStatus[session] = "Filling Up";  
+        sessionStatus[session] = "Filling Up";
       }
     });
 
