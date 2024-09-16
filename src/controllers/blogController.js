@@ -4,7 +4,7 @@ const AppError = require("../utils/appError");
 const Plan = require("../models/planModel");
 
 exports.getBlogs = catchAsync(async (req, res, next) => {
-  const limit = parseInt(req.query.limit, 10); // Get limit from query params
+  const limit = parseInt(req.query.limit, 100000); // Get limit from query params
   const cat = req.query.cat; // Get cat from query params
 
   // Initialize queryParams based on the presence of the 'cat' parameter
@@ -16,7 +16,7 @@ exports.getBlogs = catchAsync(async (req, res, next) => {
 
   // Construct the query with the populated 'user' and 'plan' fields
   const query = Blog.find(queryParams)
-    .populate("user")
+   
     .populate("plan");
 
   // Apply the limit if it's a valid positive integer
@@ -40,7 +40,7 @@ exports.getBlogs = catchAsync(async (req, res, next) => {
 // Get recent blogs
 exports.getRecentBlogs = catchAsync(async (req, res, next) => {
   const recentBlogs = await Blog.find()
-    .populate("user")
+     
     .populate("plan")
     .sort({ createdAt: -1 })
     .limit(2);
@@ -61,7 +61,7 @@ exports.getRecentBlogs = catchAsync(async (req, res, next) => {
 exports.getBlogById = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const blog = await Blog.findById(id)
-    .populate("user")
+    
     .populate("plan");
 
   if (!blog) {
@@ -79,13 +79,12 @@ exports.getBlogById = catchAsync(async (req, res, next) => {
 // Create a new blog
 exports.createBlog = catchAsync(async (req, res, next) => {
   const { image, title, text, plan } = req.body;
-  const user = req.user.id;
-  console.log(user);
+  
   const newBlog = await Blog.create({
     image,
     title,
     text,
-    user,
+    
     plan,
   });
   console.log("*****************");
@@ -104,11 +103,11 @@ exports.createBlog = catchAsync(async (req, res, next) => {
 exports.updateBlog = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const { image, title, text, plan, comments, likes } = req.body;
-  const user = req.user.id;
-  console.log(user);
+ 
+  
   const updatedBlog = await Blog.findByIdAndUpdate(
     id,
-    { image, title, text, user, plan, comments, likes },
+    { image, title, text,   plan, comments, likes },
     { new: true, runValidators: true },
   );
 
@@ -170,8 +169,7 @@ exports.addComment = catchAsync(async (req, res, next) => {
 
 exports.getComments = catchAsync(async (req, res, next) => {
   const blogId = req.params.id;
-  const user = req.user;
-  console.log("user", user);
+ 
   const blog = await Blog.findById(blogId).select("comments");
 
   if (!blog) {
@@ -189,8 +187,7 @@ exports.getComments = catchAsync(async (req, res, next) => {
 exports.removeComment = catchAsync(async (req, res, next) => {
   const blogId = req.params.id;
   const commentId = req.params.commentId;
-  const user = req.user;
-
+  
   const blog = await Blog.findById(blogId);
 
   if (!blog) {
@@ -198,7 +195,7 @@ exports.removeComment = catchAsync(async (req, res, next) => {
   }
 
   const commentIndex = blog.comments.findIndex(
-    (c) => c._id.toString() === commentId && c.email === user.email,
+    (c) => c._id.toString() === commentId  
   );
 
   if (commentIndex === -1) {
@@ -224,8 +221,7 @@ exports.updateComment = catchAsync(async (req, res, next) => {
   const blogId = req.params.id;
   const commentId = req.params.commentId;
   const { comment } = req.body;
-  const user = req.user;
-
+   
   if (!comment) {
     return next(new AppError("Please provide a comment to update.", 400));
   }
@@ -237,7 +233,7 @@ exports.updateComment = catchAsync(async (req, res, next) => {
   }
 
   const existingComment = blog.comments.find(
-    (c) => c._id.toString() === commentId && c.email === user.email,
+    (c) => c._id.toString() === commentId 
   );
 
   if (!existingComment) {

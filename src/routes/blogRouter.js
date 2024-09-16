@@ -5,7 +5,7 @@ const verify = require("../utils/verifyToken");
 
 router
   .route("/")
-  .post(verify.verifyToken, blogController.createBlog)
+  .post( blogController.createBlog)
   .get(blogController.getBlogs);
 
 router.route("/recent").get(blogController.getRecentBlogs);
@@ -13,19 +13,19 @@ router.route("/recent").get(blogController.getRecentBlogs);
 router
   .route("/:id")
   .get(blogController.getBlogById)
-  .put(verify.verifyToken, blogController.updateBlog)
-  .delete(verify.verifyToken, blogController.deleteBlog);
+  .put( blogController.updateBlog)
+  .delete(  blogController.deleteBlog);
 
 router
   .route("/:id/comments")
   .post(blogController.addComment)
-  .get(verify.verifyToken, blogController.getComments);
+  .get( blogController.getComments);
 
 router
   .route("/:id/comments/:commentId")
-  .delete(verify.verifyToken, blogController.removeComment)
-  .put(verify.verifyToken, blogController.updateComment);
+  .delete( blogController.removeComment)
+  .put(blogController.updateComment);
 
-router.route("/:id/like").post(verify.verifyToken, blogController.likeBlog);
+router.route("/:id/like").post( blogController.likeBlog);
 
 module.exports = router;
