@@ -25,6 +25,7 @@ const couriesRouter = require("./src/routes/couriseRouter")
 const populorCouriesRouter = require('./src/routes/populorcouriseRouter')
 
 const transportationRouter = require("./src/routes/transportationRouter");
+const transbookrouters = require("./src/routes/TransbookingRouter");
 const cron = require("node-cron");
 const cors = require("cors");
 const AppError = require("./src/utils/appError");
@@ -67,6 +68,7 @@ app.use("/api/v1/award", awardRoutes);
 app.use("/api/v1/locations", locationRouter);
 app.use("/api/v1/banner", bannerRouter);
 app.use("/api/v1/transportations", transportationRouter);
+app.use("/api/v1/transbook", transbookrouters);
 
 app.use("/api/v1/offers", offerRouter);
 app.use("/api/v1/offerbanner", offerbannerRouter);
