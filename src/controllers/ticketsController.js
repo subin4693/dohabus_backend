@@ -45,7 +45,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     dropLocation,
     coupon,
     addons,
-    number
+    number,
   } = req.body;
 
   console.log("addons", addons);
@@ -53,7 +53,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
   try {
     const planDetails = await Plan.findById(plan);
     const planCategory = await Category.findById(category);
-    const userDetails = { name: firstName + lastName };
+    const userDetails = { name: firstName };
 
     if (!planDetails) {
       return next(new AppError("Invalid plan selected", 400));
@@ -200,7 +200,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       discountAmount: adultDiscountAmount + childDiscountAmount || 0,
       status: "Booked",
       addonFeatures,
-      number
+      number,
     });
 
     let allcost = totalCost + addOnTotalPrice;
@@ -215,14 +215,14 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       session,
       date,
       firstName,
-      lastName,
+
       email,
       pickupLocation,
       dropLocation,
       discountAmount: adultDiscountAmount + childDiscountAmount || 0,
       addonFeatures,
       status: "Booked",
-      number
+      number,
     });
 
     try {
@@ -231,8 +231,9 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
             Hello ${userDetails.name},
         </h3>
         <p style="font-family: Arial, sans-serif; color: #333;">
-            Thank you for purchasing tickets for ${planDetails.title.en
-        }. We are thrilled to have you join us for this exciting event.
+            Thank you for purchasing tickets for ${
+              planDetails.title.en
+            }. We are thrilled to have you join us for this exciting event.
             Your support means a lot to us, and we are committed to providing you with an unforgettable experience.
             From the moment you arrive, we hope you enjoy the vibrant atmosphere, engaging performances, and the overall ambiance
             that makes this event special. We look forward to seeing you and hope you have a fantastic time!
@@ -266,7 +267,9 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         Dear DohaBus Team,
     </h3>
     <p style="font-family: Arial, sans-serif; color: #333;">
-        We would like to inform you that a new booking has been made on your website by ${userDetails.name}.
+        We would like to inform you that a new booking has been made on your website by ${
+          userDetails.name
+        }.
     </p>
     <p style="font-family: Arial, sans-serif; color: #333;">
         Below are the details of the purchase:
@@ -292,7 +295,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     <br>
     ${signature}
   `;
-
 
       await transporter.sendMail({
         to: email,

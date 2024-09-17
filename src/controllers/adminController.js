@@ -392,11 +392,6 @@ exports.getTickets = catchAsync(async (req, res, next) => {
     // Aggregation pipeline to join tickets with plans and categories
     const tickets = await Ticket.aggregate([
       {
-        $match: {
-          date: { $gte: new Date(today) }, // Only include tickets with date >= today
-        },
-      },
-      {
         $lookup: {
           from: "plans", // Join with plans collection
           localField: "plan",
@@ -425,17 +420,18 @@ exports.getTickets = catchAsync(async (req, res, next) => {
           "plan.title": "$planDetails.title",
           "plan.description": "$planDetails.description",
           "user.name": "$user",
-            // Use the string user field directly
+          // Use the string user field directly
           "category.title": "$categoryDetails.title", // Include category title
           totalPrice: "$price",
           adultQuantity: "$adultQuantity",
           childQuantity: "$childQuantity",
           number: "$number",
           status: 1, // Include the ticket status
+          createdAt: 1, // Include the createdAt field
+          date: "$date",
         },
       },
     ]);
-
     // Send the formatted response
     res.status(200).json({
       status: "success",
