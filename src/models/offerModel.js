@@ -36,6 +36,11 @@ const offerSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    limit: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
     status: {
       type: String,
       enum: ["active", "canceled", "expired"],

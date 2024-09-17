@@ -1,5 +1,6 @@
 const Offer = require("../models/offerModel"); // Ensure the path is correct
 const Plan = require("../models/planModel"); // Ensure the path is correct
+const Ticket = require("../models/ticketModel");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 
@@ -80,7 +81,7 @@ exports.deleteOffer = catchAsync(async (req, res, next) => {
 
 exports.checkOffer = catchAsync(async (req, res, next) => {
   try {
-    const { couponCode, planId, childCount = 0, adultCount = 0, addons = [] } = req.body;
+    const { couponCode, planId, email, childCount = 0, adultCount = 0, addons = [] } = req.body;
 
     console.log("***");
     console.log(addons);
@@ -102,6 +103,17 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       plan: planId, // Check if planId is in the plan array
       status: "active",
     });
+
+    const { limit } = coupon;
+
+    const userTicketCount = await Ticket.countDocuments({
+      plan: planId,
+      offer: coupon._id,
+      email,
+    });
+    if (userTicketCount >= limit) {
+      return next(new AppError(`Coupon code can only be used ${limit} time(s) per user`, 400));
+    }
 
     console.log(coupon);
 

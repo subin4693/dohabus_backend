@@ -121,12 +121,25 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     console.log("totlal cost" + totalCost);
     let adultDiscountAmount = 0;
     let childDiscountAmount = 0;
+    let offer = null;
     if (coupon) {
       const couponDetails = await Offer.findOne({ plan, couponCode: coupon, status: "active" });
 
       if (!couponDetails) {
         return next(new AppError("Invalid or expired coupon code", 400));
       }
+
+      const { limit } = couponDetails;
+
+      const userTicketCount = await Ticket.countDocuments({
+        plan,
+        offer: couponDetails._id,
+        email,
+      });
+      if (userTicketCount >= limit) {
+        return next(new AppError(`Coupon code can only be used ${limit} time(s) per user`, 400));
+      }
+      offer = couponDetails._id;
 
       const currentDate = new Date();
       if (currentDate < couponDetails.startingDate || currentDate > couponDetails.endingDate) {
@@ -201,6 +214,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       status: "Booked",
       addonFeatures,
       number,
+      offer,
     });
 
     let allcost = totalCost + addOnTotalPrice;
@@ -215,7 +229,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       session,
       date,
       firstName,
-
+      offer,
       email,
       pickupLocation,
       dropLocation,

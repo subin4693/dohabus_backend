@@ -7,6 +7,11 @@ const ticketModel = new mongoose.Schema(
       required: [true, "User id is required"],
       ref: "User",
     },
+    offer: {
+      type: mongoose.Schema.Types.ObjectId,
+
+      ref: "Offer",
+    },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       required: [true, "Category is required"],
@@ -43,6 +48,7 @@ const ticketModel = new mongoose.Schema(
     },
     lastName: {
       type: String,
+      default: "",
     },
     email: {
       type: String,
