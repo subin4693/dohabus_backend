@@ -36,6 +36,7 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     adultData,
     childData,
     limit,
+    stopSales,
   } = req.body;
 
   console.log(category);
@@ -106,6 +107,7 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     adultData,
     childData,
     limit,
+    stopSales,
   });
 
   res.status(201).json({
@@ -175,6 +177,7 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     adultData, // New field for detailed adult pricing
     childData, // New field for detailed child pricing
     limit,
+    stopSales,
   } = req.body.formData;
 
   // Validate required fields
@@ -241,6 +244,7 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     isDropOffRequired,
     addOn, // Changed to match the request
     limit,
+    stopSales,
     ...(hasAdultData && { adultData }),
     ...(hasChildData && { childData }),
     ...(hasAdultPrice && { adultPrice }),
@@ -326,9 +330,17 @@ exports.getPlanByCategory = catchAsync(async (req, res, next) => {
 
   const { categoryId } = req.params;
   const userId = req.user ? req.user.id : null;
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
 
+  console.log("today ***8 **** ");
+  console.log(today);
   // Retrieve active plans and category
-  const plansQuery = Plan.find({ category: categoryId, isActive: true });
+  const plansQuery = Plan.find({
+    category: categoryId,
+    isActive: true,
+    stopSales: { $nin: [today] },
+  });
   const categoryQuery = Category.findById(categoryId);
 
   // Initialize arrays for cart and favorites

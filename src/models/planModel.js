@@ -121,10 +121,45 @@ const plansModel = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  stopSales: [
+    {
+      type: Date,
+      set: (date) => {
+        if (date instanceof Date) {
+          const adjustedDate = new Date(date);
+          adjustedDate.setUTCHours(0, 0, 0, 0);
+          return adjustedDate;
+        }
+        return date;
+      },
+    },
+  ],
   limit: {
     type: Number,
     default: 0,
   },
+});
+plansModel.pre("save", function (next) {
+  if (this.stopSales && this.stopSales.length > 0) {
+    this.stopSales = this.stopSales.map((date) => {
+      let adjustedDate = new Date(date);
+      adjustedDate.setUTCHours(0, 0, 0, 0);
+      return adjustedDate;
+    });
+  }
+  next();
+});
+
+// Pre-update middleware to adjust dates during update operations
+plansModel.pre(["updateOne", "updateMany", "findOneAndUpdate"], function (next) {
+  if (this.getUpdate().stopSales) {
+    this.getUpdate().stopSales = this.getUpdate().stopSales.map((date) => {
+      let adjustedDate = new Date(date);
+      adjustedDate.setUTCHours(0, 0, 0, 0);
+      return adjustedDate;
+    });
+  }
+  next();
 });
 
 const Plan = mongoose.model("Plan", plansModel);

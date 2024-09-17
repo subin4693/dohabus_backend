@@ -97,7 +97,9 @@ exports.getCategoriesWithTours = catchAsync(async (req, res, next) => {
     .exec();
 
   // Fetch all tour plans and group by category ID
-  const tours = await Plan.find({ isActive: true })
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const tours = await Plan.find({ isActive: true, stopSales: { $nin: [today] } })
     .lean()
     .exec();
 
