@@ -1,9 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const populorCruiseController = require("../controllers/popularCouriseController");
-const verify = require("../utils/verifyToken");
-
- 
 
 router
   .route("/")
@@ -14,7 +11,6 @@ router
   .route("/:id")
   .get(populorCruiseController.getCourisById)
   .put(populorCruiseController.updateCourise)
-  .delete(populorCruiseController.deleteCourise)
- 
+  .delete(populorCruiseController.deleteCourise);
 
 module.exports = router;

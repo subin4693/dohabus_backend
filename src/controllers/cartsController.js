@@ -3,41 +3,41 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 
 exports.addToCart = catchAsync(async (req, res, next) => {
-  const user = req.user;
-  const { category, tour } = req.body;
+  const { category, tour, user } = req.body;
 
-  console.log(user.id, category, tour);
+  console.log(user._id, category, tour);
 
-  const existingCartItem = await Cart.findOne({ user: user.id, category, tour });
+  const existingCartItem = await Cart.findOne({ user: user._id, category, tour });
   console.log(existingCartItem);
 
   if (existingCartItem) {
     return next(new AppError("This item is already in the cart.", 400));
   }
 
-  const newCartItem = await Cart.create({ user: user.id, category, tour });
+  const newCartItem = await Cart.create({ user: user._id, category, tour });
 
   res.status(201).json({
     status: "success",
     data: {
-      cartItem: newCartItem
-    }
+      cartItem: newCartItem,
+    },
   });
 });
 
 exports.getCart = catchAsync(async (req, res, next) => {
-  const cartItems = await Cart.find({ user: req.user.id })
-    .populate('category')
-    .populate('tour');
+  const userId = req.query.user != "undefined" ? req.query.user : null;
+  const cartItems = await Cart.find({ user: userId })
+    .populate("category")
+    .populate("tour");
 
-  console.log(cartItems)
+  console.log(cartItems);
 
   res.status(200).json({
     status: "success",
     results: cartItems.length,
     data: {
-      cartItems
-    }
+      cartItems,
+    },
   });
 });
 
@@ -50,6 +50,6 @@ exports.removeFromCart = catchAsync(async (req, res, next) => {
 
   res.status(204).json({
     status: "success",
-    data: null
+    data: null,
   });
 });

@@ -321,7 +321,6 @@ exports.getPlans = catchAsync(async (req, res, next) => {
 });
 
 exports.getUsers = catchAsync(async (req, res, next) => {
-  console.log("user", req.user);
   const superAdminCount = await User.countDocuments({ role: "super-admin" });
 
   const users = await User.find().select("name email role number");

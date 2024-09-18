@@ -280,7 +280,8 @@ exports.editPlan = catchAsync(async (req, res, next) => {
 // Get a single plan by ID
 exports.getSinglePlan = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  const userId = req?.user ? req?.user?.id : null; // Get the user ID if available
+  // const userId = req?.user ? req?.user?.id : null; // Get the user ID if available
+  const userId = req.query.user != "undefined" ? req.query.user : null;
 
   const plan = await Plan.findOne({ _id: id, isActive: true });
 
@@ -326,10 +327,11 @@ exports.getSinglePlan = catchAsync(async (req, res, next) => {
 // Get plans by category ID
 exports.getPlanByCategory = catchAsync(async (req, res, next) => {
   console.log(req.params);
-  console.log(req.user);
-
+  const userId = req.query.user != "undefined" ? req.query.user : null;
+  console.log(req.query.user);
+  console.log(userId);
   const { categoryId } = req.params;
-  const userId = req.user ? req.user.id : null;
+
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
 

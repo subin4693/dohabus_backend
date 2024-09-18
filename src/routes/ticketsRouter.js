@@ -9,15 +9,13 @@ router.route("/all").get(ticketsController.getAllTickets);
 
 router
   .route("/")
-  .get(verify.verifyToken, ticketsController.getTickets)
-  .post(ticketsController.bookTicket)
-
+  .get(ticketsController.getTickets)
+  .post(ticketsController.bookTicket);
 
 router
   .route("/:id")
   .get(ticketsController.getTicketById)
-  .delete(verify.verifyToken, ticketsController.deleteTicket)
-  .put(verify.verifyToken, ticketsController.editTicket);
-
+  .delete(ticketsController.deleteTicket)
+  .put(ticketsController.editTicket);
 
 module.exports = router;

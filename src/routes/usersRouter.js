@@ -11,6 +11,6 @@ router.route("/signin").post(userController.signin);
 
 router.route("/signout").post(userController.signout);
 
-router.route("/verify").get(verify.verifyToken, userController.verify);
+router.route("/verify").get(userController.verify);
 
 module.exports = router;

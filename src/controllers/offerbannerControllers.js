@@ -3,7 +3,7 @@ const Tour = require("../models/planModel"); // Adjust the path as necessary
 
 exports.createOfferBanner = async (req, res) => {
   try {
-    const { title, percentage, tourIds } = req.body;
+    const { title, percentage, tourIds } = req.body.payload;
 
     let tours = [];
     if (!tourIds || tourIds.length === 0) {

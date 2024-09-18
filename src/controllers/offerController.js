@@ -81,7 +81,14 @@ exports.deleteOffer = catchAsync(async (req, res, next) => {
 
 exports.checkOffer = catchAsync(async (req, res, next) => {
   try {
-    const { couponCode, planId, email, childCount = 0, adultCount = 0, addons = [] } = req.body;
+    const {
+      couponCode,
+      planId,
+      email,
+      childCount = 0,
+      adultCount = 0,
+      addons = [],
+    } = req.body.requestData;
 
     console.log("***");
     console.log(addons);

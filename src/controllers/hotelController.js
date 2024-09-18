@@ -105,10 +105,10 @@ exports.getHotelById = catchAsync(async (req, res, next) => {
 
 exports.bookHotels = catchAsync(async (req, res, next) => {
   console.log("1");
-  
+
   const { id } = req.params;
-  const userId = req.user ? req.user.id : null;
-  
+  const userId = req.body.user ? req.body.user._id : null;
+
   console.log("userId", userId);
 
   const {
@@ -142,7 +142,7 @@ exports.bookHotels = catchAsync(async (req, res, next) => {
   };
 
   if (userId) {
-    newBookingData.userId = userId; 
+    newBookingData.userId = userId;
   }
 
   const newBooking = await HotelBooking.create(newBookingData);
@@ -158,8 +158,6 @@ exports.bookHotels = catchAsync(async (req, res, next) => {
   });
 });
 
-
-
 exports.getAllHotelsBookings = catchAsync(async (req, res, next) => {
   console.log("Working");
   try {
@@ -168,7 +166,7 @@ exports.getAllHotelsBookings = catchAsync(async (req, res, next) => {
       .populate({
         path: "hotelId",
         select: "title description", // Include hotel name and description
-        match: { _id: { $exists: true, $type: "objectId" } }
+        match: { _id: { $exists: true, $type: "objectId" } },
       });
 
     if (!hotelBookings) {
@@ -186,5 +184,3 @@ exports.getAllHotelsBookings = catchAsync(async (req, res, next) => {
     return next(error);
   }
 });
-
-

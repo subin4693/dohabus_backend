@@ -31,11 +31,12 @@ exports.getAllReviews = catchAsync(async (req, res, next) => {
 
 exports.deleteReview = catchAsync(async (req, res, next) => {
   const { reviewId } = req.params;
-  const user = req.user.id;
-  if (!user) {
-    return next(new AppError("User ID is required", 400));
-  }
-
+  // const user = req.body.user._id;
+  // if (!user) {
+  //   return next(new AppError("User ID is required", 400));
+  // }
+  const uesr = req.query.user != "undefined" ? req.query.user : null;
+  // const user = req.query.user;
   const review = await Review.findById(reviewId);
 
   if (!review) {
@@ -52,7 +53,8 @@ exports.deleteReview = catchAsync(async (req, res, next) => {
 
 exports.createReview = catchAsync(async (req, res, next) => {
   const { planId } = req.params; // Extract planId from URL parameters
-  const userId = req.user ? req.user.id : null; // Extract userId from the request user object
+  const userId = req.query.user != "undefined" ? req.query.user : null;
+  // const userId = req.body.user ? req.body.user._id : null; // Extract userId from the request user object
   const { reviewText, imageURL } = req.body; // Extract review details from request body
 
   if (!userId) {

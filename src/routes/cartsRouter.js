@@ -1,14 +1,14 @@
 const express = require("express");
-const verify = require("../utils/verifyToken");
+
 const cartsController = require("../controllers/cartsController");
 
 const router = express.Router();
 
 router
   .route("/")
-  .post(verify.verifyToken, cartsController.addToCart)
-  .get(verify.verifyToken, cartsController.getCart);
+  .post(cartsController.addToCart)
+  .get(cartsController.getCart);
 
-router.route("/:id").delete(verify.verifyToken, cartsController.removeFromCart);
+router.route("/:id").delete(cartsController.removeFromCart);
 
 module.exports = router;

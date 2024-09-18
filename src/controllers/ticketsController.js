@@ -46,7 +46,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     coupon,
     addons,
     number,
-  } = req.body;
+  } = req.body.dataa;
 
   console.log("addons", addons);
 
@@ -341,7 +341,8 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 });
 
 exports.getTickets = catchAsync(async (req, res, next) => {
-  const userId = req.user.id;
+  const userId = req.query.user != "undefined" ? req.query.user : null;
+
   console.log(userId);
   const tickets = await Ticket.find({ user: userId });
   console.log(tickets);

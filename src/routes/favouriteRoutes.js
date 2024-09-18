@@ -1,16 +1,16 @@
 const express = require("express");
-const verify = require("../utils/verifyToken");
+
 const favouriteController = require("../controllers/favouriteController");
 
 const router = express.Router();
 
 router
-    .route("/")
-    .post(verify.verifyToken, favouriteController.createFavourite) 
-    .get(verify.verifyToken, favouriteController.getAllFavourites); 
+  .route("/")
+  .post(favouriteController.createFavourite)
+  .get(favouriteController.getAllFavourites);
 router
-    .route("/:id")
-    .get(verify.verifyToken, favouriteController.getFavouriteById) 
-    .delete(verify.verifyToken, favouriteController.deleteFavourite); 
+  .route("/:id")
+  .get(favouriteController.getFavouriteById)
+  .delete(favouriteController.deleteFavourite);
 
 module.exports = router;

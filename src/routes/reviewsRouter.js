@@ -8,10 +8,10 @@ const router = express.Router();
 router.route("/all").get(reviewsController.getAllReviews);
 
 router
-	.route("/:planId")
-	.get(reviewsController.getReviews)
-	.post(verifyProduct.verifyToken, reviewsController.createReview);
+  .route("/:planId")
+  .get(reviewsController.getReviews)
+  .post(reviewsController.createReview);
 
-router.route("/:reviewId").delete(verify.verifyToken, reviewsController.deleteReview);
+router.route("/:reviewId").delete(reviewsController.deleteReview);
 
 module.exports = router;
