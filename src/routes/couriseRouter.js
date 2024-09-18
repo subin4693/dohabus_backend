@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const cruiseController = require("../controllers/cruiseController");
-const verify = require("../utils/verifyToken");
+const verify = require("../utils/verifyToken ");
 
  
 

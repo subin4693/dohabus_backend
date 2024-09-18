@@ -20,6 +20,6 @@ const couriseModel = mongoose.Schema({
 	description: localizedString,
 });
 
-const Courise = mongoose.model("Courise", couriseModel);
+const Courise = mongoose.model("Courise ", couriseModel);
 
 module.exports = Courise;

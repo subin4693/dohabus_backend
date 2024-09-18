@@ -68,7 +68,7 @@ exports.deleteCourise = catchAsync(async (req, res, next) => {
 
   res.status(204).json({
     status: "success",
-    message: "Category deleted successfully",
+    message: "Category deleted successfully s",
     data: null,
   });
 });
