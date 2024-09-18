@@ -4,13 +4,13 @@ const cruiseController = require("../controllers/cruiseController");
 
 router
   .route("/")
-  .post(cruiseController.createCourise)
-  .get(cruiseController.getAllCourise);
+  .post(cruiseController.createCruise) // Create a new cruise
+  .get(cruiseController.getAllCruises); // Get all cruises
 
 router
   .route("/:id")
-  .get(cruiseController.getCourisById)
-  .put(cruiseController.updateCourise)
-  .delete(cruiseController.deleteCourise);
+  .get(cruiseController.getCruiseById) // Get cruise by ID
+  .put(cruiseController.updateCruise) // Update cruise by ID
+  .delete(cruiseController.deleteCruise); // Delete cruise by ID
 
 module.exports = router;
