@@ -11,6 +11,13 @@ exports.verifyToken = catchAsync(async (req, res, next) => {
     token = testToken.split(" ")[1];
   }
   console.log("*************************");
+  console.log(req);
+  console.log(
+    "****************************** COOKIES *******************************************8",
+  );
+
+  console.log(req.cookies);
+  console.log("*************************************************************************8");
   console.log(testToken);
   console.log(token);
   console.log("*************************");
