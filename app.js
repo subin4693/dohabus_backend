@@ -73,7 +73,7 @@ app.use("/api/v1/transbook", transbookrouters);
 app.use("/api/v1/offers", offerRouter);
 app.use("/api/v1/offerbanner", offerbannerRouter);
 
-app.use("/api/v1/couries", couriesRouter);
+app.use("/api/v1/couries ", couriesRouter);
 app.use("/api/v1/populor-couries", populorCouriesRouter);
 
 
