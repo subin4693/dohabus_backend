@@ -94,7 +94,10 @@ const plansModel = new mongoose.Schema({
       type: String,
     },
   ],
-  availableDays: [{ type: Number }],
+  availableDays: {
+    type: [Number],
+    default: [1, 2, 3, 4, 5, 6, 0],
+  },
   sessions: [
     {
       type: String,

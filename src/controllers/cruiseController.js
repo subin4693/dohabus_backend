@@ -1,9 +1,7 @@
 const Courise = require("../models/cruiseModel");
 
- 
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
- 
 
 exports.createCourise = catchAsync(async (req, res, next) => {
   const { coverImage, title, description } = req.body;
@@ -22,41 +20,40 @@ exports.createCourise = catchAsync(async (req, res, next) => {
   res.status(201).json({
     status: "success",
     data: {
-        courise: newCourise,
+      courise: newCourise,
     },
   });
 });
 // Get a single hotel by ID
 exports.getCourisById = catchAsync(async (req, res, next) => {
-    const { id } = req.params;
-  
-    const courise = await Courise.findById(id);
-  
-    if (!courise) {
-      return next(new AppError("No hotel found with that ID", 404));
-    }
-  
-    res.status(200).json({
-      status: "success",
-      data: {
-        courise,
-      },
-    });
+  const { id } = req.params;
+
+  const courise = await Courise.findById(id);
+
+  if (!courise) {
+    return next(new AppError("No hotel found with that ID", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      courise,
+    },
   });
- 
+});
+
 exports.getAllCourise = catchAsync(async (req, res, next) => {
   const courise = await Courise.find();
 
   res.status(200).json({
     status: "success",
-    results:courise.length,
+    results: courise.length,
     data: {
-        courise,
+      courise,
     },
   });
 });
 
- 
 exports.deleteCourise = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
@@ -72,12 +69,11 @@ exports.deleteCourise = catchAsync(async (req, res, next) => {
     data: null,
   });
 });
- 
+
 exports.updateCourise = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const { coverImage, title, description } = req.body;
 
- 
   if (!coverImage && !title && !description) {
     return next(new AppError("At least one field is required to update the hotel", 400));
   }
@@ -95,12 +91,7 @@ exports.updateCourise = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     data: {
-        courise: updatedCourise,
+      courise: updatedCourise,
     },
   });
 });
-
- 
- 
-
-

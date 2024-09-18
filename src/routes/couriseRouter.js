@@ -1,9 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const cruiseController = require("../controllers/cruiseController");
-const verify = require("../utils/verifyToken");
-
- 
 
 router
   .route("/")
@@ -14,7 +11,6 @@ router
   .route("/:id")
   .get(cruiseController.getCourisById)
   .put(cruiseController.updateCourise)
-  .delete(cruiseController.deleteCourise)
- 
+  .delete(cruiseController.deleteCourise);
 
 module.exports = router;
