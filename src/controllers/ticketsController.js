@@ -48,10 +48,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     number,
   } = req.body.dataa;
 
-  console.log(req.body.dataa);
-
-  console.log("addons", addons);
-
   try {
     const planDetails = await Plan.findById(plan);
     const planCategory = await Category.findById(category);
@@ -90,11 +86,16 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       totalChildPrice = 0;
 
     if (adultPrice || childPrice) {
+      console.log(
+        "adult price part wroking ******************************************************(((((((((((((((((((((((((((((((((((((((((",
+      );
       totalAdultPrice = adultPrice * adultQuantity || 0;
       totalChildPrice = childPrice * childQuantity || 0;
     } else {
       // Case 2: Calculate prices based on adultData and childData if adultPrice and childPrice are not present
-
+      console.log(
+        "adult data part wroking ******************************************************(((((((((((((((((((((((((((((((((((((((((",
+      );
       // Adult Data Calculation
       if (adultData && adultQuantity > 0) {
         const sortedAdultData = adultData.sort((a, b) => a.pax - b.pax); // Sort by pax ascending
