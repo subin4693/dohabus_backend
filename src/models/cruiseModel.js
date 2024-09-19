@@ -17,6 +17,10 @@ const cruiseSchema = new mongoose.Schema({
 		type: String,
 		required: [true, "Provide a valid image"],
 	},
+	logo: {
+		type: String,
+		required: [true, "Provide a valid logo"],
+	},
 	title: localizedString,
 	operatorName: {
 		type: String,
@@ -42,6 +46,6 @@ const cruiseSchema = new mongoose.Schema({
 			required: [true, "Please provide stop information"],
 		},
 	],
-	});
+});
 
 module.exports = mongoose.model("Cruise", cruiseSchema);
