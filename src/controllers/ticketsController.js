@@ -48,6 +48,8 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     number,
   } = req.body.dataa;
 
+  console.log(req.body.dataa);
+
   console.log("addons", addons);
 
   try {
