@@ -30,6 +30,8 @@ const signature = `
     </div>
 </div>
 `;
+
+
 exports.bookTicket = catchAsync(async (req, res, next) => {
   const {
     date,
@@ -47,8 +49,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     addons,
     number,
   } = req.body.dataa;
-
-  console.log(req.body.dataa);
 
   console.log("addons", addons);
 
@@ -115,15 +115,11 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         totalChildPrice = selectedChildData ? selectedChildData.price * childQuantity : 0; // Use the selected price and multiply by childQuantity
       }
     }
-    console.log("*****************************************************8888 total adult price");
-    console.log(totalAdultPrice);
-    console.log("*****************************************************8888 total child  price");
 
+    console.log(totalAdultPrice);
     console.log(totalChildPrice);
 
     let totalCost = totalAdultPrice + totalChildPrice;
-    console.log("*****************************************************8888 total price");
-
     console.log("totlal cost" + totalCost);
     let adultDiscountAmount = 0;
     let childDiscountAmount = 0;
