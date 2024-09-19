@@ -282,6 +282,7 @@ exports.getSinglePlan = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   // const userId = req?.user ? req?.user?.id : null; // Get the user ID if available
   console.log(req.query);
+  const email = req.query.user != "undefined" ? req.query.email : null;
   const userId = req.query.user != "undefined" ? req.query.user : null;
 
   const plan = await Plan.findOne({ _id: id, isActive: true });
@@ -294,10 +295,10 @@ exports.getSinglePlan = catchAsync(async (req, res, next) => {
   let cartId = false;
   let favId = false;
 
-  if (userId) {
+  if (email) {
     // Check if the user has a booked ticket for the plan with a future date
     const ticket = await Ticket.findOne({
-      user: userId,
+      email: email,
       plan: id,
       status: "Booked",
       date: { $lt: Date.now() },

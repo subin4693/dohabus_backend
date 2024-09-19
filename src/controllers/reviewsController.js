@@ -35,16 +35,16 @@ exports.deleteReview = catchAsync(async (req, res, next) => {
   // if (!user) {
   //   return next(new AppError("User ID is required", 400));
   // }
-  const uesr = req.query.user != "undefined" ? req.query.user : null;
+  // const user = req.query.user != "undefined" ? req?.query?.user : null;
   // const user = req.query.user;
   const review = await Review.findById(reviewId);
 
   if (!review) {
     return next(new AppError("Review not found", 404));
   }
-  if (review.user.toString() !== user) {
-    return next(new AppError("You are not authorized to delete this review", 403));
-  }
+  // if (review.user.toString() !== user) {
+  //   return next(new AppError("You are not authorized to delete this review", 403));
+  // }
   await Review.findByIdAndDelete(reviewId);
   return res.status(204).json({
     status: "success",
@@ -53,17 +53,18 @@ exports.deleteReview = catchAsync(async (req, res, next) => {
 
 exports.createReview = catchAsync(async (req, res, next) => {
   const { planId } = req.params; // Extract planId from URL parameters
-  const userId = req.query.user != "undefined" ? req.query.user : null;
+  // const userId = req.query.user != "undefined" ? req.query.user : null;
   // const userId = req.body.user ? req.body.user._id : null; // Extract userId from the request user object
-  const { reviewText, imageURL } = req.body; // Extract review details from request body
-
-  if (!userId) {
+  const { reviewText, imageURL, user } = req.body; // Extract review details from request body
+  const userId = user?._id;
+  const email = user?.email;
+  if (!userId || !email) {
     return next(new AppError("User must be logged in to submit a review", 401));
   }
 
   // Check if the user has a booked ticket for the plan
   const ticket = await Ticket.findOne({
-    user: userId,
+    email: email,
     plan: planId,
     status: "Booked",
     date: { $lt: Date.now() },
@@ -72,7 +73,6 @@ exports.createReview = catchAsync(async (req, res, next) => {
   if (!ticket) {
     return next(new AppError("You must have a valid ticket to submit a review", 403));
   }
-
   // Create and save the review
   const review = await Review.create({
     user: userId,
