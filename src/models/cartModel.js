@@ -17,6 +17,14 @@ const cartSchema = new mongoose.Schema(
       ref: "Plan",
       required: [true, "Please provide a courseid."],
     },
+    adultCount: {
+      type: Number,
+      default: 0,
+    },
+    childCount: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true },
 );

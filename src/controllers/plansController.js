@@ -281,6 +281,7 @@ exports.editPlan = catchAsync(async (req, res, next) => {
 exports.getSinglePlan = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   // const userId = req?.user ? req?.user?.id : null; // Get the user ID if available
+  console.log(req.query);
   const userId = req.query.user != "undefined" ? req.query.user : null;
 
   const plan = await Plan.findOne({ _id: id, isActive: true });

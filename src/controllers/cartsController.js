@@ -3,7 +3,7 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 
 exports.addToCart = catchAsync(async (req, res, next) => {
-  const { category, tour, user } = req.body;
+  const { category, tour, user, childCount, adultCount } = req.body;
 
   console.log(user._id, category, tour);
 
@@ -14,7 +14,7 @@ exports.addToCart = catchAsync(async (req, res, next) => {
     return next(new AppError("This item is already in the cart.", 400));
   }
 
-  const newCartItem = await Cart.create({ user: user._id, category, tour });
+  const newCartItem = await Cart.create({ user: user._id, category, tour, childCount, adultCount });
 
   res.status(201).json({
     status: "success",
