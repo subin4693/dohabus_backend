@@ -100,11 +100,18 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       // Adult Data Calculation
       if (adultData && adultQuantity > 0) {
         const sortedAdultData = adultData.sort((a, b) => a.pax - b.pax); // Sort by pax ascending
+        console.log(sortedAdultData);
         const selectedAdultData = sortedAdultData
           .filter((adult) => adult.pax <= adultQuantity)
           .pop(); // Get the closest pax <= adultQuantity
-
+        console.log("selected");
+        console.log(selectedAdultData);
         totalAdultPrice = selectedAdultData ? selectedAdultData.price * adultQuantity : 0; // Use the selected price and multiply by adultQuantity
+        console.log(typeof selectedAdultData.price);
+        console.log(typeof adultQuantity);
+        console.log(selectedAdultData.price * adultQuantity);
+        console.log("total adult price");
+        console.log(totalAdultPrice);
       }
 
       // Child Data Calculation
