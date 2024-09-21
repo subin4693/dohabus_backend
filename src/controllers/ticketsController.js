@@ -460,7 +460,6 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
   const ticket = await Ticket.findById(id);
   const plan = await Plan.findById(ticket.plan);
   const planCategory = await Category.findById(ticket.category);
-  // console.log(plan)
 
   if (!ticket) {
     return next(new AppError("Ticket not found", 404));
