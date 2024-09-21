@@ -424,7 +424,13 @@ exports.getTickets = catchAsync(async (req, res, next) => {
           totalPrice: "$price",
           adultQuantity: "$adultQuantity",
           childQuantity: "$childQuantity",
+          firstName:"$firstName",
+          lastName:"$lastName",
           number: "$number",
+          email:"$email",
+          pickupLocation:"$pickupLocation",
+          dropLocation:"$dropLocation",
+          addonFeatures:"$addonFeatures",
           status: 1, // Include the ticket status
           createdAt: 1, // Include the createdAt field
           date: "$date",
