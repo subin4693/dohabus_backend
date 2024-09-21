@@ -422,15 +422,16 @@ exports.getTickets = catchAsync(async (req, res, next) => {
           // Use the string user field directly
           "category.title": "$categoryDetails.title", // Include category title
           totalPrice: "$price",
+          uniqueId: "$uniqueId",
           adultQuantity: "$adultQuantity",
           childQuantity: "$childQuantity",
-          firstName:"$firstName",
-          lastName:"$lastName",
+          firstName: "$firstName",
+          lastName: "$lastName",
           number: "$number",
-          email:"$email",
-          pickupLocation:"$pickupLocation",
-          dropLocation:"$dropLocation",
-          addonFeatures:"$addonFeatures",
+          email: "$email",
+          pickupLocation: "$pickupLocation",
+          dropLocation: "$dropLocation",
+          addonFeatures: "$addonFeatures",
           status: 1, // Include the ticket status
           createdAt: 1, // Include the createdAt field
           date: "$date",
