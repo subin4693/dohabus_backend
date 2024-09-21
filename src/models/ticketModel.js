@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const ticketModel = new mongoose.Schema(
   {
+    uniqueId: {
+      type: String,
+      required: true,
+    },
     user: {
       type: String,
       required: [true, "User id is required"],
