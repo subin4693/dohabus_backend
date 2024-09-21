@@ -17,8 +17,6 @@ exports.getSummary = catchAsync(async (req, res, next) => {
     status: "Booked",
     date: { $gte: new Date().setHours(0, 0, 0, 0) }, // Ensure the date is greater than or equal to today's date
   });
-  console.log("************");
-  console.log(activeTickets);
 
   res.status(200).json({
     status: "success",
@@ -365,7 +363,6 @@ exports.promoteUser = catchAsync(async (req, res, next) => {
 
 exports.demoteUser = catchAsync(async (req, res, next) => {
   const { userId, role } = req.body;
-  console.log(userId);
 
   if (!userId) {
     return res.status(400).json({ message: "User ID is required." });
@@ -422,15 +419,16 @@ exports.getTickets = catchAsync(async (req, res, next) => {
           // Use the string user field directly
           "category.title": "$categoryDetails.title", // Include category title
           totalPrice: "$price",
+          uniqueId: "$uniqueId",
           adultQuantity: "$adultQuantity",
           childQuantity: "$childQuantity",
-          firstName:"$firstName",
-          lastName:"$lastName",
+          firstName: "$firstName",
+          lastName: "$lastName",
           number: "$number",
-          email:"$email",
-          pickupLocation:"$pickupLocation",
-          dropLocation:"$dropLocation",
-          addonFeatures:"$addonFeatures",
+          email: "$email",
+          pickupLocation: "$pickupLocation",
+          dropLocation: "$dropLocation",
+          addonFeatures: "$addonFeatures",
           status: 1, // Include the ticket status
           createdAt: 1, // Include the createdAt field
           date: "$date",
@@ -451,11 +449,10 @@ exports.getTickets = catchAsync(async (req, res, next) => {
 exports.cancelTicket = catchAsync(async (req, res, next) => {
   try {
     const { id } = req.params;
-    console.log(req.params);
 
     // Find the ticket by its ID
     const ticket = await Ticket.findById(id);
-    console.log(ticket);
+
     if (!ticket) {
       return next(new AppError("Ticket not found", 404));
     }
@@ -463,7 +460,6 @@ exports.cancelTicket = catchAsync(async (req, res, next) => {
     // Update the ticket status to "Canceled"
     ticket.status = "Canceled";
     await ticket.save();
-    console.log(ticket);
 
     res.status(200).json({
       status: "success",

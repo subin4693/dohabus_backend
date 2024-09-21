@@ -3,7 +3,6 @@ const catchAsync = require("../utils/catchAsync");
 const banner = require("../models/bannerModel");
 
 exports.createBanner = catchAsync(async (req, res, next) => {
-  console.log(req.body);
   const newBanner = await banner.create(req.body);
   res.status(201).json({
     status: "success",
@@ -25,7 +24,7 @@ exports.getBanner = catchAsync(async (req, res, next) => {
 
 exports.editBanner = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  console.log(req.body);
+
   const updatedBanner = await banner.findByIdAndUpdate(id, req.body, {
     new: true,
   });

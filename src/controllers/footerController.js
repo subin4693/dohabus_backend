@@ -3,35 +3,34 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 
 exports.getFooterImages = catchAsync(async (req, res, next) => {
-	const images = await footer.find();
+  const images = await footer.find();
 
-	if (!images) return next(new AppError("There is no images found", 404));
+  if (!images) return next(new AppError("There is no images found", 404));
 
-	res.status(200).json({
-		status: "success",
-		images,
-	});
+  res.status(200).json({
+    status: "success",
+    images,
+  });
 });
 
 exports.createNewFooterImage = catchAsync(async (req, res, next) => {
-	const image = req.body.imageUrl;
+  const image = req.body.imageUrl;
 
-	const iiimage = await footer.create({ image });
-	res.status(201).json({ status: "success", iiimage });
+  const iiimage = await footer.create({ image });
+  res.status(201).json({ status: "success", iiimage });
 });
 
 exports.deletetFooterImages = catchAsync(async (req, res, next) => {
-	const { id } = req.params;
+  const { id } = req.params;
 
-	await footer.findByIdAndDelete(id);
+  await footer.findByIdAndDelete(id);
 
-	res.status(200).json({ status: "success" });
+  res.status(200).json({ status: "success" });
 });
 
 exports.editFooterImage = catchAsync(async (req, res, next) => {
-	const { id } = req.params;
-	console.log(id);
-	console.log(req.body);
-	const resposne = await footer.findByIdAndUpdate(id, { image: req.body.imageUrl }, { new: true });
-	res.status(200).json({ status: "success", resposne });
+  const { id } = req.params;
+
+  const resposne = await footer.findByIdAndUpdate(id, { image: req.body.imageUrl }, { new: true });
+  res.status(200).json({ status: "success", resposne });
 });

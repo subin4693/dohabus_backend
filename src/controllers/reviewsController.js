@@ -22,7 +22,7 @@ exports.getAllReviews = catchAsync(async (req, res, next) => {
       path: "plan",
       select: "title",
     });
-  console.log(reviews);
+
   return res.status(200).json({
     status: "success",
     data: reviews,

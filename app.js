@@ -45,7 +45,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 cron.schedule("0 9 * * *", () => {
-  console.log("Scheduled called once a day at 9 AM");
   sendGmail();
 });
 app.use("/api/v1/users", userRouter);

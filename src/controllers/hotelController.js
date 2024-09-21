@@ -7,7 +7,7 @@ const AppError = require("../utils/appError");
 // Create a new hotel
 exports.createHotel = catchAsync(async (req, res, next) => {
   const { coverImage, title, description } = req.body;
-  console.log("Form data here!!!", coverImage, title, description);
+
   if (!coverImage || !title?.en || !title?.ar || !description?.en || !description?.ar) {
     return next(
       new AppError(
@@ -16,7 +16,7 @@ exports.createHotel = catchAsync(async (req, res, next) => {
       ),
     );
   }
-  console.log("Erro2");
+
   const newHotel = await Hotel.create({ coverImage, title, description });
 
   res.status(201).json({
@@ -104,12 +104,8 @@ exports.getHotelById = catchAsync(async (req, res, next) => {
 });
 
 exports.bookHotels = catchAsync(async (req, res, next) => {
-  console.log("1");
-
   const { id } = req.params;
   const userId = req.body.user ? req.body.user._id : null;
-
-  console.log("userId", userId);
 
   const {
     checkInDate,
@@ -123,8 +119,6 @@ exports.bookHotels = catchAsync(async (req, res, next) => {
     email,
     name,
   } = req.body;
-
-  console.log("done 1");
 
   // Create booking object with or without userId
   const newBookingData = {
@@ -147,8 +141,6 @@ exports.bookHotels = catchAsync(async (req, res, next) => {
 
   const newBooking = await HotelBooking.create(newBookingData);
 
-  console.log("done 2");
-
   // Respond with the created booking
   res.status(201).json({
     status: "success",
@@ -159,7 +151,6 @@ exports.bookHotels = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllHotelsBookings = catchAsync(async (req, res, next) => {
-  console.log("Working");
   try {
     const hotelBookings = await HotelBooking.find()
       .populate("userId", "name email") // Include user name and email

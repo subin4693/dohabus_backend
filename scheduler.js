@@ -76,7 +76,6 @@ exports.sendGmail = async () => {
       };
       // Send the email
       await transporter.sendMail(mailOptions);
-      console.log(`Email sent to ${email}`);
     }
   } catch (error) {
     console.log("Error in sending email:", error);

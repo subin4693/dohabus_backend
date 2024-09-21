@@ -4,15 +4,33 @@ const AppError = require("../utils/appError");
 
 // Create a new cruise
 exports.createCruise = catchAsync(async (req, res, next) => {
-  const { coverImage, title, operatorName, cruiseName, location, numberOfNights, stops, logo } = req.body;
-
-  console.log(coverImage, title, operatorName, cruiseName, location, numberOfNights, stops)
-
-  console.log("LOGO>>>>>", logo)
+  const {
+    coverImage,
+    title,
+    operatorName,
+    cruiseName,
+    location,
+    numberOfNights,
+    stops,
+    logo,
+  } = req.body;
 
   // Check for required fields
-  if (!coverImage || !title?.en || !title?.ar || !operatorName || !cruiseName || !location?.en || !location?.ar || !numberOfNights || !stops || !logo) {
-    return next(new AppError("All fields, including localized strings, are required to create a cruise", 400));
+  if (
+    !coverImage ||
+    !title?.en ||
+    !title?.ar ||
+    !operatorName ||
+    !cruiseName ||
+    !location?.en ||
+    !location?.ar ||
+    !numberOfNights ||
+    !stops ||
+    !logo
+  ) {
+    return next(
+      new AppError("All fields, including localized strings, are required to create a cruise", 400),
+    );
   }
 
   // Create new cruise using the model
@@ -71,13 +89,22 @@ exports.getAllCruises = catchAsync(async (req, res, next) => {
 // Update a cruise by ID
 exports.updateCruise = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  const { coverImage, title, operatorName, cruiseName, location, numberOfNights, stops, logo } = req.body;
+  const {
+    coverImage,
+    title,
+    operatorName,
+    cruiseName,
+    location,
+    numberOfNights,
+    stops,
+    logo,
+  } = req.body;
 
   // Find the cruise by ID and update it with new data
   const updatedCruise = await Cruise.findByIdAndUpdate(
     id,
     { coverImage, title, operatorName, cruiseName, location, numberOfNights, stops, logo },
-    { new: true, runValidators: true } // Return the updated document and validate
+    { new: true, runValidators: true }, // Return the updated document and validate
   );
 
   if (!updatedCruise) {

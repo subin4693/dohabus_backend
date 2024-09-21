@@ -10,17 +10,6 @@ exports.verifyToken = catchAsync(async (req, res, next) => {
   if (testToken && testToken.startsWith("bearer")) {
     token = testToken.split(" ")[1];
   }
-  console.log("*************************");
-  console.log(req);
-  console.log(
-    "****************************** COOKIES *******************************************8",
-  );
-
-  console.log(req.cookies);
-  console.log("*************************************************************************8");
-  console.log(testToken);
-  console.log(token);
-  console.log("*************************");
 
   if (!token) {
     return res.status(200).json({

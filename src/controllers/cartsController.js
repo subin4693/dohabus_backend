@@ -5,10 +5,7 @@ const catchAsync = require("../utils/catchAsync");
 exports.addToCart = catchAsync(async (req, res, next) => {
   const { category, tour, user, childCount, adultCount } = req.body;
 
-  console.log(user._id, category, tour);
-
   const existingCartItem = await Cart.findOne({ user: user._id, category, tour });
-  console.log(existingCartItem);
 
   if (existingCartItem) {
     return next(new AppError("This item is already in the cart.", 400));
@@ -29,8 +26,6 @@ exports.getCart = catchAsync(async (req, res, next) => {
   const cartItems = await Cart.find({ user: userId })
     .populate("category")
     .populate("tour");
-
-  console.log(cartItems);
 
   res.status(200).json({
     status: "success",

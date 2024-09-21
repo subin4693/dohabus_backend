@@ -5,10 +5,7 @@ const AppError = require("../utils/appError");
 exports.createFavourite = catchAsync(async (req, res, next) => {
   const { category, tour, user } = req.body;
 
-  console.log(user._id, category, tour);
-
   const existingFavourite = await Favourite.findOne({ user: user._id, category, tour });
-  console.log(existingFavourite);
 
   if (existingFavourite) {
     return next(new AppError("This item is already in your favourites.", 400));

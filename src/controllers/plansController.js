@@ -39,8 +39,6 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     stopSales,
   } = req.body;
 
-  console.log(category);
-  console.log(req.body);
   // Validate required fields
   const requiredFields = [
     { name: "category", value: category },
@@ -281,7 +279,7 @@ exports.editPlan = catchAsync(async (req, res, next) => {
 exports.getSinglePlan = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   // const userId = req?.user ? req?.user?.id : null; // Get the user ID if available
-  console.log(req.query);
+
   const email = req.query.user != "undefined" ? req.query.email : null;
   const userId = req.query.user != "undefined" ? req.query.user : null;
 
@@ -328,17 +326,13 @@ exports.getSinglePlan = catchAsync(async (req, res, next) => {
 
 // Get plans by category ID
 exports.getPlanByCategory = catchAsync(async (req, res, next) => {
-  console.log(req.params);
   const userId = req.query.user != "undefined" ? req.query.user : null;
-  console.log(req.query.user);
-  console.log(userId);
+
   const { categoryId } = req.params;
 
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
 
-  console.log("today ***8 **** ");
-  console.log(today);
   // Retrieve active plans and category
   const plansQuery = Plan.find({
     category: categoryId,
@@ -376,10 +370,9 @@ exports.getPlanByCategory = catchAsync(async (req, res, next) => {
 
   const updatedPlans = plans.map((plan) => {
     const planIdStr = plan._id.toString();
-    console.log("lan str:");
-    console.log(planIdStr);
+
     favid = favMap.get(planIdStr);
-    console.log("fabic: " + favid);
+
     return {
       ...plan._doc,
       isInCart: cartMap.has(planIdStr),
@@ -388,7 +381,6 @@ exports.getPlanByCategory = catchAsync(async (req, res, next) => {
       favId: favMap.get(planIdStr) || null,
     };
   });
-  console.log(updatedPlans);
 
   res.status(200).json({
     status: "success",

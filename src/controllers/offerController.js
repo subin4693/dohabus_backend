@@ -6,7 +6,7 @@ const catchAsync = require("../utils/catchAsync");
 
 exports.createOffer = catchAsync(async (req, res, next) => {
   const { plan, ...offerData } = req.body; // Extract plan array and the rest of the offer data
-  console.log(req.body);
+
   if (!plan || plan.length === 0) {
     return next(new AppError("No plan provided", 400));
   }
@@ -90,11 +90,6 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       addons = [],
     } = req.body.requestData;
 
-    console.log("***");
-    console.log(addons);
-
-    console.log("***");
-
     const plan = await Plan.findById(planId);
     if (!plan) {
       return res.status(404).json({
@@ -121,8 +116,6 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
     if (userTicketCount >= limit) {
       return next(new AppError(`Coupon code can only be used ${limit} time(s) per user`, 400));
     }
-
-    console.log(coupon);
 
     if (!coupon) {
       return res.status(400).json({
@@ -181,15 +174,12 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
     if (childCount > 0 && coupon.childDiscountType === "percentage") {
       childDiscountAmount = (totalChildPrice * coupon.childDiscountPrice) / 100;
 
-      console.log(childDiscountAmount);
       // childDiscountAmount = (totalChildPrice * coupon.childDiscountPrice) / 100;
     } else if (childCount > 0 && coupon.childDiscountType === "price") {
       childDiscountAmount = coupon.childDiscountPrice;
     }
 
     if (addons?.length > 0) {
-      console.log(addons);
-
       // Loop through add-on IDs and find matches in data.addOn
       addons.forEach((addOnId) => {
         const matchingAddOn = addOn?.find((addOn) => addOn._id == addOnId);
@@ -201,27 +191,12 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
 
       // Multiply the add-on total by the adultCount and childCount
       addOnTotalPrice = addOnTotalPrice * (adultCount + childCount);
-      console.log("---" + addons);
-      console.log("adult and child count" + adultCount + "" + childCount);
     }
-
-    console.log(adultDiscountAmount);
-    console.log(childDiscountAmount);
-    console.log("total adultPrice: " + totalAdultPrice);
-    console.log("total chidprice : " + totalChildPrice);
 
     const totalDiscountAmount = adultDiscountAmount + childDiscountAmount;
     const totalPrice = totalAdultPrice + totalChildPrice;
     const discountedPrice = totalPrice - totalDiscountAmount;
-    console.log("total price " + totalPrice);
-    console.log("addon total price " + addOnTotalPrice);
-    console.log({
-      discountedPrice: Math.max(0, discountedPrice + addOnTotalPrice), // Ensure price is not negative
-      originalPrice: totalPrice + addOnTotalPrice,
-      totalDiscountAmount,
-      adultDiscountAmount,
-      childDiscountAmount,
-    });
+
     res.status(200).json({
       status: "success",
       data: {

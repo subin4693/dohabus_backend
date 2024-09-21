@@ -49,8 +49,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     number,
   } = req.body.dataa;
 
-  console.log("addons", addons);
-
   try {
     const planDetails = await Plan.findById(plan);
     const planCategory = await Category.findById(category);
@@ -59,7 +57,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     if (!planDetails) {
       return next(new AppError("Invalid plan selected", 400));
     }
-    console.log("userDetails", userDetails.name);
+
     const { adultPrice, childPrice, adultData, childData } = planDetails;
     const sessionLimit = planDetails.limit;
 
@@ -115,11 +113,8 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       }
     }
 
-    console.log(totalAdultPrice);
-    console.log(totalChildPrice);
-
     let totalCost = totalAdultPrice + totalChildPrice;
-    console.log("totlal cost" + totalCost);
+
     let adultDiscountAmount = 0;
     let childDiscountAmount = 0;
     let offer = null;
@@ -154,7 +149,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         adultDiscountAmount = (totalAdultPrice * couponDetails.adultDiscountPrice) / 100;
       } else if (couponDetails.adultDiscountType === "price" && adultQuantity > 0) {
         adultDiscountAmount = couponDetails.adultDiscountPrice;
-        console.log("adult discount amount" + adultDiscountAmount);
       }
 
       // Calculate discount for children
@@ -169,13 +163,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 
       // Calculate the total cost
       totalCost = discountedAdultPrice + discountedChildPrice;
-
-      console.log(totalAdultPrice);
-      console.log(totalChildPrice);
-      console.log(discountedAdultPrice);
-      console.log(discountedChildPrice);
-      console.log(totalCost);
-      console.log(adultDiscountAmount + "-" + childDiscountAmount);
     }
     let addOnTotalPrice = 0;
     let addonFeatures = [];
@@ -187,41 +174,25 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
           addOnTotalPrice += matchingAddOn.price;
         }
       });
-      console.log("addOnTotalPrice+++++++++++1", addOnTotalPrice);
+
       // Multiply the add-on total by the adultCount and childCount
       let tt = 0;
       if (childQuantity && childQuantity > 0) tt += childQuantity;
       if (adultQuantity && adultQuantity > 0) tt += adultQuantity;
       addOnTotalPrice = addOnTotalPrice * tt;
-      console.log("addOnTotalPrice+++++++++++", addOnTotalPrice);
-      console.log("total cost" + totalCost);
     }
 
-    console.log({
-      user: userDetails.name,
-      category,
-      plan,
-      price: totalCost + addOnTotalPrice || 0,
-      adultQuantity: adultQuantity || 0,
-      childQuantity: childQuantity || 0,
-      session,
-      date,
-      firstName,
-      lastName,
-      email,
-      pickupLocation,
-      dropLocation,
-      discountAmount: adultDiscountAmount + childDiscountAmount || 0,
-      status: "Booked",
-      addonFeatures,
-      number,
-      offer,
-    });
+    const latestTicket = await Ticket.findOne().sort({ uniqueId: -1 });
+    const newIdNumber = latestTicket ? parseInt(latestTicket.uniqueId) + 1 : 1;
+
+    // Format the new uniqueId with leading zeros
+    const newUniqueId = String(newIdNumber).padStart(5, "0"); // Change 5 to the desired length
 
     let allcost = totalCost + addOnTotalPrice;
-    console.log("Cost?????????????????????/", allcost);
+
     const ticket = await Ticket.create({
       user: userDetails.name,
+      uniqueId: newUniqueId,
       category,
       plan,
       price: totalCost + addOnTotalPrice || 0,
@@ -242,74 +213,74 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 
     try {
       const emailContent = `
-        <h3 style="font-family: Arial, sans-serif; color: #333;">
-            Hello ${userDetails.name},
-        </h3>
-        <p style="font-family: Arial, sans-serif; color: #333;">
-            Thank you for purchasing tickets for ${
-              planDetails.title.en
-            }. We are thrilled to have you join us for this exciting event.
-            Your support means a lot to us, and we are committed to providing you with an unforgettable experience.
-            From the moment you arrive, we hope you enjoy the vibrant atmosphere, engaging performances, and the overall ambiance
-            that makes this event special. We look forward to seeing you and hope you have a fantastic time!
-        </p>
-        <p style="font-family: Arial, sans-serif; color: #333;">
-            Here are the purchase details:
-        </p>
-        <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Tour Name: ${planDetails.title.en}
-        </h4>
-        <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Number Of Tickets: ${adultQuantity + childQuantity}
-        </h4>
-        <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Total Amount: ${allcost} QAR
-        </h4>
-        <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Category: ${planCategory.title.en}
-        </h4>
+          <h3 style="font-family: Arial, sans-serif; color: #333;">
+              Hello ${userDetails.name},
+          </h3>
+          <p style="font-family: Arial, sans-serif; color: #333;">
+              Thank you for purchasing tickets for ${
+                planDetails.title.en
+              }. We are thrilled to have you join us for this exciting event.
+              Your support means a lot to us, and we are committed to providing you with an unforgettable experience.
+              From the moment you arrive, we hope you enjoy the vibrant atmosphere, engaging performances, and the overall ambiance
+              that makes this event special. We look forward to seeing you and hope you have a fantastic time!
+          </p>
+          <p style="font-family: Arial, sans-serif; color: #333;">
+              Here are the purchase details:
+          </p>
+          <h4 style="font-family: Arial, sans-serif; color: #333;">
+              Tour Name: ${planDetails.title.en}
+          </h4>
+          <h4 style="font-family: Arial, sans-serif; color: #333;">
+              Number Of Tickets: ${adultQuantity + childQuantity}
+          </h4>
+          <h4 style="font-family: Arial, sans-serif; color: #333;">
+              Total Amount: ${allcost} QAR
+          </h4>
+          <h4 style="font-family: Arial, sans-serif; color: #333;">
+              Category: ${planCategory.title.en}
+          </h4>
 
-        <p style="font-family: Arial, sans-serif; color: #333;">
-        We greatly value your recent experience with us. If you were pleased with our service, we would be honored if you could share your feedback by leaving a review on TripAdvisor. Your insights are invaluable in helping us continue to provide excellent service.<br>
-        [https://www.tripadvisor.com/Attraction_Review-g294009-d6215547-Reviews-Doha_Bus-Doha.html]
-        </p>
-    
-        <br>
-        ${signature}
-    `;
+          <p style="font-family: Arial, sans-serif; color: #333;">
+          We greatly value your recent experience with us. If you were pleased with our service, we would be honored if you could share your feedback by leaving a review on TripAdvisor. Your insights are invaluable in helping us continue to provide excellent service.<br>
+          [https://www.tripadvisor.com/Attraction_Review-g294009-d6215547-Reviews-Doha_Bus-Doha.html]
+          </p>
+
+          <br>
+          ${signature}
+      `;
       const emailContentFordohabus = `
-    <h3 style="font-family: Arial, sans-serif; color: #333;">
-        Dear DohaBus Team,
-    </h3>
-    <p style="font-family: Arial, sans-serif; color: #333;">
-        We would like to inform you that a new booking has been made on your website by ${
-          userDetails.name
-        }.
-    </p>
-    <p style="font-family: Arial, sans-serif; color: #333;">
-        Below are the details of the purchase:
-    </p>
-    <h4 style="font-family: Arial, sans-serif; color: #333;">
-        Tour Name: ${planDetails.title.en}
-    </h4>
-    <h4 style="font-family: Arial, sans-serif; color: #333;">
-        Number Of Tickets: ${adultQuantity + childQuantity}
-    </h4>
-    <h4 style="font-family: Arial, sans-serif; color: #333;">
-        Total Amount: ${allcost} QAR
-    </h4>
-    <h4 style="font-family: Arial, sans-serif; color: #333;">
-        Category: ${planCategory.title.en}
-    </h4>
-    <p style="font-family: Arial, sans-serif; color: #333;">
-        Please ensure all necessary arrangements are made to accommodate this booking. Feel free to reach out if any further details are required.
-    </p>
-    <p style="font-family: Arial, sans-serif; color: #333;">
-        Thank you for your attention.
-    </p>
-    <br>
-    ${signature}
-  `;
+      <h3 style="font-family: Arial, sans-serif; color: #333;">
+          Dear DohaBus Team,
+      </h3>
+      <p style="font-family: Arial, sans-serif; color: #333;">
+          We would like to inform you that a new booking has been made on your website by ${
+            userDetails.name
+          }.
+      </p>
+      <p style="font-family: Arial, sans-serif; color: #333;">
+          Below are the details of the purchase:
+      </p>
+      <h4 style="font-family: Arial, sans-serif; color: #333;">
+          Tour Name: ${planDetails.title.en}
+      </h4>
+      <h4 style="font-family: Arial, sans-serif; color: #333;">
+          Number Of Tickets: ${adultQuantity + childQuantity}
+      </h4>
+      <h4 style="font-family: Arial, sans-serif; color: #333;">
+          Total Amount: ${allcost} QAR
+      </h4>
+      <h4 style="font-family: Arial, sans-serif; color: #333;">
+          Category: ${planCategory.title.en}
+      </h4>
+      <p style="font-family: Arial, sans-serif; color: #333;">
+          Please ensure all necessary arrangements are made to accommodate this booking. Feel free to reach out if any further details are required.
+      </p>
+      <p style="font-family: Arial, sans-serif; color: #333;">
+          Thank you for your attention.
+      </p>
+      <br>
+      ${signature}
+    `;
 
       await transporter.sendMail({
         to: email,
@@ -321,9 +292,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         subject: `Ticket Booked By ${userDetails.name},Plan ${planDetails.title.en} tickets`,
         html: emailContentFordohabus,
       });
-      console.log("Email has been sent");
     } catch (error) {
-      console.log(error.message);
       return res.status(400).json({ message: error.message });
     }
 
@@ -344,9 +313,8 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 exports.getTickets = catchAsync(async (req, res, next) => {
   const userId = req.query.user != "undefined" ? req.query.user : null;
 
-  console.log(userId);
   const tickets = await Ticket.find({ user: userId });
-  console.log(tickets);
+
   res.status(200).json({
     status: "success",
     data: {
@@ -366,7 +334,7 @@ exports.getAllTickets = catchAsync(async (req, res, next) => {
       select: "title description",
     })
     .select(
-      "firstName lastName email category plan price adultQuantity childQuantity date status pickupLocation dropLocation createdAt",
+      "firstName lastName email category plan price adultQuantity childQuantity date status pickupLocation dropLocation createdAt uniqueId",
     ); // Including firstName and lastName in the ticket query
 
   res.status(200).json({

@@ -3,10 +3,7 @@ const catchAsync = require("../utils/catchAsync");
 const TransBooking = require("../models/booktransportation");
 
 exports.createBooking = catchAsync(async (req, res, next) => {
-  console.log("Starting transportation booking process");
   const userId = req.body.user ? req.body.user._id : null; // Get the user ID from the request
-
-  console.log("User ID:", userId);
 
   const {
     transId,
@@ -17,17 +14,6 @@ exports.createBooking = catchAsync(async (req, res, next) => {
     email,
     name,
   } = req.body;
-  console.log(
-    transId,
-    checkInDate,
-    numberOfAdults,
-    numberOfChildren,
-    additionalRequest,
-    email,
-    name,
-  );
-
-  console.log("Received booking data");
 
   // Create booking object with or without userId
   const newBookingData = {
@@ -39,14 +25,12 @@ exports.createBooking = catchAsync(async (req, res, next) => {
     email,
     name,
   };
-  console.log(newBookingData);
+
   if (userId) {
     newBookingData.userId = userId;
   }
 
   const newBooking = await TransBooking.create(newBookingData);
-
-  console.log("Transportation booking created successfully");
 
   // Respond with the created booking
   res.status(201).json({

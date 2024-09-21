@@ -4,8 +4,6 @@ const Category = require("../models/categoryModel");
 const Plan = require("../models/planModel");
 
 exports.createCategory = catchAsync(async (req, res, next) => {
-  console.log("API called successfully");
-
   const { coverImage, title, description } = req.body;
 
   if (!coverImage || !title?.en || !title?.ar || !description?.en || !description?.ar) {

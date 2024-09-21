@@ -6,7 +6,7 @@ exports.createAbout = catchAsync(async (req, res, next) => {
   const data = req.body;
   data.text = req.body.about;
   const newAboutUs = await Aboutus.create(data);
-  console.log("New About Us created:", newAboutUs);
+
   res.status(201).json({
     status: "success",
     aboutus: newAboutUs,
@@ -15,7 +15,6 @@ exports.createAbout = catchAsync(async (req, res, next) => {
 
 exports.getAboutus = catchAsync(async (req, res, next) => {
   const aboutUsEntries = await Aboutus.find();
-  console.log("All About Us entries:", aboutUsEntries);
   res.status(200).json({
     status: "success",
     aboutus: aboutUsEntries,

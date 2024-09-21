@@ -13,7 +13,6 @@ exports.createOfferBanner = async (req, res) => {
     }
 
     const tourIdList = tours.map((tour) => tour._id);
-    console.log(tourIdList);
 
     const offerBanner = new OfferBanner({
       title,
@@ -46,8 +45,6 @@ exports.getActiveOfferBanners = async (req, res) => {
       select: "category _id", // Select only category and _id from Plan
     });
 
-    console.log(activeOfferBanners);
-
     res.status(200).json(activeOfferBanners);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -69,7 +66,7 @@ exports.getOfferBannerById = async (req, res) => {
 exports.updateOfferBanner = async (req, res) => {
   try {
     const offerBanner = await OfferBanner.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    console.log(req.body);
+
     if (!offerBanner) {
       return res.status(404).json({ message: "OfferBanner not found" });
     }
