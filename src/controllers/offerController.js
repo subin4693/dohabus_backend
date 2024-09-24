@@ -145,6 +145,14 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       // Adult Data Calculation
       if (adultData && adultCount > 0) {
         const sortedAdultData = adultData.sort((a, b) => a.pax - b.pax); // Sort by pax ascending
+
+        const minAdultPax = sortedAdultData[0]?.pax; // Get the minimum pax from sortedAdultData
+
+        if (adultCount < minAdultPax) {
+          return res.status(400).json({
+            message: `The minimum adult count should be ${minAdultPax}. You have selected ${adultCount}.`,
+          });
+        }
         const selectedAdultData = sortedAdultData.filter((adult) => adult.pax <= adultCount).pop(); // Get the closest pax <= adultCount
 
         totalAdultPrice = selectedAdultData ? selectedAdultData.price * adultCount : 0; // Use the selected price and multiply by the count
@@ -153,6 +161,15 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       // Child Data Calculation
       if (childData && childCount > 0) {
         const sortedChildData = childData.sort((a, b) => a.pax - b.pax); // Sort by pax ascending
+
+        const minChildPax = sortedChildData[0]?.pax; // Get the minimum pax from sortedChildData
+
+        // Check if childQuantity is greater than or equal to the minimum pax
+        if (childCount < minChildPax) {
+          return res.status(400).json({
+            message: `The minimum child count should be ${minChildPax}. You have selected ${childCount}.`,
+          });
+        }
         const selectedChildData = sortedChildData.filter((child) => child.pax <= childCount).pop(); // Get the closest pax <= childCount
 
         totalChildPrice = selectedChildData ? selectedChildData.price * childCount : 0; // Use the selected price and multiply by the count
