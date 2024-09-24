@@ -142,7 +142,7 @@ const plansModel = new mongoose.Schema({
     default: 0,
   },
 });
-plansModel.pre("save", function (next) {
+plansModel.pre("save", function(next) {
   if (this.stopSales && this.stopSales.length > 0) {
     this.stopSales = this.stopSales.map((date) => {
       let adjustedDate = new Date(date);
@@ -154,7 +154,7 @@ plansModel.pre("save", function (next) {
 });
 
 // Pre-update middleware to adjust dates during update operations
-plansModel.pre(["updateOne", "updateMany", "findOneAndUpdate"], function (next) {
+plansModel.pre(["updateOne", "updateMany", "findOneAndUpdate"], function(next) {
   if (this.getUpdate().stopSales) {
     this.getUpdate().stopSales = this.getUpdate().stopSales.map((date) => {
       let adjustedDate = new Date(date);

@@ -90,6 +90,8 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       addons = [],
     } = req.body.requestData;
 
+    console.log(addons);
+
     const plan = await Plan.findById(planId);
     if (!plan) {
       return res.status(404).json({
@@ -113,7 +115,7 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       offer: coupon._id,
       email,
     });
-    if (userTicketCount >= limit) {
+    if (userTicketCount >= limit && limit != 0) {
       return next(new AppError(`Coupon code can only be used ${limit} time(s) per user`, 400));
     }
 
@@ -164,7 +166,9 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
 
     if (adultCount > 0 && coupon.adultDiscountType === "percentage") {
       adultDiscountAmount = (totalAdultPrice * coupon.adultDiscountPrice) / 100;
-
+      console.log(totalAdultPrice);
+      console.log(coupon);
+      console.log(adultDiscountAmount);
       // adultDiscountAmount = (totalAdultPrice * coupon.adultDiscountPrice) / 100;
     } else if (adultCount > 0 && coupon.adultDiscountType === "price") {
       adultDiscountAmount = coupon.adultDiscountPrice;
@@ -182,15 +186,18 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
     if (addons?.length > 0) {
       // Loop through add-on IDs and find matches in data.addOn
       addons.forEach((addOnId) => {
-        const matchingAddOn = addOn?.find((addOn) => addOn._id == addOnId);
+        const [addId, count] = addOnId.split(":");
+        const matchingAddOn = addOn?.find((addOn) => addOn._id == addId);
         if (matchingAddOn) {
+          const addOnCount = parseInt(count, 10) || 1;
           // Add the price of the matched add-on
-          addOnTotalPrice += matchingAddOn.price;
+          addOnTotalPrice += matchingAddOn.price * addOnCount;
         }
+        console.log(addOnTotalPrice);
       });
 
       // Multiply the add-on total by the adultCount and childCount
-      addOnTotalPrice = addOnTotalPrice * (adultCount + childCount);
+      //addOnTotalPrice = addOnTotalPrice * (adultCount + childCount);
     }
 
     const totalDiscountAmount = adultDiscountAmount + childDiscountAmount;

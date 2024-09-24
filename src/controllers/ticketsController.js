@@ -132,7 +132,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         offer: couponDetails._id,
         email,
       });
-      if (userTicketCount >= limit) {
+      if (userTicketCount >= limit && limit > 0) {
         return next(new AppError(`Coupon code can only be used ${limit} time(s) per user`, 400));
       }
       offer = couponDetails._id;
@@ -166,12 +166,16 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     }
     let addOnTotalPrice = 0;
     let addonFeatures = [];
+
     if (addons?.length > 0 && planDetails?.addOn?.length > 0) {
       addons.forEach((addOnId) => {
-        const matchingAddOn = planDetails?.addOn?.find((addOn) => addOn._id == addOnId);
+        const [addId, count] = addOnId.split(":");
+
+        const matchingAddOn = planDetails?.addOn?.find((addOn) => addOn._id == addId);
         addonFeatures.push(matchingAddOn?.en);
         if (matchingAddOn) {
-          addOnTotalPrice += matchingAddOn.price;
+          const addOnCount = parseInt(count, 10) || 1;
+          addOnTotalPrice += matchingAddOn.price * addOnCount;
         }
       });
 
@@ -179,7 +183,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       let tt = 0;
       if (childQuantity && childQuantity > 0) tt += childQuantity;
       if (adultQuantity && adultQuantity > 0) tt += adultQuantity;
-      addOnTotalPrice = addOnTotalPrice * tt;
     }
 
     const latestTicket = await Ticket.findOne().sort({ uniqueId: -1 });
