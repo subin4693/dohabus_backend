@@ -94,7 +94,14 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 
       // Adult Data Calculation
       if (adultData && adultQuantity > 0) {
-        const sortedAdultData = adultData.sort((a, b) => a.pax - b.pax); // Sort by pax ascending
+        const sortedAdultData = adultData.sort((a, b) => a.pax - b.pax);
+        const minAdultPax = sortedAdultData[0]?.pax; // Get the minimum pax from sortedAdultData
+
+        if (adultQuantity < minAdultPax) {
+          return res.status(400).json({
+            message: `The minimum adult count should be ${minAdultPax}. You have selected ${adultQuantity}.`,
+          });
+        }
         const selectedAdultData = sortedAdultData
           .filter((adult) => adult.pax <= adultQuantity)
           .pop(); // Get the closest pax <= adultQuantity
@@ -104,7 +111,15 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 
       // Child Data Calculation
       if (childData && childQuantity > 0) {
-        const sortedChildData = childData.sort((a, b) => a.pax - b.pax); // Sort by pax ascending
+        const sortedChildData = childData.sort((a, b) => a.pax - b.pax);
+        const minChildPax = sortedChildData[0]?.pax; // Get the minimum pax from sortedChildData
+
+        // Check if childQuantity is greater than or equal to the minimum pax
+        if (childQuantity < minChildPax) {
+          return res.status(400).json({
+            message: `The minimum child count should be ${minChildPax}. You have selected ${childQuantity}.`,
+          });
+        }
         const selectedChildData = sortedChildData
           .filter((child) => child.pax <= childQuantity)
           .pop(); // Get the closest pax <= childQuantity
