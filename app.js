@@ -23,6 +23,7 @@ const offerRouter = require("./src/routes/offerRouter");
 const offerbannerRouter = require("./src/routes/offerbannerRouter");
 const couriesRouter = require("./src/routes/couriseRouter");
 const populorCouriesRouter = require("./src/routes/populorcouriseRouter");
+const guideLineRouter = require("./src/routes/guidelineRouter");
 
 const transportationRouter = require("./src/routes/transportationRouter");
 const transbookrouters = require("./src/routes/TransbookingRouter");
@@ -74,6 +75,7 @@ app.use("/api/v1/offerbanner", offerbannerRouter);
 
 app.use("/api/v1/couries", couriesRouter);
 app.use("/api/v1/populor-couries", populorCouriesRouter);
+app.use("/api/v1/guidelines", guideLineRouter);
 
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
