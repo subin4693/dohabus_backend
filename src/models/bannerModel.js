@@ -5,10 +5,10 @@ const bannerModel = new mongoose.Schema({
     type: String,
     required: [true, "Please provide a valid image"],
   },
-  url: {
-    type: String,
-    required: [true, "Please provide a valid link"],
-  },
+  // url: {
+  //   type: String,
+  //   required: [true, "Please provide a valid link"],
+  // },
 });
 
 module.exports = new mongoose.model("Banner", bannerModel);
