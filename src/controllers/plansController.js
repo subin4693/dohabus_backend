@@ -37,6 +37,7 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     childData,
     limit,
     stopSales,
+    minPerson,
   } = req.body;
 
   // Validate required fields
@@ -106,6 +107,7 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     childData,
     limit,
     stopSales,
+    minPerson,
   });
 
   res.status(201).json({
@@ -176,6 +178,7 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     childData, // New field for detailed child pricing
     limit,
     stopSales,
+    minPerson,
   } = req.body.formData;
 
   // Validate required fields
@@ -243,6 +246,7 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     addOn, // Changed to match the request
     limit,
     stopSales,
+    minPerson,
     ...(hasAdultData && { adultData }),
     ...(hasChildData && { childData }),
     ...(hasAdultPrice && { adultPrice }),
