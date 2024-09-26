@@ -5,6 +5,8 @@ const userController = require("../controllers/usersController");
 
 const router = express.Router();
 
+router.route("/using-google").post(userController.SigninWithGoogle);
+
 router.route("/signup").post(userController.signup);
 
 router.route("/signin").post(userController.signin);

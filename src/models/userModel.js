@@ -18,13 +18,12 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: [true, "Please enter a password."],
-      minlength: 8,
+      // required: [true, "Please enter a password."],
+      // minlength: 8,
     },
-    number:{
-      type:String,
-      required:[true,"Please enter a number"],
-      
+    number: {
+      type: String,
+      // required:[true,"Please enter a number"],
     },
     role: {
       type: String,
