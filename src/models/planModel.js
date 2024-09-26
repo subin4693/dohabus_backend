@@ -124,6 +124,10 @@ const plansModel = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  minPerson: {
+    type: Number,
+    default: 0,
+  },
   stopSales: [
     {
       type: Date,

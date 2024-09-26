@@ -100,13 +100,19 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       });
     }
 
-    const { childPrice, adultPrice, adultData, childData, addOn } = plan;
+    const { childPrice, adultPrice, adultData, childData, addOn, minPerson } = plan;
 
     const coupon = await Offer.findOne({
       couponCode: couponCode,
       plan: planId, // Check if planId is in the plan array
       status: "active",
     });
+    if (!coupon) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Invalid or expired coupon code",
+      });
+    }
 
     const { limit } = coupon;
 
@@ -119,12 +125,6 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       return next(new AppError(`Coupon code can only be used ${limit} time(s) per user`, 400));
     }
 
-    if (!coupon) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Invalid or expired coupon code",
-      });
-    }
     const now = new Date();
     if (now < coupon.startingDate || now > coupon.endingDate) {
       return res.status(400).json({
@@ -132,6 +132,14 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
         message: "Coupon code is not valid at this time",
       });
     }
+
+    if (minPerson > 0 && minPerson > adultCount + childCount) {
+      return res.status(400).json({
+        message: `The minimum persons count should be ${minPerson}. You have selected ${adultCount +
+          childCount}`,
+      });
+    }
+
     let addOnTotalPrice = 0;
     let totalAdultPrice = 0,
       totalChildPrice = 0;

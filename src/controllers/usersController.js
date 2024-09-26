@@ -24,7 +24,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   // var expirationDate = new Date();
   // expirationDate.setDate(expirationDate.getDate() + 30);
 
-  res.cookie("token", "bearer " + token);
+  // res.cookie("token", "bearer " + token);
 
   res.status(201).json({
     status: "success",
@@ -69,7 +69,7 @@ exports.signin = catchAsync(async (req, res, next) => {
   // var expirationDate = new Date();
   // expirationDate.setDate(expirationDate.getDate() + 30);
 
-  res.cookie("token", "bearer " + token);
+  // res.cookie("token", "bearer " + token);
 
   res.status(201).json({
     status: "success",

@@ -58,7 +58,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       return next(new AppError("Invalid plan selected", 400));
     }
 
-    const { adultPrice, childPrice, adultData, childData } = planDetails;
+    const { adultPrice, childPrice, adultData, childData, minPerson } = planDetails;
     const sessionLimit = planDetails.limit;
 
     const targetDate = new Date(date);
@@ -80,6 +80,13 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       const availableTickets = sessionLimit - totalBookedTickets;
       return res.status(400).json({
         message: `Only ${availableTickets} tickets are available for this session.`,
+      });
+    }
+
+    if (minPerson > 0 && minPerson > adultQuantity + childQuantity) {
+      return res.status(400).json({
+        message: `The minimum persons count should be ${minPerson}. You have selected ${adultQuantity +
+          childQuantity}`,
       });
     }
 
