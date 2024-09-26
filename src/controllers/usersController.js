@@ -111,3 +111,67 @@ exports.verify = catchAsync(async (req, res, next) => {
   //   },
   // });
 });
+
+
+
+
+exports.SigninWithGoogle = catchAsync(async (req, res, next) => {
+  console.log("Goooooogle")
+  const data = req.body;
+  console.log(data.fields.email)
+
+  const user = await User.findOne({ email: data.fields.email });
+
+  try {
+    if (!user) {
+      const newUser = await User.create({ email: data.fields.email, name: data.fields.name, number: data.fields.phone });
+      const token = jwt.sign(
+        { id: newUser._id, role: newUser.role, email: newUser.email },
+        process.env.JWT_SECRECT,
+        {
+          expiresIn: process.env.LOGIN_EXPIRES,
+        },
+      );
+
+      newUser.password = undefined;
+
+      res.cookie("token", "bearer " + token);
+
+      res.status(201).json({
+        status: "success",
+
+        data: {
+          user: newUser,
+        },
+      });
+    }
+    else {
+      const user = await User.findOne({ email: data.fields.email });
+      const token = jwt.sign(
+        { id: user._id, role: user.role, email: user.email },
+        process.env.JWT_SECRECT,
+        {
+          expiresIn: process.env.LOGIN_EXPIRES,
+        },
+      );
+
+      res.cookie("token", "bearer " + token);
+
+      res.status(201).json({
+        status: "success",
+
+        data: {
+          user,
+        },
+      });
+
+    }
+  } catch (error) {
+    console.log(error.message)
+    res.status(500).json({
+      status: "Failed",
+    });
+  }
+
+
+});
