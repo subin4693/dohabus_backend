@@ -37,7 +37,7 @@ let app = express();
 let weekCounter = 0;
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://main--boisterous-dasik-d64956.netlify.app","www.dohabus.com"],
+    origin: ["http://localhost:5173", "https://main--boisterous-dasik-d64956.netlify.app","https://www.dohabus.com","https://dohabus.com"],
     credentials: true,
   }),
 );
