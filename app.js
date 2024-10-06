@@ -27,6 +27,7 @@ const guideLineRouter = require("./src/routes/guidelineRouter");
 
 const transportationRouter = require("./src/routes/transportationRouter");
 const transbookrouters = require("./src/routes/TransbookingRouter");
+const faqRouter = require("./src/routes/faqRouter");
 const cron = require("node-cron");
 const cors = require("cors");
 const AppError = require("./src/utils/appError");
@@ -37,7 +38,7 @@ let app = express();
 let weekCounter = 0;
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://main--boisterous-dasik-d64956.netlify.app","https://www.dohabus.com","https://dohabus.com"],
+    origin: ["http://localhost:5173", "https://main--boisterous-dasik-d64956.netlify.app", "https://www.dohabus.com", "https://dohabus.com"],
     credentials: true,
   }),
 );
@@ -76,6 +77,7 @@ app.use("/api/v1/offerbanner", offerbannerRouter);
 app.use("/api/v1/couries", couriesRouter);
 app.use("/api/v1/populor-couries", populorCouriesRouter);
 app.use("/api/v1/guidelines", guideLineRouter);
+app.use("/api/v1/faq", faqRouter);
 
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
