@@ -8,7 +8,7 @@ const Ticket = require("../models/ticketModel");
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 const { v4: uuidv4 } = require("uuid"); // Ensure that 'uuid' is installed properly
-
+const cryptojs = require('crypto-js');
 const generatePaymentRequestSKIP = require("../utils/generatePayment");
 dotenv.config();
 dotenv.config({ path: "dohabus_backend/.env" });
@@ -596,8 +596,9 @@ exports.handleWebhook = async (req, res) => {
 
     res.status(200).json({ success: true });
   } catch (error) {
+    console.log("Webhook error",error);
     console.error("Error handling webhook:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: "Internal server error",error: error.message  });
   }
 };
 exports.getTickets = catchAsync(async (req, res, next) => {
