@@ -28,13 +28,21 @@ const paymentGatewayDetails = {
   clientId: process.env.SKIP_CASH_CLIENT_ID,
 };
 const calculateSignature = (payload, secretKey) => {
-  const combinedData = Object.keys(payload)
-    .sort()
-    .map((key) => `${key}=${payload[key]}`)
-    .join(",");
+  // Specific order as per SkipCash documentation
+  const fieldOrder = ['paymentId', 'amount', 'statusId', 'transactionId', 'custom1', 'visaId'];
+
+  const combinedData = fieldOrder
+    .map(key => payload[key] != null && payload[key] !== '' ? `${key}=${payload[key]}` : null)
+    .filter(item => item !== null)
+    .join(',');
+
+  console.log('Combined data:', combinedData);
 
   const hash = cryptojs.HmacSHA256(combinedData, secretKey);
-  return cryptojs.enc.Base64.stringify(hash);
+  const signature = cryptojs.enc.Base64.stringify(hash);
+
+  console.log('Calculated signature:', signature);
+  return signature;
 };
 const esignature = `
     <div style="margin-left: 10px;">
@@ -297,10 +305,17 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 
 exports.handleWebhook = async (req, res) => {
   try {
-    console.log("Webhook received:", req.body);
+  
+    console.log('Received webhook payload:', req.body);
+    console.log('Received headers:', req.headers);
     const { paymentId, amount, statusId, transactionId, custom1, visaId } = req.body;
     const signature = req.headers.authorization;
     const calculatedSignature = calculateSignature(req.body, process.env.SKIP_CASH_WEBHOOK_KEY);
+
+
+    console.log('Received signature:', receivedSignature);
+    console.log('Calculated signature:', calculatedSignature);
+
 
     console.log("Signature verification:", {
       received: signature,
