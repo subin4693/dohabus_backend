@@ -9,6 +9,7 @@ const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 const { v4: uuidv4 } = require("uuid"); // Ensure that 'uuid' is installed properly
 const cryptojs = require('crypto-js');
+const crypto = require('crypto');
 const generatePaymentRequestSKIP = require("../utils/generatePayment");
 dotenv.config();
 dotenv.config({ path: "dohabus_backend/.env" });
@@ -27,10 +28,11 @@ const paymentGatewayDetails = {
   keyId: process.env.SKIP_CASH_KEY_ID,
   clientId: process.env.SKIP_CASH_CLIENT_ID,
 };
+
 const calculateSignature = (payload, secretKey) => {
   // Specific order as per SkipCash documentation
   const fieldOrder = ['paymentId', 'amount', 'statusId', 'transactionId', 'custom1', 'visaId'];
-
+  
   const combinedData = fieldOrder
     .map(key => payload[key] != null && payload[key] !== '' ? `${key}=${payload[key]}` : null)
     .filter(item => item !== null)
@@ -38,8 +40,9 @@ const calculateSignature = (payload, secretKey) => {
 
   console.log('Combined data:', combinedData);
 
-  const hash = cryptojs.HmacSHA256(combinedData, secretKey);
-  const signature = cryptojs.enc.Base64.stringify(hash);
+  const hmac = crypto.createHmac('sha256', secretKey);
+  hmac.update(combinedData);
+  const signature = hmac.digest('base64');
 
   console.log('Calculated signature:', signature);
   return signature;
@@ -305,28 +308,20 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 
 exports.handleWebhook = async (req, res) => {
   try {
-  
     console.log('Received webhook payload:', req.body);
     console.log('Received headers:', req.headers);
-    const { paymentId, amount, statusId, transactionId, custom1, visaId } = req.body;
-    const signature = req.headers.authorization;
+  
+    const receivedSignature = req.headers.authorization;
     const calculatedSignature = calculateSignature(req.body, process.env.SKIP_CASH_WEBHOOK_KEY);
-
-
-    console.log('Received signature:',  signature);
+  
+    console.log('Received signature:', receivedSignature);
     console.log('Calculated signature:', calculatedSignature);
-
-
-    console.log("Signature verification:", {
-      received: signature,
-      calculated: calculatedSignature,
-      isValid: signature === calculatedSignature,
-    });
-
-    if (signature !== calculatedSignature) {
+  
+    if (receivedSignature !== calculatedSignature) {
       console.log("Invalid signature");
       return res.status(400).json({ success: false, message: "Invalid signature" });
     }
+  
     // Populate user.populate('plan')      // Populate plan.populate('category');;
     const ticket = await Ticket.findOne({ transactionId: transactionId })
       // .populate('user')      // Populate user
