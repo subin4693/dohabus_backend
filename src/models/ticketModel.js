@@ -6,11 +6,11 @@ const ticketModel = new mongoose.Schema(
       type: String,
       required: true,
     },
-    user: {
-      type: String,
-      required: [true, "User id is required"],
-      ref: "User",
-    },
+    // user: {
+    //   type: String,
+
+    //   ref: "User",
+    // },
     offer: {
       type: mongoose.Schema.Types.ObjectId,
 
@@ -75,6 +75,21 @@ const ticketModel = new mongoose.Schema(
     number: {
       type: String,
       required: [true, "Mobile number is required"],
+    },
+    transactionId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["Pending", "Paid", "Failed", "Cancelled"],
+      default: "Pending",
+    },
+    visaId: String,
+    expiresAt: {
+      type: Date,
+      required: true,
     },
     status: {
       type: String,
