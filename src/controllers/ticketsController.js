@@ -332,11 +332,11 @@ exports.handleWebhook = async (req, res) => {
         // Sending emails
         const emailContent = `
     //           <h3 style="font-family: Arial, sans-serif; color: #333;">
-    //               Hello ${ticket.firstName}+ ${ticket.lastName},
+    //               Hello ${ticket?.firstName}+ ${ticket?.lastName},
     //           </h3>
     //           <p style="font-family: Arial, sans-serif; color: #333;">
     //               Thank you for purchasing tickets for ${
-      ticket.plan.title.en
+      ticket?.plan?.title?.en
     }. We are thrilled to have you join us for this exciting event.
                   Your support means a lot to us, and we are committed to providing you with an unforgettable experience.
                   From the moment you arrive, we hope you enjoy the vibrant atmosphere, engaging performances, and the overall ambiance
@@ -348,40 +348,40 @@ exports.handleWebhook = async (req, res) => {
                   
               </p>
  <h4 style="font-family: Arial, sans-serif; color: #333;">
-                  Unique Id: ${ticket.uniqueId}
+                  Unique Id: ${ticket?.uniqueId}
               </h4>
 
                <h4 style="font-family: Arial, sans-serif; color: #333;">
-                  Unique Id: ${ticket.uniqueId}
+                  Unique Id: ${ticket?.uniqueId}
               </h4>
               <h4 style="font-family: Arial, sans-serif; color: #333;">
-                  Tour Name: ${ticket.plan.title.en}
+                  Tour Name: ${ticket?.plan?.title?.en}
               </h4>
               <h4 style="font-family: Arial, sans-serif; color: #333;">
-                  Number Of Tickets: ${ticket.adultQuantity + ticket.childQuantity}
+                  Number Of Tickets: ${ticket?.adultQuantity + ticket?.childQuantity}
               </h4>
               <h4 style="font-family: Arial, sans-serif; color: #333;">
                   Total Amount: ${allcost} QAR
               </h4>
                 <h4 style="font-family: Arial, sans-serif; color: #333;">
-                  Pick Up Location: ${ticket.pickupLocation} 
+                  Pick Up Location: ${ticket?.pickupLocation} 
               </h4>
                 <h4 style="font-family: Arial, sans-serif; color: #333;">
-                Drop Location: ${ticket.dropLocation} 
+                Drop Location: ${ticket?.dropLocation} 
               </h4>
               <h4 style="font-family: Arial, sans-serif; color: #333;">
-                  Category: ${ticket.category.title.en}
+                  Category: ${ticket?.category?.title?.en}
               </h4>
      <h4 style="font-family: Arial, sans-serif; color: #333;">
-                 Add On : ${ticket.addonFeatures?.join()}
+                 Add On : ${ticket?.addonFeatures?.join()}
               </h4>
 
               <h4 style="font-family: Arial, sans-serif; color: #333;">
-                 Selected Plan :  ${ticket.plan.title.en}
+                 Selected Plan :  ${ticket?.plan?.title?.en}
               </h4>
 
                <h4 style="font-family: Arial, sans-serif; color: #333;">
-                 Session :  ${ticket.session}
+                 Session :  ${ticket?.session}
               </h4>
 
               <h4 style="font-family: Arial, sans-serif; color: #333;">
@@ -393,23 +393,23 @@ exports.handleWebhook = async (req, res) => {
   </h4>
 
     <h4 style="font-family: Arial, sans-serif; color: #333;">
-                 Phone Number :  ${ticket.number}
+                 Phone Number :  ${ticket?.number}
               </h4>
                  <h4 style="font-family: Arial, sans-serif; color: #333;">
-               Email :  ${ticket.email}
+               Email :  ${ticket?.email}
               </h4>
                  <h4 style="font-family: Arial, sans-serif; color: #333;">
-                 Status :  ${ticket.status}
+                 Status :  ${ticket?.status}
               </h4>
 
                </h4>
                  <h4 style="font-family: Arial, sans-serif; color: #333;">
-                 Payment Status :  ${ticket.paymentStatus}
+                 Payment Status :  ${ticket?.paymentStatus}
               </h4>
 
               <p style="font-family: Arial, sans-serif; color: #333;">
   <a 
-    href="https://dohabus.com/invoice/${ticket._id}" 
+    href="https://dohabus.com/invoice/${ticket?._id}" 
     style="color: #007bff; text-decoration: none; font-weight: bold;"
     target="_blank"
     rel="noopener noreferrer"
@@ -440,19 +440,19 @@ exports.handleWebhook = async (req, res) => {
           </p>
         
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Customer Name: ${ticket.firstName} ${ticket.lastName}
+            Customer Name: ${ticket?.firstName} ${ticket?.lastName}
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Unique Id: ${ticket.uniqueId}
+            Unique Id: ${ticket?.uniqueId}
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Tour Name: ${ticket.plan.title.en}
+            Tour Name: ${ticket?.plan?.title?.en}
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Number Of Tickets: ${ticket.adultQuantity + ticket.childQuantity}
+            Number Of Tickets: ${ticket?.adultQuantity + ticket?.childQuantity}
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
@@ -460,31 +460,31 @@ exports.handleWebhook = async (req, res) => {
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Pick Up Location: ${ticket.pickupLocation}
+            Pick Up Location: ${ticket?.pickupLocation}
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Drop Location: ${ticket.dropLocation}
+            Drop Location: ${ticket?.dropLocation}
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Category: ${ticket.category.title.en}
+            Category: ${ticket?.category?.title?.en}
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Add On: ${ticket.addonFeatures?.join(", ") || "None"}
+            Add On: ${ticket?.addonFeatures?.join(", ") || "None"}
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Selected Plan: ${ticket.plan.title.en}
+            Selected Plan: ${ticket?.plan?.title?.en}
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Session: ${ticket.session}
+            Session: ${ticket?.session}
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Date: ${new Date(ticket.date).toLocaleDateString("en-US", {
+            Date: ${new Date(ticket?.date).toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",
               day: "numeric",
@@ -492,19 +492,19 @@ exports.handleWebhook = async (req, res) => {
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Phone Number: ${ticket.number}
+            Phone Number: ${ticket?.number}
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Email: ${ticket.email}
+            Email: ${ticket?.email}
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Status: ${ticket.status}
+            Status: ${ticket?.status}
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Payment Status: ${ticket.paymentStatus}
+            Payment Status: ${ticket?.paymentStatus}
           </h4>
         
           <p style="font-family: Arial, sans-serif; color: #333;">
@@ -513,7 +513,7 @@ exports.handleWebhook = async (req, res) => {
           
           <p style="font-family: Arial, sans-serif; color: #333;">
             <a 
-              href="https://dohabus.com/invoice/${ticket._id}" 
+              href="https://dohabus.com/invoice/${ticket?._id}" 
               style="color: #007bff; text-decoration: none; font-weight: bold;"
               target="_blank"
               rel="noopener noreferrer"
@@ -530,13 +530,13 @@ exports.handleWebhook = async (req, res) => {
 
         await transporter.sendMail({
           to: ticket.email,
-          subject: `Hello ${ticket.firstName}, Thank you for purchasing ${ticket.plan.title.en} tickets`,
+          subject: `Hello ${ticket?.firstName}, Thank you for purchasing ${ticket?.plan?.title?.en} tickets`,
           html: emailContent,
         });
 
         await transporter.sendMail({
           to: process.env.COMPANY_EMAIL,
-          subject: `Ticket Booked By ${ticket.firstName},Plan ${ticket.plan.title.en} tickets`,
+          subject: `Ticket Booked By ${ticket?.firstName},Plan ${ticket?.plan?.title?.en} tickets`,
           html: emailContentFordohabus,
         });
       } else {
@@ -545,34 +545,34 @@ exports.handleWebhook = async (req, res) => {
         // Prepare cancellation email content
         const cancellationEmailContent = `
             <h3 style="font-family: Arial, sans-serif; color: #333;">
-                Hello ${ticket.firstName},
+                Hello ${ticket?.firstName},
             </h3>
             <p style="font-family: Arial, sans-serif; color: #333;">
                 We regret to inform you that your payment for the tickets for ${
-                  planDetails.title.en
+                  planDetails?.title?.en
                 } was not successful. 
                 As a result, your booking has been canceled.
             </p>
             <h4 style="font-family: Arial, sans-serif; color: #333;">
-                Tour Name: ${planDetails.title.en}
+                Tour Name: ${planDetails?.title?.en}
             </h4>
             <h4 style="font-family: Arial, sans-serif; color: #333;">
-                Number Of Tickets: ${ticket.adultQuantity + ticket.childQuantity}
+                Number Of Tickets: ${ticket?.adultQuantity + ticket?.childQuantity}
             </h4>
             <h4 style="font-family: Arial, sans-serif; color: #333;">
-                Total Amount: ${ticket.price} QAR
+                Total Amount: ${ticket?.price} QAR
             </h4>
             <h4 style="font-family: Arial, sans-serif; color: #333;">
                 Payment Status: Failed
             </h4>
             <h4 style="font-family: Arial, sans-serif; color: #333;">
-                Transaction ID: ${ticket.transactionId}
+                Transaction ID: ${ticket?.transactionId}
             </h4>
             <p style="font-family: Arial, sans-serif; color: #333;">
                 If you have any questions or would like to retry your booking, please feel free to reach out to us.
             </p>
               <a 
-    href="https://dohabus.com/invoice/${ticket._id}" 
+    href="https://dohabus.com/invoice/${ticket?._id}" 
     style="color: #007bff; text-decoration: none; font-weight: bold;"
     target="_blank"
     rel="noopener noreferrer"
@@ -585,8 +585,8 @@ exports.handleWebhook = async (req, res) => {
 
         // Send cancellation email to user
         await transporter.sendMail({
-          to: ticket.email,
-          subject: `Cancellation of your ${planDetails.title.en} tickets`,
+          to: ticket?.email,
+          subject: `Cancellation of your ${planDetails?.title?.en} tickets`,
           html: cancellationEmailContent,
         });
       }
