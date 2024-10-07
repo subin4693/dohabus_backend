@@ -242,9 +242,8 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
               Hello ${userDetails.name},
           </h3>
           <p style="font-family: Arial, sans-serif; color: #333;">
-              Thank you for purchasing tickets for ${
-                planDetails.title.en
-              }. We are thrilled to have you join us for this exciting event.
+              Thank you for purchasing tickets for ${planDetails.title.en
+        }. We are thrilled to have you join us for this exciting event.
               Your support means a lot to us, and we are committed to providing you with an unforgettable experience.
               From the moment you arrive, we hope you enjoy the vibrant atmosphere, engaging performances, and the overall ambiance
               that makes this event special. We look forward to seeing you and hope you have a fantastic time!
@@ -278,9 +277,8 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
           Dear DohaBus Team,
       </h3>
       <p style="font-family: Arial, sans-serif; color: #333;">
-          We would like to inform you that a new booking has been made on your website by ${
-            userDetails.name
-          }.
+          We would like to inform you that a new booking has been made on your website by ${userDetails.name
+        }.
       </p>
       <p style="font-family: Arial, sans-serif; color: #333;">
           Below are the details of the purchase:
@@ -373,7 +371,7 @@ exports.getAllTickets = catchAsync(async (req, res, next) => {
 exports.deleteTicket = catchAsync(async (req, res, next) => {
   const ticketId = req.params.id;
 
-  await Ticket.findByIdAndUpdate(ticketId, { status: "Canceled" });
+  await Ticket.findByIdAndDelete(ticketId);
   res.status(200).json({
     status: "success",
   });

@@ -5,6 +5,31 @@ const AppError = require("../utils/appError");
 const Cart = require("../models/cartModel");
 const catchAsync = require("../utils/catchAsync");
 const Favourite = require("../models/favouritesModel");
+const nodemailer = require("nodemailer");
+const dotenv = require("dotenv");
+dotenv.config();
+dotenv.config({ path: "dohabus_backend/.env" });
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+});
+const signature = `
+    <div style="margin-left: 10px;">
+        <p style="font-family: Arial, sans-serif; color: #333;"><b>Best regards,</b></p>
+        <p style="font-family: Arial, sans-serif; color: #333;"><b>Doha Bus</b></p>
+    </div>
+    <div style="display: flex; justify-content: center; align-items: center; margin-top: 10px; padding: 10px;">
+    <div style="display: flex; align-items: center; justify-content:center;">
+       <div> <img src="https://eng.dohabus.com/English/images/LOGOFOOTER.png" alt="Signature Image" style="width: 100px; height: 100px; margin-right: 10px; object-fit: cover;"></div>
+       <div> <h1 style="color: yellow; font-size: 2rem; margin: 0;">
+       <b>Doha Bus</b>
+   </h1></div>
+    </div>
+</div>
+`;
 
 exports.getSummary = catchAsync(async (req, res, next) => {
   const usersCount = await User.countDocuments();
@@ -451,16 +476,45 @@ exports.cancelTicket = catchAsync(async (req, res, next) => {
     const { id } = req.params;
 
     // Find the ticket by its ID
-    const ticket = await Ticket.findById(id);
+    const ticket = await Ticket.findById(id)
+      .populate('plan')
+      .populate('category');
 
     if (!ticket) {
       return next(new AppError("Ticket not found", 404));
     }
 
+    // console.log(ticket)
     // Update the ticket status to "Canceled"
     ticket.status = "Canceled";
     await ticket.save();
 
+    try {
+      const emailContent = `
+        <h3 style="font-family: Arial, sans-serif; color: #333;">
+            Dear ${ticket.user},
+        </h3>
+        <p style="font-family: Arial, sans-serif; color: #333;">
+            We regret to inform you that your tickets for ${ticket.plan.title.en} have been canceled. We understand this may be disappointing, and we apologize for any inconvenience this may cause.
+        </p>
+        <p style="font-family: Arial, sans-serif; color: #333;">
+            If you have any questions or need assistance with cancellations or refund, please check our FAQs page.
+        </p>
+        <br>
+        ${signature}
+    `;
+
+
+      await transporter.sendMail({
+        to: ticket.email,
+        subject: `Dear ${ticket.user}, Your ticket for ${ticket.plan.title.en} has been canceled`,
+        html: emailContent,
+      });
+
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
+    console.log("Email sended!!")
     res.status(200).json({
       status: "success",
       data: {
