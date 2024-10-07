@@ -76,6 +76,21 @@ const ticketModel = new mongoose.Schema(
       type: String,
       required: [true, "Mobile number is required"],
     },
+    transactionId: {
+      type: String,
+      required: true,
+      unique: true
+    },
+    paymentStatus: {
+      type: String,
+      enum: ['Pending', 'Paid', 'Failed', 'Cancelled'],
+      default: 'Pending'
+    },
+    visaId: String,
+    expiresAt: {
+      type: Date,
+      required: true
+    },
     status: {
       type: String,
       enum: ["Booked", "Canceled"],
