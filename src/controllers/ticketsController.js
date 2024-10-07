@@ -313,7 +313,7 @@ exports.handleWebhook = async (req, res) => {
     const calculatedSignature = calculateSignature(req.body, process.env.SKIP_CASH_WEBHOOK_KEY);
 
 
-    console.log('Received signature:', receivedSignature);
+    console.log('Received signature:',  signature);
     console.log('Calculated signature:', calculatedSignature);
 
 
