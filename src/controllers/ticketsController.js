@@ -332,7 +332,7 @@ exports.handleWebhook = async (req, res) => {
         // Sending emails
         const emailContent = `
     //           <h3 style="font-family: Arial, sans-serif; color: #333;">
-    //               Hello ${ticket?.firstName}+ ${ticket?.lastName},
+    //               Hello ${ticket?.firstName} ${ticket?.lastName},
     //           </h3>
     //           <p style="font-family: Arial, sans-serif; color: #333;">
     //               Thank you for purchasing tickets for ${
