@@ -89,7 +89,7 @@ const ticketModel = new mongoose.Schema(
     visaId: String,
     expiresAt: {
       type: Date,
-      required: true,
+      // required: true,
     },
     status: {
       type: String,

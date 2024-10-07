@@ -20,6 +20,7 @@
     "mongodb": "^5.9.1",
     "mongoose": "^8.4.3",
     "node-cron": "^3.0.3",
+    "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.14",
     "validator": "^13.12.0"
   },
