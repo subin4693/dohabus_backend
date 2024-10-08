@@ -8,7 +8,7 @@ const Ticket = require("../models/ticketModel");
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 const { v4: uuidv4 } = require("uuid"); // Ensure that 'uuid' is installed properly
-const cryptojs = require('crypto-js');
+const CryptoJS = require('crypto-js');
 const crypto = require('crypto');
 const generatePaymentRequestSKIP = require("../utils/generatePayment");
 dotenv.config();
@@ -28,25 +28,17 @@ const paymentGatewayDetails = {
   keyId: process.env.SKIP_CASH_KEY_ID,
   clientId: process.env.SKIP_CASH_CLIENT_ID,
 };
+const WEBHOOK_KEY = process.env.SKIP_CASH_WEBHOOK_KEY;
+function calculateSignature(payload) {
+  const fields = ['PaymentId', 'Amount', 'StatusId', 'TransactionId', 'Custom1', 'VisaId'];
+  const data = fields
+      .filter(field => payload[field] != null)
+      .map(field => `${field}=${payload[field]}`)
+      .join(',');
 
-const calculateSignature = (payload, secretKey) => {
-  // Specific order as per SkipCash documentation
-  const fieldOrder = ['paymentId', 'amount', 'statusId', 'transactionId', 'custom1', 'visaId'];
-  
-  const combinedData = fieldOrder
-    .map(key => payload[key] != null && payload[key] !== '' ? `${key}=${payload[key]}` : null)
-    .filter(item => item !== null)
-    .join(',');
-
-  console.log('Combined data:', combinedData);
-
-  const hmac = crypto.createHmac('sha256', secretKey);
-  hmac.update(combinedData);
-  const signature = hmac.digest('base64');
-
-  console.log('Calculated signature:', signature);
-  return signature;
-};
+  const hmac = CryptoJS.HmacSHA256(data, WEBHOOK_KEY);
+  return CryptoJS.enc.Base64.stringify(hmac);
+}
 const esignature = `
     <div style="margin-left: 10px;">
         <p style="font-family: Arial, sans-serif; color: #333;"><b>Best regards,</b></p>
@@ -308,19 +300,25 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 
 exports.handleWebhook = async (req, res) => {
   try {
-    console.log('Received webhook payload:', req.body);
-    console.log('Received headers:', req.headers);
-  
-    const receivedSignature = req.headers.authorization;
-    const calculatedSignature = calculateSignature(req.body, process.env.SKIP_CASH_WEBHOOK_KEY);
-  
-    console.log('Received signature:', receivedSignature);
-    console.log('Calculated signature:', calculatedSignature);
-  
-    if (receivedSignature !== calculatedSignature) {
-      console.log("Invalid signature");
-      return res.status(400).json({ success: false, message: "Invalid signature" });
-    }
+    console.log("Web Hook Called----");
+  const { PaymentId, Amount, StatusId, TransactionId, Custom1, VisaId } = req.body;
+  const authHeader = req.headers['authorization'];
+console.log("Webhook auth heade ris",authHeader);
+  if (!PaymentId || !Amount || !StatusId || !TransactionId) {
+      return res.status(400).json({
+          success: false,
+          message: "Invalid webhook data.",
+      });
+  }
+  const calculatedSignature = calculateSignature(req.body);
+  console.log("Calculated Signature is",calculatedSignature);
+  if (authHeader !== calculatedSignature) {
+      return res.status(401).json({
+          success: false,
+          message: "Invalid signature.",
+      });
+  }
+
   
     // Populate user.populate('plan')      // Populate plan.populate('category');;
     const ticket = await Ticket.findOne({ transactionId: transactionId })
