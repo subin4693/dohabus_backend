@@ -369,7 +369,7 @@ console.log("Webhook auth heade ris",authHeader);
                   Number Of Tickets: ${ticket?.adultQuantity + ticket?.childQuantity}
               </h4>
               <h4 style="font-family: Arial, sans-serif; color: #333;">
-                  Total Amount: ${allcost} QAR
+                  Total Amount: ${ticket?.price} QAR
               </h4>
                 <h4 style="font-family: Arial, sans-serif; color: #333;">
                   Pick Up Location: ${ticket?.pickupLocation} 
@@ -434,6 +434,8 @@ console.log("Webhook auth heade ris",authHeader);
               <br>
               ${esignature}
           `;
+
+          console.log("Email sent to user");
         const emailContentFordohabus = `
           <h3 style="font-family: Arial, sans-serif; color: #333;">
             New Ticket Purchase Notification
@@ -464,7 +466,7 @@ console.log("Webhook auth heade ris",authHeader);
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
-            Total Amount: ${allcost} QAR
+            Total Amount: ${ticket?.price} QAR
           </h4>
           
           <h4 style="font-family: Arial, sans-serif; color: #333;">
@@ -535,7 +537,7 @@ console.log("Webhook auth heade ris",authHeader);
            Doha Bus
           </p>
         `;
-
+        console.log("Email sent to Company");
         await transporter.sendMail({
           to: ticket.email,
           subject: `Hello ${ticket?.firstName}, Thank you for purchasing ${ticket?.plan?.title?.en} tickets`,
