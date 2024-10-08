@@ -636,7 +636,7 @@ exports.getAllTickets = catchAsync(async (req, res, next) => {
       select: "title description",
     })
     .select(
-      "firstName lastName email category plan price adultQuantity childQuantity date status pickupLocation dropLocation createdAt uniqueId",
+      "firstName lastName email category plan price adultQuantity childQuantity date status pickupLocation dropLocation createdAt uniqueId paymentStatus",
     ); // Including firstName and lastName in the ticket query
 
   res.status(200).json({
