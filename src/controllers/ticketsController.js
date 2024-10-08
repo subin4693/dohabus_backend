@@ -321,7 +321,7 @@ console.log("Webhook auth heade ris",authHeader);
 
   
     // Populate user.populate('plan')      // Populate plan.populate('category');;
-    const ticket = await Ticket.findOne({ transactionId: transactionId })
+    const ticket = await Ticket.findOne({ transactionId: TransactionId })
       // .populate('user')      // Populate user
       .populate("plan") // Populate plan
       .populate("category");
@@ -329,12 +329,12 @@ console.log("Webhook auth heade ris",authHeader);
     console.log("Booking found for ticket:", ticket);
 
     if (ticket) {
-      ticket.paymentStatus = statusId === 2 ? "Paid" : "Failed";
-      ticket.visaId = visaId;
+      ticket.paymentStatus = StatusId === 2 ? "Paid" : "Failed";
+      ticket.visaId = VisaId;
       await ticket.save();
       console.log("Booking updated:", ticket);
 
-      if (statusId === 2) {
+      if (StatusId === 2) {
         console.log("Payment successful, preparing email");
 
         // Sending emails
