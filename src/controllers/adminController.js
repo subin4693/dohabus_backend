@@ -479,6 +479,8 @@ exports.cancelTicket = catchAsync(async (req, res, next) => {
     const ticket = await Ticket.findById(id)
       .populate('plan')
       .populate('category');
+    console.log("done3 ")
+
 
     if (!ticket) {
       return next(new AppError("Ticket not found", 404));
@@ -489,25 +491,80 @@ exports.cancelTicket = catchAsync(async (req, res, next) => {
     ticket.status = "Canceled";
     await ticket.save();
 
+
     try {
       const emailContent = `
-        <h3 style="font-family: Arial, sans-serif; color: #333;">
-            Dear ${ticket.user},
-        </h3>
-        <p style="font-family: Arial, sans-serif; color: #333;">
-            We regret to inform you that your tickets for ${ticket.plan.title.en} have been canceled. We understand this may be disappointing, and we apologize for any inconvenience this may cause.
-        </p>
-        <p style="font-family: Arial, sans-serif; color: #333;">
-            If you have any questions or need assistance with cancellations or refund, please check our FAQs page.
-        </p>
-        <br>
-        ${signature}
-    `;
+    <h3 style="font-family: Arial, sans-serif; color: #333;">
+        Dear ${ticket?.firstName},
+    </h3>
+    <p style="font-family: Arial, sans-serif; color: #333;">
+        We regret to inform you that your tickets for ${ticket.plan.title.en} have been canceled. We understand this may be disappointing, and we apologize for any inconvenience this may cause.
+    </p>
+    <p style="font-family: Arial, sans-serif; color: #333;">
+        If you have any questions or need assistance with cancellations or refunds, please check our FAQs page.
+    </p>
+
+    <h4 style="font-family: Arial, sans-serif; color: #333;">Here are your ticket details:</h4>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Field</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Unique ID</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${ticket?.uniqueId}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Plan</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${ticket.plan.title.en}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Price</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">$${ticket?.price}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Adult Quantity</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${ticket?.adultQuantity}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Child Quantity</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${ticket?.childQuantity}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Session</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${ticket?.session}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Date</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${new Date(ticket?.date).toLocaleDateString()}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Email</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${ticket?.email}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Pickup Location</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${ticket?.pickupLocation}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Drop Location</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${ticket?.dropLocation}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+    ${signature}
+`;
+
 
 
       await transporter.sendMail({
         to: ticket.email,
-        subject: `Dear ${ticket.user}, Your ticket for ${ticket.plan.title.en} has been canceled`,
+        subject: `Dear ${ticket?.firstName}, Your ticket for ${ticket.plan.title.en} has been canceled`,
         html: emailContent,
       });
 
