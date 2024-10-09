@@ -91,6 +91,10 @@ const ticketModel = new mongoose.Schema(
       type: Date,
       // required: true,
     },
+    pickupTime: {
+      type: String,
+      default: "",
+    },
     status: {
       type: String,
       enum: ["Booked", "Canceled"],

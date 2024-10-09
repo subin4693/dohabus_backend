@@ -8,8 +8,8 @@ const Ticket = require("../models/ticketModel");
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 const { v4: uuidv4 } = require("uuid"); // Ensure that 'uuid' is installed properly
-const CryptoJS = require('crypto-js');
-const crypto = require('crypto');
+const CryptoJS = require("crypto-js");
+const crypto = require("crypto");
 const generatePaymentRequestSKIP = require("../utils/generatePayment");
 dotenv.config();
 dotenv.config({ path: "dohabus_backend/.env" });
@@ -30,11 +30,11 @@ const paymentGatewayDetails = {
 };
 const WEBHOOK_KEY = process.env.SKIP_CASH_WEBHOOK_KEY;
 function calculateSignature(payload) {
-  const fields = ['PaymentId', 'Amount', 'StatusId', 'TransactionId', 'Custom1', 'VisaId'];
+  const fields = ["PaymentId", "Amount", "StatusId", "TransactionId", "Custom1", "VisaId"];
   const data = fields
-      .filter(field => payload[field] != null)
-      .map(field => `${field}=${payload[field]}`)
-      .join(',');
+    .filter((field) => payload[field] != null)
+    .map((field) => `${field}=${payload[field]}`)
+    .join(",");
 
   const hmac = CryptoJS.HmacSHA256(data, WEBHOOK_KEY);
   return CryptoJS.enc.Base64.stringify(hmac);
@@ -70,6 +70,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     coupon,
     addons,
     number,
+    pickupTime,
   } = req.body.dataa;
 
   try {
@@ -282,6 +283,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       addonFeatures,
       status: "Booked",
       number,
+      pickupTime,
     });
 
     res.status(200).json({
@@ -301,25 +303,24 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 exports.handleWebhook = async (req, res) => {
   try {
     console.log("Web Hook Called----");
-  const { PaymentId, Amount, StatusId, TransactionId, Custom1, VisaId } = req.body;
-  const authHeader = req.headers['authorization'];
-console.log("Webhook auth heade ris",authHeader);
-  if (!PaymentId || !Amount || !StatusId || !TransactionId) {
+    const { PaymentId, Amount, StatusId, TransactionId, Custom1, VisaId } = req.body;
+    const authHeader = req.headers["authorization"];
+    console.log("Webhook auth heade ris", authHeader);
+    if (!PaymentId || !Amount || !StatusId || !TransactionId) {
       return res.status(400).json({
-          success: false,
-          message: "Invalid webhook data.",
+        success: false,
+        message: "Invalid webhook data.",
       });
-  }
-  const calculatedSignature = calculateSignature(req.body);
-  console.log("Calculated Signature is",calculatedSignature);
-  if (authHeader !== calculatedSignature) {
+    }
+    const calculatedSignature = calculateSignature(req.body);
+    console.log("Calculated Signature is", calculatedSignature);
+    if (authHeader !== calculatedSignature) {
       return res.status(401).json({
-          success: false,
-          message: "Invalid signature.",
+        success: false,
+        message: "Invalid signature.",
       });
-  }
+    }
 
-  
     // Populate user.populate('plan')      // Populate plan.populate('category');;
     const ticket = await Ticket.findOne({ transactionId: TransactionId })
       // .populate('user')      // Populate user
@@ -377,6 +378,11 @@ console.log("Webhook auth heade ris",authHeader);
                 <h4 style="font-family: Arial, sans-serif; color: #333;">
                 Drop Location: ${ticket?.dropLocation} 
               </h4>
+
+              <h4 style="font-family: Arial, sans-serif; color: #333;">
+                Pickup Time: ${ticket?.pickupTime} 
+              </h4>
+
               <h4 style="font-family: Arial, sans-serif; color: #333;">
                   Category: ${ticket?.category?.title?.en}
               </h4>
@@ -435,7 +441,7 @@ console.log("Webhook auth heade ris",authHeader);
               ${esignature}
           `;
 
-          console.log("Email sent to user");
+        console.log("Email sent to user");
         const emailContentFordohabus = `
           <h3 style="font-family: Arial, sans-serif; color: #333;">
             New Ticket Purchase Notification
@@ -476,7 +482,10 @@ console.log("Webhook auth heade ris",authHeader);
           <h4 style="font-family: Arial, sans-serif; color: #333;">
             Drop Location: ${ticket?.dropLocation}
           </h4>
-          
+             <h4 style="font-family: Arial, sans-serif; color: #333;">
+                Pickup Time: ${ticket?.pickupTime} 
+              </h4>
+
           <h4 style="font-family: Arial, sans-serif; color: #333;">
             Category: ${ticket?.category?.title?.en}
           </h4>
@@ -606,9 +615,11 @@ console.log("Webhook auth heade ris",authHeader);
 
     res.status(200).json({ success: true });
   } catch (error) {
-    console.log("Webhook error",error);
+    console.log("Webhook error", error);
     console.error("Error handling webhook:", error);
-    res.status(500).json({ success: false, message: "Internal server error",error: error.message  });
+    res
+      .status(500)
+      .json({ success: false, message: "Internal server error", error: error.message });
   }
 };
 exports.getTickets = catchAsync(async (req, res, next) => {
