@@ -458,6 +458,7 @@ exports.getTickets = catchAsync(async (req, res, next) => {
           createdAt: 1, // Include the createdAt field
           date: "$date",
           paymentStatus: "$paymentStatus",
+          pickupTime: "$pickupTime",
         },
       },
     ]);
