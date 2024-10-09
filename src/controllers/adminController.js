@@ -524,7 +524,7 @@ exports.cancelTicket = catchAsync(async (req, res, next) => {
             </tr>
             <tr>
                 <td style="border: 1px solid #ddd; padding: 8px;">Price</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">$${ticket?.price}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${ticket?.price} QAR</td>
             </tr>
             <tr>
                 <td style="border: 1px solid #ddd; padding: 8px;">Adult Quantity</td>
@@ -550,10 +550,7 @@ exports.cancelTicket = catchAsync(async (req, res, next) => {
                 <td style="border: 1px solid #ddd; padding: 8px;">Pickup Location</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${ticket?.pickupLocation}</td>
             </tr>
-            <tr>
-                <td style="border: 1px solid #ddd; padding: 8px;">Drop Location</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${ticket?.dropLocation}</td>
-            </tr>
+      
         </tbody>
     </table>
 
