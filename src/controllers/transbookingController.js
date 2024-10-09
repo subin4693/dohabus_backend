@@ -20,7 +20,7 @@ exports.createBooking = catchAsync(async (req, res, next) => {
     transId: transId, // Replace `hotelId` with `transportationId`
     date: checkInDate,
     numberOfAdults,
-    numberOfChildren,
+    pickupLocation: numberOfChildren,
     additionalRequest,
     email,
     name,

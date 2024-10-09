@@ -19,8 +19,8 @@ const booktransportationSchema = new mongoose.Schema(
             type: Number,
             required: true,
         },
-        numberOfChildren: {
-            type: Number,
+        pickupLocation: {
+            type: String,
             required: true,
         },
 
