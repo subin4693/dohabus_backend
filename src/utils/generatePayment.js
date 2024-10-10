@@ -21,7 +21,7 @@ const generatePaymentRequestSKIP = async (paymentDetails) => {
         console.log("Generated Signature:", hashInBase64);
         console.log("Request Body:", JSON.stringify(paymentDetails));
 
-        const url = `${paymentGatewayDetails.sandboxURL}/api/v1/payments`;
+        const url = `${paymentGatewayDetails.productionURL}/api/v1/payments`;
         const response = await fetch(url, {
             method: "POST",
             headers: {
