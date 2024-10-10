@@ -570,7 +570,7 @@ exports.handleWebhook = async (req, res) => {
           html: emailContentFordohabus,
         });
       } else {
-        console.log("Payment not successful, status:", statusId);
+        console.log("Payment not successful, status:", StatusId);
 
         // Prepare cancellation email content
         const cancellationEmailContent = `
