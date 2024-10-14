@@ -15,7 +15,8 @@ const localizedString = {
 
 const guidelineSchema = new mongoose.Schema(
   {
-    text: localizedString,
+    heading: localizedString,
+    points: [localizedString], // Array of localized strings for points
   },
   { timestamps: true },
 );
@@ -24,18 +25,20 @@ const GuideLine = mongoose.model("GuideLine", guidelineSchema);
 
 module.exports = GuideLine;
 
+// Sample JSON structure
 // {
-//   "image":"imageurl",
-//   "text":{
-//     "en":"english text",
-//     "ar":"arabic text"
+//   "heading": {
+//     "en": "English heading",
+//     "ar": "Arabic heading"
 //   },
-// "mission":{
-//     "en":"english text",
-//     "ar":"arabic text"
-//   },
-//   "vision":{
-//     "en":"english text",
-//     "ar":"arabic text"
-//   },
+//   "points": [
+//     {
+//       "en": "English point 1",
+//       "ar": "Arabic point 1"
+//     },
+//     {
+//       "en": "English point 2",
+//       "ar": "Arabic point 2"
+//     }
+//   ]
 // }
