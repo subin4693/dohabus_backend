@@ -5,24 +5,41 @@ const GuideLine = require("../models/guidelineModel");
 
 // Create a new guideline
 exports.createGuideline = catchAsync(async (req, res, next) => {
-  const { heading, points } = req.body; // Destructure heading and points from request body
-
-  if (!heading || !points) {
+  console.log("called")
+  const { data } = req.body; // Destructure heading and points from request body
+  console.log(data
+  )
+  if (!data?.heading || !data?.points) {
     return res.status(400).json({ message: "Heading and points are required" });
   }
 
-  const response = await GuideLine.create({ heading, points });
+  const response = await GuideLine.create({ heading: data?.heading, points: data?.points });
   return res.status(201).json({ message: "Success", data: response });
 });
 
 // Get a guideline
 exports.getGuideline = catchAsync(async (req, res, next) => {
-  const response = await GuideLine.findOne();
+  const response = await GuideLine.find();
   if (!response) {
     return res.status(404).json({ message: "GuideLine not found" });
   }
   return res.status(200).json({ message: "Success", data: response });
 });
+exports.guiddelete = catchAsync(async (req, res, next) => {
+  const { id } = req.params; // Extract the ID from the request parameters
+
+  // Check if the guideline exists
+  const guideline = await GuideLine.findById(id);
+  if (!guideline) {
+    return res.status(404).json({ message: "GuideLine not found" });
+  }
+
+  // Delete the guideline
+  await GuideLine.findByIdAndDelete(id);
+
+  return res.status(200).json({ message: "GuideLine deleted successfully" });
+});
+
 
 // Edit an existing guideline
 exports.editGuideline = catchAsync(async (req, res, next) => {

@@ -9,6 +9,6 @@ router
   .get(guidelineController.getGuideline)
   .post(guidelineController.createGuideline);
 
-router.route("/:id").put(guidelineController.editGuideline);
+router.route("/:id").put(guidelineController.editGuideline).delete(guidelineController.guiddelete);
 
 module.exports = router;
