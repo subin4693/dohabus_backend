@@ -99,9 +99,10 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
         message: "Plan not found",
       });
     }
+    const planObject = plan.toObject();
 
-    const { childPrice, adultPrice, adultData, childData, addOn, minPerson } = plan;
-
+    const { childPrice, adultPrice, adultData, childData, addOn, minPerson } = planObject;
+    console.log(planObject);
     const coupon = await Offer.findOne({
       couponCode: couponCode,
       plan: planId, // Check if planId is in the plan array

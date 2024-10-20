@@ -82,7 +82,9 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       return next(new AppError("Invalid plan selected", 400));
     }
 
-    const { adultPrice, childPrice, adultData, childData, minPerson } = planDetails;
+    const planObject = planDetails.toObject();
+
+    const { adultPrice, childPrice, adultData, childData, minPerson } = planObject;
     const sessionLimit = planDetails.limit;
 
     const targetDate = new Date(date);
@@ -344,7 +346,9 @@ exports.handleWebhook = async (req, res) => {
           Hello ${ticket?.firstName} ${ticket?.lastName},
         </h3>
         <p style="font-family: Arial, sans-serif; color: #333;">
-          Thank you for purchasing tickets for ${ticket?.plan?.title?.en}. We are thrilled to have you join us for this exciting event. Your support means a lot to us, and we are committed to providing you with an unforgettable experience. From the moment you arrive, we hope you enjoy the vibrant atmosphere, engaging performances, and the overall ambiance that makes this event special. We look forward to seeing you and hope you have a fantastic time!
+          Thank you for purchasing tickets for ${
+            ticket?.plan?.title?.en
+          }. We are thrilled to have you join us for this exciting event. Your support means a lot to us, and we are committed to providing you with an unforgettable experience. From the moment you arrive, we hope you enjoy the vibrant atmosphere, engaging performances, and the overall ambiance that makes this event special. We look forward to seeing you and hope you have a fantastic time!
         </p>
       
         <p style="font-family: Arial, sans-serif; color: #333;">
@@ -370,7 +374,8 @@ exports.handleWebhook = async (req, res) => {
           </tr>
           <tr>
             <td style="border: 1px solid #ccc; padding: 8px;"><strong>Number Of Tickets:</strong></td>
-            <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.adultQuantity + ticket?.childQuantity}</td>
+            <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.adultQuantity +
+              ticket?.childQuantity}</td>
           </tr>
           <tr>
             <td style="border: 1px solid #ccc; padding: 8px;"><strong>Total Amount:</strong></td>
@@ -390,7 +395,8 @@ exports.handleWebhook = async (req, res) => {
           </tr>
           <tr>
             <td style="border: 1px solid #ccc; padding: 8px;"><strong>Add On:</strong></td>
-            <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.addonFeatures?.join(", ") || "None"}</td>
+            <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.addonFeatures?.join(", ") ||
+              "None"}</td>
           </tr>
           <tr>
             <td style="border: 1px solid #ccc; padding: 8px;"><strong>Session:</strong></td>
@@ -398,11 +404,13 @@ exports.handleWebhook = async (req, res) => {
           </tr>
           <tr>
             <td style="border: 1px solid #ccc; padding: 8px;"><strong>Date:</strong></td>
-            <td style="border: 1px solid #ccc; padding: 8px;">${new Date(ticket.date).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })}</td>
+            <td style="border: 1px solid #ccc; padding: 8px;">${new Date(
+              ticket.date,
+            ).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}</td>
           </tr>
           <tr>
             <td style="border: 1px solid #ccc; padding: 8px;"><strong>Phone Number:</strong></td>
@@ -442,7 +450,6 @@ exports.handleWebhook = async (req, res) => {
         ${esignature}
       `;
 
-
         console.log("Email sent to user");
         const emailContentFordohabus = `
   <h3 style="font-family: Arial, sans-serif; color: #333;">
@@ -460,7 +467,9 @@ exports.handleWebhook = async (req, res) => {
   <table style="font-family: Arial, sans-serif; color: #333; border-collapse: collapse; width: 100%;">
     <tr>
       <td style="border: 1px solid #ccc; padding: 8px;"><strong>Customer Name:</strong></td>
-      <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.firstName} ${ticket?.lastName}</td>
+      <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.firstName} ${
+          ticket?.lastName
+        }</td>
     </tr>
     <tr>
       <td style="border: 1px solid #ccc; padding: 8px;"><strong>Email:</strong></td>
@@ -492,11 +501,14 @@ exports.handleWebhook = async (req, res) => {
     </tr>
     <tr>
       <td style="border: 1px solid #ccc; padding: 8px;"><strong>Date:</strong></td>
-      <td style="border: 1px solid #ccc; padding: 8px;">${new Date(ticket?.date).toLocaleDateString("en-US", {
+      <td style="border: 1px solid #ccc; padding: 8px;">${new Date(ticket?.date).toLocaleDateString(
+        "en-US",
+        {
           year: "numeric",
           month: "long",
           day: "numeric",
-        })}</td>
+        },
+      )}</td>
     </tr>
     <tr>
       <td style="border: 1px solid #ccc; padding: 8px;"><strong>Number Of Adults:</strong></td>
@@ -508,7 +520,8 @@ exports.handleWebhook = async (req, res) => {
     </tr>
     <tr>
       <td style="border: 1px solid #ccc; padding: 8px;"><strong>Number Of Tickets:</strong></td>
-      <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.adultQuantity + ticket?.childQuantity}</td>
+      <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.adultQuantity +
+        ticket?.childQuantity}</td>
     </tr>
     <tr>
       <td style="border: 1px solid #ccc; padding: 8px;"><strong>Total Amount:</strong></td>
@@ -524,7 +537,8 @@ exports.handleWebhook = async (req, res) => {
     </tr>
     <tr>
       <td style="border: 1px solid #ccc; padding: 8px;"><strong>Add On:</strong></td>
-      <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.addonFeatures?.join(", ") || "None"}</td>
+      <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.addonFeatures?.join(", ") ||
+        "None"}</td>
     </tr>
     <tr>
       <td style="border: 1px solid #ccc; padding: 8px;"><strong>Status:</strong></td>
@@ -578,8 +592,9 @@ exports.handleWebhook = async (req, res) => {
                 Hello ${ticket?.firstName},
             </h3>
             <p style="font-family: Arial, sans-serif; color: #333;">
-                We regret to inform you that your payment for the tickets for ${planDetails?.title?.en
-          } was not successful. 
+                We regret to inform you that your payment for the tickets for ${
+                  planDetails?.title?.en
+                } was not successful. 
                 As a result, your booking has been canceled.
             </p>
             <h4 style="font-family: Arial, sans-serif; color: #333;">
@@ -743,10 +758,12 @@ exports.getTicketCounts = catchAsync(async (req, res, next) => {
     // Initialize the session counts with 0 for each session
     const sessionCounts = {};
     const sessionStatus = {}; // This will hold the status of each session (full or available)
-    plan.sessions.forEach((session) => {
-      sessionCounts[session] = 0;
-      sessionStatus[session] = "Available"; // Default status
-    });
+
+    // Loop through the sessions in the plan
+    for (const session of plan.sessions) {
+      sessionCounts[session._id] = 0; // Use _id as the key
+      sessionStatus[session._id] = "Available"; // Default status
+    }
 
     // Find tickets for the given date and planId
     const tickets = await Ticket.find({
@@ -763,13 +780,15 @@ exports.getTicketCounts = catchAsync(async (req, res, next) => {
     });
 
     // Check the counts against the limit for each session
-    plan.sessions.forEach((session) => {
-      if (sessionLimit > 0 && sessionCounts[session] >= sessionLimit) {
-        sessionStatus[session] = "Full";
-      } else if (sessionLimit > 0 && sessionCounts[session] >= sessionLimit / 2) {
-        sessionStatus[session] = "Filling Up";
+    for (const session of plan.sessions) {
+      if (sessionLimit > 0 && sessionCounts[session._id] >= sessionLimit) {
+        sessionStatus[session._id] = "Full";
+      } else if (sessionLimit > 0 && sessionCounts[session._id] >= sessionLimit / 2) {
+        sessionStatus[session._id] = "Filling Up";
       }
-    });
+    }
+
+    console.log(sessionStatus, sessionCounts);
 
     return res.status(200).json({ sessionCounts, sessionStatus });
   } catch (error) {

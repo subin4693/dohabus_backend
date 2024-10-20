@@ -472,17 +472,25 @@ exports.getTickets = catchAsync(async (req, res, next) => {
     return next(new AppError("Internal Server Error", 500));
   }
 });
+exports.getPlanById = catchAsync(async (req, res, next) => {
+  const planId = req.params.planId;
+  const plan = await Plan.findById(planId).lean();
 
+  res.status(200).json({
+    status: "success",
+    results: plan.length,
+    data: plan,
+  });
+});
 exports.cancelTicket = catchAsync(async (req, res, next) => {
   try {
     const { id } = req.params;
 
     // Find the ticket by its ID
     const ticket = await Ticket.findById(id)
-      .populate('plan')
-      .populate('category');
-    console.log("done3 ")
-
+      .populate("plan")
+      .populate("category");
+    console.log("done3 ");
 
     if (!ticket) {
       return next(new AppError("Ticket not found", 404));
@@ -493,14 +501,15 @@ exports.cancelTicket = catchAsync(async (req, res, next) => {
     ticket.status = "Canceled";
     await ticket.save();
 
-
     try {
       const emailContent = `
     <h3 style="font-family: Arial, sans-serif; color: #333;">
         Dear ${ticket?.firstName},
     </h3>
     <p style="font-family: Arial, sans-serif; color: #333;">
-        We regret to inform you that your tickets for ${ticket.plan.title.en} have been canceled. We understand this may be disappointing, and we apologize for any inconvenience this may cause.
+        We regret to inform you that your tickets for ${
+          ticket.plan.title.en
+        } have been canceled. We understand this may be disappointing, and we apologize for any inconvenience this may cause.
     </p>
     <p style="font-family: Arial, sans-serif; color: #333;">
         If you have any questions or need assistance with cancellations or refunds, please check our FAQs page.
@@ -541,7 +550,9 @@ exports.cancelTicket = catchAsync(async (req, res, next) => {
             </tr>
             <tr>
                 <td style="border: 1px solid #ddd; padding: 8px;">Date</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${new Date(ticket?.date).toLocaleDateString()}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${new Date(
+                  ticket?.date,
+                ).toLocaleDateString()}</td>
             </tr>
             <tr>
                 <td style="border: 1px solid #ddd; padding: 8px;">Email</td>
@@ -559,18 +570,15 @@ exports.cancelTicket = catchAsync(async (req, res, next) => {
     ${signature}
 `;
 
-
-
       await transporter.sendMail({
         to: ticket.email,
         subject: `Dear ${ticket?.firstName}, Your ticket for ${ticket.plan.title.en} has been canceled`,
         html: emailContent,
       });
-
     } catch (error) {
       return res.status(400).json({ message: error.message });
     }
-    console.log("Email sended!!")
+    console.log("Email sended!!");
     res.status(200).json({
       status: "success",
       data: {
