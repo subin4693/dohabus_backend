@@ -187,12 +187,39 @@ plansModel.methods.getPricingForDate = function(bookingDate) {
 
   if (priceLimit) {
     console.log("Matching pricing limit found:", priceLimit);
-    return {
-      adultPrice: priceLimit.adultPrice || this.defaultAdultPrice,
-      childPrice: priceLimit.childPrice || this.defaultChildPrice,
-      adultData: priceLimit.adultData.length > 0 ? priceLimit.adultData : this.defaultAdultData,
-      childData: priceLimit.childData.length > 0 ? priceLimit.childData : this.defaultChildData,
-    };
+
+    // Prepare the response object based on what exists in priceLimit
+    const response = {};
+
+    // Add adult pricing only if it exists in priceLimit
+    if (priceLimit.adultPrice !== undefined) {
+      response.adultPrice = priceLimit.adultPrice;
+    }
+
+    // Add child pricing only if it exists in priceLimit
+    if (priceLimit.childPrice !== undefined) {
+      response.childPrice = priceLimit.childPrice;
+    }
+
+    // Add adult data only if it exists and has length
+    if (priceLimit.adultData && priceLimit.adultData.length > 0) {
+      response.adultData = priceLimit.adultData;
+    }
+
+    // Add child data only if it exists and has length
+    if (priceLimit.childData && priceLimit.childData.length > 0) {
+      response.childData = priceLimit.childData;
+    }
+
+    // If no specific price or data exists in the price limit, return the default pricing
+    if (Object.keys(response).length === 0) {
+      response.adultPrice = this.defaultAdultPrice;
+      response.childPrice = this.defaultChildPrice;
+      response.adultData = this.defaultAdultData;
+      response.childData = this.defaultChildData;
+    }
+
+    return response;
   }
 
   console.log("No matching pricing limit found. Returning default pricing.");
@@ -203,6 +230,7 @@ plansModel.methods.getPricingForDate = function(bookingDate) {
     childData: this.defaultChildData,
   };
 };
+
 
 // Custom `toJSON` and `toObject` transformations to add pricing fields at the top level
 plansModel.set("toJSON", {
