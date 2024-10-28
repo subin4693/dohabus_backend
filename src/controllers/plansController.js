@@ -38,7 +38,7 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     limit,
     stopSales,
     minPerson,
-    pricingByMonth,
+    pricingLimits,
   } = req.body;
 
   // Validate required fields
@@ -60,44 +60,69 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     }
   }
 
-  if (pricingByMonth && pricingByMonth.length > 0) {
-    for (const monthPricing of pricingByMonth) {
-      const hasMonthAdultPrice =
-        monthPricing.adultPrice !== undefined && monthPricing.adultPrice !== null;
-      const hasMonthChildPrice =
-        monthPricing.childPrice !== undefined && monthPricing.childPrice !== null;
-      const hasMonthAdultData =
-        monthPricing.adultData &&
-        monthPricing.adultData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
-      const hasMonthChildData =
-        monthPricing.childData &&
-        monthPricing.childData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
+  const hasAdultPrice = adultPrice !== undefined && adultPrice !== null && adultPrice !== "";
+  const hasChildPrice = childPrice !== undefined && childPrice !== null && childPrice !== "";
+  const hasAdultData =
+    adultData && adultData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
+  const hasChildData =
+    childData && childData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
 
-      if ((hasMonthAdultPrice || hasMonthChildPrice) && (hasMonthAdultData || hasMonthChildData)) {
+  if ((hasAdultPrice || hasChildPrice) && (hasAdultData || hasChildData)) {
+    return next(
+      new AppError("Provide either single price fields or detailed pricing data, not both.", 400),
+    );
+  }
+
+  if ((hasAdultPrice && !hasChildPrice) || (!hasAdultPrice && hasChildPrice)) {
+    return next(new AppError("Both adultPrice and childPrice must be provided together.", 400));
+  }
+
+  if ((hasAdultData && !hasChildData) || (!hasAdultData && hasChildData)) {
+    return next(new AppError("Both adultData and childData must be provided together.", 400));
+  }
+
+  if (pricingLimits && pricingLimits.length > 0) {
+    for (const limit of pricingLimits) {
+      const { startDate, endDate, adultPrice, childPrice, adultData, childData } = limit;
+
+      // Check for required fields `startDate` and `endDate`
+      if (!startDate || !endDate) {
+        return next(
+          new AppError("Both startDate and endDate must be provided in pricingLimits.", 400),
+        );
+      }
+
+      // Flags to check if pricing data exists
+      const hasAdultPrice = adultPrice !== undefined && adultPrice !== null && adultPrice !== "";
+      const hasChildPrice = childPrice !== undefined && childPrice !== null && childPrice !== "";
+      const hasAdultData =
+        adultData && adultData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
+      const hasChildData =
+        childData && childData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
+
+      // Ensure at least one adult and one child price type exists
+      if (!(hasAdultPrice || hasAdultData)) {
         return next(
           new AppError(
-            `For month ${monthPricing.month}, provide either single price fields (adultPrice/childPrice) or detailed pricing data (adultData/childData), not both.`,
+            `For pricing limit between ${startDate} and ${endDate}, provide either adultPrice or adultData.`,
+            400,
+          ),
+        );
+      }
+      if (!(hasChildPrice || hasChildData)) {
+        return next(
+          new AppError(
+            `For pricing limit between ${startDate} and ${endDate}, provide either childPrice or childData.`,
             400,
           ),
         );
       }
 
-      if (
-        (hasMonthAdultPrice && !hasMonthChildPrice) ||
-        (!hasMonthAdultPrice && hasMonthChildPrice)
-      ) {
+      // Ensure only one type of adult and one type of child pricing is provided
+      if ((hasAdultPrice && hasAdultData) || (hasChildPrice && hasChildData)) {
         return next(
           new AppError(
-            `For month ${monthPricing.month}, both adultPrice and childPrice must be provided together.`,
-            400,
-          ),
-        );
-      }
-
-      if ((hasMonthAdultData && !hasMonthChildData) || (!hasMonthAdultData && hasMonthChildData)) {
-        return next(
-          new AppError(
-            `For month ${monthPricing.month}, both adultData and childData must be provided together.`,
+            `For pricing limit between ${startDate} and ${endDate}, provide either price fields (adultPrice/childPrice) or detailed pricing data (adultData/childData), not both.`,
             400,
           ),
         );
@@ -105,28 +130,6 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     }
   }
 
-  // const hasAdultPrice = adultPrice !== undefined && adultPrice !== null && adultPrice !== "";
-  // const hasChildPrice = childPrice !== undefined && childPrice !== null && childPrice !== "";
-  // const hasAdultData =
-  //   adultData && adultData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
-  // const hasChildData =
-  //   childData && childData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
-
-  // if ((hasAdultPrice || hasChildPrice) && (hasAdultData || hasChildData)) {
-  //   return next(
-  //     new AppError("Provide either single price fields or detailed pricing data, not both.", 400),
-  //   );
-  // }
-
-  // if ((hasAdultPrice && !hasChildPrice) || (!hasAdultPrice && hasChildPrice)) {
-  //   return next(new AppError("Both adultPrice and childPrice must be provided together.", 400));
-  // }
-
-  // if ((hasAdultData && !hasChildData) || (!hasAdultData && hasChildData)) {
-  //   return next(new AppError("Both adultData and childData must be provided together.", 400));
-  // }
-
-  // Create the plan
   const newPlan = await Plan.create({
     category,
     coverImage,
@@ -145,17 +148,17 @@ exports.createNewPlans = catchAsync(async (req, res, next) => {
     galleryVideos,
     availableDays,
     sessions: selectedSessions,
-    adultPrice,
-    childPrice,
+    defaultAdultPrice: hasAdultPrice ? adultPrice : null,
+    defaultChildPrice: hasChildPrice ? childPrice : null,
     isPickupRequired,
     isDropOffRequired,
     addOn,
-    adultData,
-    childData,
+    defaultAdultData: hasAdultData ? adultData : null,
+    defaultChildData: hasChildData ? childData : null,
     limit,
     stopSales,
     minPerson,
-    pricingByMonth,
+    pricingLimits:pricingLimits,
   });
 
   res.status(201).json({
@@ -222,12 +225,12 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     isPickupRequired,
     isDropOffRequired,
     addOn, // Use "addon" instead of "addOn"
-    adultData, // New field for detailed adult pricing
-    childData, // New field for detailed child pricing
+    adultData,
+    childData,
     limit,
     stopSales,
     minPerson,
-    pricingByMonth,
+    pricingLimits,
   } = req.body.formData;
 
   // Validate required fields
@@ -248,45 +251,48 @@ exports.editPlan = catchAsync(async (req, res, next) => {
       return next(new AppError(`Field ${field.name} is required`, 400));
     }
   }
+  if (pricingLimits && pricingLimits.length > 0) {
+    for (const limit of pricingLimits) {
+      const { startDate, endDate, adultPrice, childPrice, adultData, childData } = limit;
 
-  if (pricingByMonth && pricingByMonth.length > 0) {
-    for (const monthPricing of pricingByMonth) {
-      const hasMonthAdultPrice =
-        monthPricing.adultPrice !== undefined && monthPricing.adultPrice !== null;
-      const hasMonthChildPrice =
-        monthPricing.childPrice !== undefined && monthPricing.childPrice !== null;
-      const hasMonthAdultData =
-        monthPricing.adultData &&
-        monthPricing.adultData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
-      const hasMonthChildData =
-        monthPricing.childData &&
-        monthPricing.childData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
+      // Check for required fields `startDate` and `endDate`
+      if (!startDate || !endDate) {
+        return next(
+          new AppError("Both startDate and endDate must be provided in pricingLimits.", 400),
+        );
+      }
 
-      if ((hasMonthAdultPrice || hasMonthChildPrice) && (hasMonthAdultData || hasMonthChildData)) {
+      // Flags to check if pricing data exists
+      const hasAdultPrice = adultPrice !== undefined && adultPrice !== null && adultPrice !== "";
+      const hasChildPrice = childPrice !== undefined && childPrice !== null && childPrice !== "";
+      const hasAdultData =
+        adultData && adultData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
+      const hasChildData =
+        childData && childData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
+
+      // Ensure at least one adult and one child price type exists
+      if (!(hasAdultPrice || hasAdultData)) {
         return next(
           new AppError(
-            `For month ${monthPricing.month}, provide either single price fields (adultPrice/childPrice) or detailed pricing data (adultData/childData), not both.`,
+            `For pricing limit between ${startDate} and ${endDate}, provide either adultPrice or adultData.`,
+            400,
+          ),
+        );
+      }
+      if (!(hasChildPrice || hasChildData)) {
+        return next(
+          new AppError(
+            `For pricing limit between ${startDate} and ${endDate}, provide either childPrice or childData.`,
             400,
           ),
         );
       }
 
-      if (
-        (hasMonthAdultPrice && !hasMonthChildPrice) ||
-        (!hasMonthAdultPrice && hasMonthChildPrice)
-      ) {
+      // Ensure only one type of adult and one type of child pricing is provided
+      if ((hasAdultPrice && hasAdultData) || (hasChildPrice && hasChildData)) {
         return next(
           new AppError(
-            `For month ${monthPricing.month}, both adultPrice and childPrice must be provided together.`,
-            400,
-          ),
-        );
-      }
-
-      if ((hasMonthAdultData && !hasMonthChildData) || (!hasMonthAdultData && hasMonthChildData)) {
-        return next(
-          new AppError(
-            `For month ${monthPricing.month}, both adultData and childData must be provided together.`,
+            `For pricing limit between ${startDate} and ${endDate}, provide either price fields (adultPrice/childPrice) or detailed pricing data (adultData/childData), not both.`,
             400,
           ),
         );
@@ -294,27 +300,26 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     }
   }
 
-  // Ensure only one type of pricing data is provided
-  // const hasAdultPrice = adultPrice !== undefined && adultPrice !== null && adultPrice !== "";
-  // const hasChildPrice = childPrice !== undefined && childPrice !== null && childPrice !== "";
-  // const hasAdultData =
-  //   adultData && adultData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
-  // const hasChildData =
-  //   childData && childData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
+  const hasAdultPrice = adultPrice !== undefined && adultPrice !== null && adultPrice !== "";
+  const hasChildPrice = childPrice !== undefined && childPrice !== null && childPrice !== "";
+  const hasAdultData =
+    adultData && adultData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
+  const hasChildData =
+    childData && childData.some((row) => Number(row.pax) > 0 || Number(row.price) > 0);
 
-  // if ((hasAdultPrice || hasChildPrice) && (hasAdultData || hasChildData)) {
-  //   return next(
-  //     new AppError("Provide either single price fields or detailed pricing data, not both.", 400),
-  //   );
-  // }
+  if ((hasAdultPrice || hasChildPrice) && (hasAdultData || hasChildData)) {
+    return next(
+      new AppError("Provide either single price fields or detailed pricing data, not both.", 400),
+    );
+  }
 
-  // if ((hasAdultPrice && !hasChildPrice) || (!hasAdultPrice && hasChildPrice)) {
-  //   return next(new AppError("Both adultPrice and childPrice must be provided together.", 400));
-  // }
+  if ((hasAdultPrice && !hasChildPrice) || (!hasAdultPrice && hasChildPrice)) {
+    return next(new AppError("Both adultPrice and childPrice must be provided together.", 400));
+  }
 
-  // if ((hasAdultData && !hasChildData) || (!hasAdultData && hasChildData)) {
-  //   return next(new AppError("Both adultData and childData must be provided together.", 400));
-  // }
+  if ((hasAdultData && !hasChildData) || (!hasAdultData && hasChildData)) {
+    return next(new AppError("Both adultData and childData must be provided together.", 400));
+  }
 
   // Prepare the update data, conditionally including pricing data
   const updateData = {
@@ -337,15 +342,15 @@ exports.editPlan = catchAsync(async (req, res, next) => {
     sessions: selectedSessions,
     isPickupRequired,
     isDropOffRequired,
-    addOn, // Changed to match the request
+    addOn,
     limit,
     stopSales,
     minPerson,
-    pricingByMonth,
-    // ...(hasAdultData && { adultData }),
-    // ...(hasChildData && { childData }),
-    // ...(hasAdultPrice && { adultPrice }),
-    // ...(hasChildPrice && { childPrice }),
+    pricingLimits,
+    defaultAdultData: hasAdultData ? adultData : null,
+    defaultChildData: hasChildData ? childData : null,
+    defaultAdultPrice: hasAdultPrice ? adultPrice : null,
+    defaultChildPrice: hasChildPrice ? childPrice : null,
   };
 
   // Handle the case where the user switches from one type of pricing data to the other
@@ -358,6 +363,10 @@ exports.editPlan = catchAsync(async (req, res, next) => {
   // }
 
   // Update the plan
+
+  console.log("** for fianl test print ****************************************");
+  console.log(updateData);
+  
   const updatedPlan = await Plan.findByIdAndUpdate(id, updateData, {
     new: true,
     runValidators: true,
@@ -383,7 +392,7 @@ exports.getSinglePlan = catchAsync(async (req, res, next) => {
   const userId = req.query.user != "undefined" ? req.query.user : null;
   console.log("Plan id");
   console.log(id);
-  const plan = await Plan.findOne({ _id: id, isActive: true });
+  const plan = await Plan.findOne({ _id: id, isActive: true }).exec();
 
   if (!plan) {
     return next(new AppError("No plan found with that ID", 404));

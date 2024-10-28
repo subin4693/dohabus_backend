@@ -39,19 +39,25 @@ const pricingSchema = new mongoose.Schema({
     required: [true, "Price is required"],
   },
 });
-const monthlyPricingSchema = new mongoose.Schema({
-  month: {
-    type: Number, // 0 for January, 1 for February, ..., 11 for December
+
+// Pricing limit schema
+const pricingLimitSchema = new mongoose.Schema({
+  startDate: {
+    type: Date,
     required: true,
   },
+  endDate: {
+    type: Date,
+    required: true,
+  },
+  adultData: [pricingSchema],
+  childData: [pricingSchema],
   adultPrice: {
     type: Number,
   },
   childPrice: {
     type: Number,
   },
-  adultData: [pricingSchema],
-  childData: [pricingSchema],
 });
 
 // Define the Plan schema
@@ -72,12 +78,10 @@ const plansModel = new mongoose.Schema({
     {
       en: {
         type: String,
-
         trim: true,
       },
       ar: {
         type: String,
-
         trim: true,
       },
       price: {
@@ -112,12 +116,6 @@ const plansModel = new mongoose.Schema({
     type: [Number],
     default: [1, 2, 3, 4, 5, 6, 0],
   },
-  // sessions: [
-  //   {
-  //     type: String,
-  //     trim: true,
-  //   },
-  // ],
   sessions: [
     {
       name: {
@@ -131,15 +129,15 @@ const plansModel = new mongoose.Schema({
     },
   ],
 
-  // adultPrice: {
-  //   type: Number,
-  // },
-  // childPrice: {
-  //   type: Number,
-  // },
-  // adultData: [pricingSchema],
-  // childData: [pricingSchema],
-  pricingByMonth: [monthlyPricingSchema],
+  defaultAdultPrice: {
+    type: Number,
+  },
+  defaultChildPrice: {
+    type: Number,
+  },
+  defaultAdultData: [pricingSchema],
+  defaultChildData: [pricingSchema],
+  pricingLimits: [pricingLimitSchema],
   isActive: {
     type: Boolean,
     default: true,
@@ -174,51 +172,64 @@ const plansModel = new mongoose.Schema({
     default: 0,
   },
 });
-plansModel.virtual("currentMonthPricing").get(function() {
-  const currentMonth = new Date().getMonth(); // Get the current month (0-11)
-  const currentPricing = this.pricingByMonth?.find((p) => p.month === currentMonth);
 
-  if (currentPricing) {
+// Method to calculate pricing based on a booking date
+plansModel.methods.getPricingForDate = function(bookingDate) {
+  const date = new Date(bookingDate);
+  console.log("Checking pricing for booking date:", date);
+
+  // Find a pricing limit that applies to the booking date
+  const priceLimit = this.pricingLimits.find((limit) => {
+    const isWithinLimit = date >= new Date(limit.startDate) && date <= new Date(limit.endDate);
+    console.log(`Checking date range: ${limit.startDate} - ${limit.endDate}, Match: ${isWithinLimit}`);
+    return isWithinLimit;
+  });
+
+  if (priceLimit) {
+    console.log("Matching pricing limit found:", priceLimit);
     return {
-      adultPrice: currentPricing.adultPrice,
-      childPrice: currentPricing.childPrice,
-      adultData: currentPricing.adultData,
-      childData: currentPricing.childData,
+      adultPrice: priceLimit.adultPrice || this.defaultAdultPrice,
+      childPrice: priceLimit.childPrice || this.defaultChildPrice,
+      adultData: priceLimit.adultData.length > 0 ? priceLimit.adultData : this.defaultAdultData,
+      childData: priceLimit.childData.length > 0 ? priceLimit.childData : this.defaultChildData,
     };
   }
-  return {};
-});
 
-// Custom `toJSON` and `toObject` transformation to merge `currentMonthPricing` into the root object
-plansModel.set("toObject", {
-  virtuals: true,
-  transform: function(doc, ret) {
-    if (ret.currentMonthPricing) {
-      // Spread the fields from currentMonthPricing into the parent object
-      Object.assign(ret, ret.currentMonthPricing);
-      delete ret.currentMonthPricing; // Remove the nested currentMonthPricing field
-    }
-    return ret;
-  },
-});
+  console.log("No matching pricing limit found. Returning default pricing.");
+  return {
+    adultPrice: this.defaultAdultPrice,
+    childPrice: this.defaultChildPrice,
+    adultData: this.defaultAdultData,
+    childData: this.defaultChildData,
+  };
+};
 
+// Custom `toJSON` and `toObject` transformations to add pricing fields at the top level
 plansModel.set("toJSON", {
   virtuals: true,
   transform: function(doc, ret) {
-    if (ret.currentMonthPricing) {
-      // Spread the fields from currentMonthPricing into the parent object
-      Object.assign(ret, ret.currentMonthPricing);
-      delete ret.currentMonthPricing; // Remove the nested currentMonthPricing field
-    }
+    // Calculate pricing based on the current date and merge it at the top level
+    const pricing = doc.getPricingForDate(new Date());
+    Object.assign(ret, pricing);
     return ret;
   },
 });
 
-// Pre-save middleware to adjust stopSales date
+plansModel.set("toObject", {
+  virtuals: true,
+  transform: function(doc, ret) {
+    // Calculate pricing based on the current date and merge it at the top level
+    const pricing = doc.getPricingForDate(new Date());
+    Object.assign(ret, pricing);
+    return ret;
+  },
+});
+
+// Pre-save middleware to adjust stopSales dates
 plansModel.pre("save", function(next) {
   if (this.stopSales && this.stopSales.length > 0) {
     this.stopSales = this.stopSales.map((date) => {
-      let adjustedDate = new Date(date);
+      const adjustedDate = new Date(date);
       adjustedDate.setUTCHours(0, 0, 0, 0);
       return adjustedDate;
     });
@@ -226,11 +237,11 @@ plansModel.pre("save", function(next) {
   next();
 });
 
-// Pre-update middleware to adjust dates during update operations
+// Pre-update middleware to adjust stopSales dates during updates
 plansModel.pre(["updateOne", "updateMany", "findOneAndUpdate"], function(next) {
   if (this.getUpdate().stopSales) {
     this.getUpdate().stopSales = this.getUpdate().stopSales.map((date) => {
-      let adjustedDate = new Date(date);
+      const adjustedDate = new Date(date);
       adjustedDate.setUTCHours(0, 0, 0, 0);
       return adjustedDate;
     });

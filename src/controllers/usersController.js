@@ -36,6 +36,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 });
 
 exports.signin = catchAsync(async (req, res, next) => {
+  console.log("sicnin reived")
   const email = req.body.email;
   const password = req.body.password;
 
@@ -58,13 +59,13 @@ exports.signin = catchAsync(async (req, res, next) => {
     return next(error);
   }
   user.password = undefined;
-  const token = jwt.sign(
-    { id: user._id, role: user.role, email: user.email },
-    process.env.JWT_SECRECT,
-    {
-      expiresIn: process.env.LOGIN_EXPIRES,
-    },
-  );
+  // const token = jwt.sign(
+  //   { id: user._id, role: user.role, email: user.email },
+  //   process.env.JWT_SECRECT,
+  //   {
+  //     expiresIn: process.env.LOGIN_EXPIRES,
+  //   },
+  // );
 
   // var expirationDate = new Date();
   // expirationDate.setDate(expirationDate.getDate() + 30);
