@@ -761,8 +761,8 @@ exports.getTicketCounts = catchAsync(async (req, res, next) => {
 
     // Loop through the sessions in the plan
     for (const session of plan.sessions) {
-      sessionCounts[session._id] = 0; // Use _id as the key
-      sessionStatus[session._id] = "Available"; // Default status
+      sessionCounts[session.name] = 0; // Use _id as the key
+      sessionStatus[session.name] = "Available"; // Default status
     }
 
     // Find tickets for the given date and planId
@@ -781,13 +781,13 @@ exports.getTicketCounts = catchAsync(async (req, res, next) => {
 
     // Check the counts against the limit for each session
     for (const session of plan.sessions) {
-      if (sessionLimit > 0 && sessionCounts[session._id] >= sessionLimit) {
-        sessionStatus[session._id] = "Full";
-      } else if (sessionLimit > 0 && sessionCounts[session._id] >= sessionLimit / 2) {
-        sessionStatus[session._id] = "Filling Up";
+      if (sessionLimit > 0 && sessionCounts[session.name] >= sessionLimit) {
+        sessionStatus[session.name] = "Full";
+      } else if (sessionLimit > 0 && sessionCounts[session.name] >= sessionLimit / 2) {
+        sessionStatus[session.name] = "Filling Up";
       }
     }
-
+    console.log("worked** worked")
     console.log(sessionStatus, sessionCounts);
 
     return res.status(200).json({ sessionCounts, sessionStatus });
