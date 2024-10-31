@@ -88,6 +88,7 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       childCount = 0,
       adultCount = 0,
       addons = [],
+      selectedDate
     } = req.body.requestData;
 
     console.log(addons);
@@ -101,8 +102,32 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
     }
     const planObject = plan.toObject();
 
-    const { childPrice, adultPrice, adultData, childData, addOn, minPerson } = planObject;
-    console.log(planObject);
+    let { childPrice, adultPrice, adultData, childData, addOn, minPerson, pricingLimits } = planObject;
+    
+    if (selectedDate) {
+      const normalizedSelectedDate = new Date(selectedDate);
+      normalizedSelectedDate.setHours(0, 0, 0, 0); 
+
+     
+      const currentPricingLimit = pricingLimits.find(limit => {
+        const startDate = new Date(limit.startDate);
+        const endDate = new Date(limit.endDate);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+
+        return normalizedSelectedDate >= startDate && normalizedSelectedDate <= endDate;
+      });
+
+      
+      if (currentPricingLimit) {
+        childPrice = currentPricingLimit.childPrice ?? null;
+        adultPrice = currentPricingLimit.adultPrice ?? null;
+        adultData = currentPricingLimit.adultData?.length?currentPricingLimit.adultData: null;
+        childData = currentPricingLimit.childData?.length? currentPricingLimit.childData: null;
+      }
+    }
+
+
     const coupon = await Offer.findOne({
       couponCode: couponCode,
       plan: planId, // Check if planId is in the plan array

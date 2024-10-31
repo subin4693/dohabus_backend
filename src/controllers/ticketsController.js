@@ -84,7 +84,39 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 
     const planObject = planDetails.toObject();
 
-    const { adultPrice, childPrice, adultData, childData, minPerson } = planObject;
+    let { childPrice, adultPrice, adultData, childData, addOn, minPerson, pricingLimits } = planObject;
+    console.log({childPrice,
+      adultPrice,
+      adultData,
+      childData})
+    if (date) {
+      const normalizedSelectedDate = new Date(date);
+      normalizedSelectedDate.setHours(0, 0, 0, 0); 
+
+     
+      const currentPricingLimit = pricingLimits.find(limit => {
+        const startDate = new Date(limit.startDate);
+        const endDate = new Date(limit.endDate);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+
+        return normalizedSelectedDate >= startDate && normalizedSelectedDate <= endDate;
+      });
+
+      
+      if (currentPricingLimit) {
+        childPrice = currentPricingLimit.childPrice ?? null;
+        adultPrice = currentPricingLimit.adultPrice ?? null;
+        adultData = currentPricingLimit.adultData?.length?currentPricingLimit.adultData: null;
+        childData = currentPricingLimit.childData?.length? currentPricingLimit.childData: null;
+      }
+    }
+
+console.log({childPrice,
+  adultPrice,
+  adultData,
+  childData})
+
     const sessionLimit = planDetails.limit;
 
     const targetDate = new Date(date);
