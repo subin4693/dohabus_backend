@@ -93,7 +93,7 @@ const ticketModel = new mongoose.Schema(
     },
     pickupTime: {
       type: String,
-      default: "",
+      default: "--",
     },
     status: {
       type: String,
