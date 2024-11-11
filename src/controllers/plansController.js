@@ -439,14 +439,13 @@ exports.getPlanByCategory = catchAsync(async (req, res, next) => {
 
   const { categoryId } = req.params;
 
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+ 
 
   // Retrieve active plans and category
   const plansQuery = Plan.find({
     category: categoryId,
     isActive: true,
-    stopSales: { $nin: [today] },
+    
   });
   const categoryQuery = Category.findById(categoryId);
 
