@@ -84,17 +84,21 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 
     const planObject = planDetails.toObject();
 
-    let { childPrice, adultPrice, adultData, childData, addOn, minPerson, pricingLimits } = planObject;
-    console.log({childPrice,
+    let {
+      childPrice,
       adultPrice,
       adultData,
-      childData})
+      childData,
+      addOn,
+      minPerson,
+      pricingLimits,
+    } = planObject;
+    console.log({ childPrice, adultPrice, adultData, childData });
     if (date) {
       const normalizedSelectedDate = new Date(date);
-      normalizedSelectedDate.setHours(0, 0, 0, 0); 
+      normalizedSelectedDate.setHours(0, 0, 0, 0);
 
-     
-      const currentPricingLimit = pricingLimits.find(limit => {
+      const currentPricingLimit = pricingLimits.find((limit) => {
         const startDate = new Date(limit.startDate);
         const endDate = new Date(limit.endDate);
         startDate.setHours(0, 0, 0, 0);
@@ -103,19 +107,15 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         return normalizedSelectedDate >= startDate && normalizedSelectedDate <= endDate;
       });
 
-      
       if (currentPricingLimit) {
         childPrice = currentPricingLimit.childPrice ?? null;
         adultPrice = currentPricingLimit.adultPrice ?? null;
-        adultData = currentPricingLimit.adultData?.length?currentPricingLimit.adultData: null;
-        childData = currentPricingLimit.childData?.length? currentPricingLimit.childData: null;
+        adultData = currentPricingLimit.adultData?.length ? currentPricingLimit.adultData : null;
+        childData = currentPricingLimit.childData?.length ? currentPricingLimit.childData : null;
       }
     }
 
-console.log({childPrice,
-  adultPrice,
-  adultData,
-  childData})
+    console.log({ childPrice, adultPrice, adultData, childData });
 
     const sessionLimit = planDetails.limit;
 
@@ -417,6 +417,9 @@ exports.handleWebhook = async (req, res) => {
             <td style="border: 1px solid #ccc; padding: 8px;"><strong>Pick Up Location:</strong></td>
             <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.pickupLocation}</td>
           </tr>
+          
+          
+          
           <tr>
             <td style="border: 1px solid #ccc; padding: 8px;"><strong>Pickup Time:</strong></td>
             <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.pickupTime}</td>
@@ -819,7 +822,7 @@ exports.getTicketCounts = catchAsync(async (req, res, next) => {
         sessionStatus[session.name] = "Filling Up";
       }
     }
-    console.log("worked** worked")
+    console.log("worked** worked");
     console.log(sessionStatus, sessionCounts);
 
     return res.status(200).json({ sessionCounts, sessionStatus });
