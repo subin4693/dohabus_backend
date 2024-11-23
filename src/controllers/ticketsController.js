@@ -104,7 +104,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(0, 0, 0, 0);
 
-        return normalizedSelectedDate >= startDate && normalizedSelectedDate <= endDate;
+        return date >= startDate && date <= endDate;
       });
 
       if (currentPricingLimit) {
@@ -218,7 +218,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
 
       offer = couponDetails._id;
       const currentDate = new Date();
-      if (currentDate < couponDetails.startingDate || currentDate > couponDetails.endingDate) {
+      if (date < couponDetails.startingDate || date > couponDetails.endingDate) {
         return next(new AppError("Coupon code is not valid at this time", 400));
       }
 

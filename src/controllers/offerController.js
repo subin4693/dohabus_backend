@@ -88,11 +88,11 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       childCount = 0,
       adultCount = 0,
       addons = [],
-      selectedDate
+      selectedDate,
     } = req.body.requestData;
 
     console.log(addons);
-
+    let normalizedSelectedDate = null;
     const plan = await Plan.findById(planId);
     if (!plan) {
       return res.status(404).json({
@@ -102,31 +102,36 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
     }
     const planObject = plan.toObject();
 
-    let { childPrice, adultPrice, adultData, childData, addOn, minPerson, pricingLimits } = planObject;
-    
-    if (selectedDate) {
-      const normalizedSelectedDate = new Date(selectedDate);
-      normalizedSelectedDate.setHours(0, 0, 0, 0); 
+    let {
+      childPrice,
+      adultPrice,
+      adultData,
+      childData,
+      addOn,
+      minPerson,
+      pricingLimits,
+    } = planObject;
 
-     
-      const currentPricingLimit = pricingLimits.find(limit => {
+    if (selectedDate) {
+      normalizedSelectedDate = new Date(selectedDate);
+      normalizedSelectedDate.setHours(0, 0, 0, 0);
+
+      const currentPricingLimit = pricingLimits.find((limit) => {
         const startDate = new Date(limit.startDate);
         const endDate = new Date(limit.endDate);
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(0, 0, 0, 0);
 
-        return normalizedSelectedDate >= startDate && normalizedSelectedDate <= endDate;
+        return selectedDate >= startDate && selectedDate <= endDate;
       });
 
-      
       if (currentPricingLimit) {
         childPrice = currentPricingLimit.childPrice ?? null;
         adultPrice = currentPricingLimit.adultPrice ?? null;
-        adultData = currentPricingLimit.adultData?.length?currentPricingLimit.adultData: null;
-        childData = currentPricingLimit.childData?.length? currentPricingLimit.childData: null;
+        adultData = currentPricingLimit.adultData?.length ? currentPricingLimit.adultData : null;
+        childData = currentPricingLimit.childData?.length ? currentPricingLimit.childData : null;
       }
     }
-
 
     const coupon = await Offer.findOne({
       couponCode: couponCode,
@@ -151,8 +156,7 @@ exports.checkOffer = catchAsync(async (req, res, next) => {
       return next(new AppError(`Coupon code can only be used ${limit} time(s) per user`, 400));
     }
 
-    const now = new Date();
-    if (now < coupon.startingDate || now > coupon.endingDate) {
+    if (selectedDate < coupon.startingDate || selectedDate > coupon.endingDate) {
       return res.status(400).json({
         status: "fail",
         message: "Coupon code is not valid at this time",
