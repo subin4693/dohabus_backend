@@ -39,7 +39,7 @@ let app = express();
 let weekCounter = 0;
 app.use(
   cors({
-    origin: [],
+    origin: ["http://localhost:5173"],
     credentials: true,
   }),
 );
