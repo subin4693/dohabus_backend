@@ -56,6 +56,7 @@ app.use(cookieParser());
 cron.schedule("0 9 * * *", () => {
   sendGmail();
 });
+
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/categorys", categoryRouter);
 app.use("/api/v1/plans", planRouter);
