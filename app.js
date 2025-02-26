@@ -37,6 +37,7 @@ const globalErrorHandler = require("./src/controllers/errorController");
 const { sendGmail } = require("./scheduler");
 let app = express();
 let weekCounter = 0;
+
 app.use(
   cors({
     origin: [
