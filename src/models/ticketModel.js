@@ -6,11 +6,9 @@ const ticketModel = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // user: {
-    //   type: String,
-
-    //   ref: "User",
-    // },
+    pun: {
+      type: String,
+    },
     offer: {
       type: mongoose.Schema.Types.ObjectId,
 

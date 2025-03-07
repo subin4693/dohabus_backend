@@ -12,6 +12,9 @@ router
   .get(ticketsController.getTickets)
   .post(ticketsController.bookTicket);
 
+router.route("/qpay-response").post(ticketsController.handleQPayResponse);
+router.route("/cybersource-response").post(ticketsController.cybersourcePaymentResponse);
+
 router
   .route("/:id")
   .get(ticketsController.getTicketById)
