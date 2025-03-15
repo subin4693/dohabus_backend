@@ -6,6 +6,15 @@ const ticketModel = new mongoose.Schema(
       type: String,
       required: true,
     },
+    paymentMethod: {
+      type: String,
+      enum: ["qpay", "cybersource"],
+      required: true,
+    },
+    refundPun: {
+      type: String,
+      default: "",
+    },
     pun: {
       type: String,
     },
@@ -81,7 +90,16 @@ const ticketModel = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["Pending", "Paid", "Failed", "Cancelled"],
+      enum: [
+        "Pending",
+        "Paid",
+        "Failed",
+        "Cancelled",
+        "Refund Pending",
+        "Refund Processing",
+        "Refunded",
+        "Refund Rejected By DohaBus",
+      ],
       default: "Pending",
     },
     visaId: String,
