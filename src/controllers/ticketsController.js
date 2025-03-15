@@ -284,7 +284,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       // -----------------------
       console.log("DEBUG: Preparing QPay payment data...");
       const REDIRECT_URL = process.env.QPAY_REDIRECT_URL;
-      const onSuccessRedirect = process.env.RETURN_URL;
+      const onSuccessRedirect = process.env.QPAY_RETURN_URL;
 
       const generateSecureHash = (data, secretKey) => {
         const fieldsOrder = [
@@ -441,10 +441,10 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         currency: "qar",
         locale: "en-us",
         device_fingerprint_id: deviceFingerprintId,
-        // override_custom_cancel_page: process.env.CYBERSOURCE_RETURN_UR,
-        // override_custom_receipt_page: process.env.CYBERSOURCE_RETURN_UR,
-        override_custom_cancel_page: "http://localhost:8081/api/v1/tickets/cybersource-response",
-        override_custom_receipt_page: "http://localhost:8081/api/v1/tickets/cybersource-response",
+        override_custom_cancel_page: process.env.CYBERSOURCE_RETURN_UR,
+        override_custom_receipt_page: process.env.CYBERSOURCE_RETURN_UR,
+        // override_custom_cancel_page: "http://localhost:8081/api/v1/tickets/cybersource-response",
+        // override_custom_receipt_page: "http://localhost:8081/api/v1/tickets/cybersource-response",
       };
 
       const signature = sign(fieldsToSign, CYBERSOURCE_SECRET_KEY);

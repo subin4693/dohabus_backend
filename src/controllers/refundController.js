@@ -372,7 +372,8 @@ exports.requestRefund = async (req, res) => {
 
     const mailOptions = {
       from: process.env.EMAIL,
-      to: "melvinmps11301@gmail.com",
+      // to: "melvinmps11301@gmail.com",
+      to: process.env.EMAIL,
       subject: "New Refund Request",
       text: `The booking with unique ID ${uniqueId} (Ticket ID: ${ticket._id}) has requested a refund. Reason: ${reason}`,
     };
