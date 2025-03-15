@@ -277,12 +277,14 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     // Payment Data Preparation
     // -----------------------
     if (paymentMethod === "qpay") {
+      console.log("Payemnt MEthod ====", paymentMethod);
+
       // -----------------------
       // QPay Payment Processing
       // -----------------------
       console.log("DEBUG: Preparing QPay payment data...");
       const REDIRECT_URL = process.env.QPAY_REDIRECT_URL;
-      const onSuccessRedirect = process.env.RETURN_URL;
+      const onSuccessRedirect = process.env.QPAY_RETURN_URL;
 
       const generateSecureHash = (data, secretKey) => {
         const fieldsOrder = [
@@ -360,6 +362,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       console.log("DEBUG: Creating ticket in DB...");
       const ticket = await Ticket.create({
         uniqueId: newUniqueId,
+        paymentMethod: paymentMethod,
         category,
         plan,
         price: allcost || 0,
@@ -379,7 +382,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         status: "Booked",
         number,
         pickupTime,
-        paymentProvider: paymentMethod,
         pun: truncatedPUN, // Store the generated PUN
       });
       console.log("DEBUG: Ticket created:", ticket);
@@ -441,6 +443,8 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         device_fingerprint_id: deviceFingerprintId,
         override_custom_cancel_page: process.env.CYBERSOURCE_RETURN_UR,
         override_custom_receipt_page: process.env.CYBERSOURCE_RETURN_UR,
+        // override_custom_cancel_page: "http://localhost:8081/api/v1/tickets/cybersource-response",
+        // override_custom_receipt_page: "http://localhost:8081/api/v1/tickets/cybersource-response",
       };
 
       const signature = sign(fieldsToSign, CYBERSOURCE_SECRET_KEY);
@@ -451,12 +455,12 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         signature,
       });
 
-      // Create ticket in the DB without a PUN if desired (or you can set pun to null)
       const ticket = await Ticket.create({
         uniqueId: newUniqueId,
+        paymentMethod: paymentMethod,
         category,
         plan,
-        price: allcost || 0,
+        price: allcost,
         adultQuantity: adultQuantity || 0,
         childQuantity: childQuantity || 0,
         session,
@@ -473,7 +477,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         status: "Booked",
         number,
         pickupTime,
-        paymentProvider: paymentMethod,
         pun: null, // CyberSource doesn't use PUN
       });
       console.log("DEBUG: Ticket created (CyberSource):", ticket);
@@ -497,9 +500,32 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
   }
 });
 
-// -----------------------
-// HANDLE QPAY RESPONSE
-// -----------------------
+const mapQPayErrorCode = (code) => {
+  // Mapping from QPay EZ‑Connect Integration Guide Appendix B
+  const errorMap = {
+    "EZConnect-0001": "Missing 'Action' parameter.",
+    "EZConnect-0002": "Missing 'BankID' parameter.",
+    "EZConnect-0003": "Missing 'PUN' parameter.",
+    "EZConnect-0004": "Missing 'MerchantID' parameter.",
+    "EZConnect-0005": "Merchant is not available.",
+    "EZConnect-0006": "Merchant is not configured for EZ‑Connect.",
+    "EZConnect-0007": "Merchant has no configured secret key.",
+    "EZConnect-0008": "Merchant IP is not supported.",
+    "EZConnect-0009": "Secure Hash could not be validated.",
+    "EZConnect-0010": "Missing 'SecureHash' parameter.",
+    "EZConnect-0012": "Missing 'Lang' parameter.",
+    "EZConnect-0013": "Missing 'OriginalTransactionPaymentUniqueNumber' parameter.",
+    "EZConnect-0014": "Missing 'Amount' parameter.",
+    "EZConnect-0015": "Missing 'CurrencyCode' parameter.",
+    "EZConnect-0016": "Invalid amount value received.",
+    "EZConnect-0017": "Invalid amount format received.",
+    "EZConnect-0018": "Invalid action type sent.",
+    "EZConnect-0019": "Missing 'TransactionRequestDate' parameter.",
+    // Add additional mappings as needed
+  };
+  return errorMap[code] || null;
+};
+
 exports.handleQPayResponse = async (req, res) => {
   console.log("DEBUG: handleQPayResponse invoked.");
   console.log("DEBUG: Raw QPay response (req.body):", JSON.stringify(req.body));
@@ -539,6 +565,7 @@ exports.handleQPayResponse = async (req, res) => {
     let hashString = process.env.QPAY_SECRET_KEY;
     fieldsOrder.forEach((field) => {
       let value = (responseParams[field] || "").trim();
+      // Replace spaces with '+' in any message field (per documentation)
       if (field.toLowerCase().includes("message")) {
         value = value.replace(/ /g, "+");
       }
@@ -576,15 +603,25 @@ exports.handleQPayResponse = async (req, res) => {
     }
     console.log("DEBUG: Ticket found:", ticket);
 
-    ticket.paymentStatus = responseParams["Response.Status"] === "0000" ? "Paid" : "Failed";
+    const responseStatus = responseParams["Response.Status"];
+    ticket.paymentStatus = responseStatus === "0000" ? "Paid" : "Failed";
     ticket.confirmationId = responseParams["Response.ConfirmationID"];
     console.log("DEBUG: Updating ticket payment status to:", ticket.paymentStatus);
     await ticket.save();
     console.log("DEBUG: Ticket updated:", ticket);
 
+    // If the status code is not success, map it to a friendly message if available
+    let message = responseParams["Response.StatusMessage"];
+    if (responseStatus !== "0000") {
+      const friendlyMsg = mapQPayErrorCode(responseStatus);
+      if (friendlyMsg) {
+        message = friendlyMsg;
+      }
+    }
+
     const queryParams = new URLSearchParams({
-      status: responseParams["Response.Status"],
-      message: responseParams["Response.StatusMessage"],
+      status: responseStatus,
+      message: message,
       ticketId: ticket._id.toString(),
     }).toString();
     console.log("DEBUG: Redirecting with queryParams:", queryParams);
@@ -597,20 +634,28 @@ exports.handleQPayResponse = async (req, res) => {
   }
 };
 
-// -----------------------
-// HANDLE CYBERSOURCE RESPONSE
-// -----------------------
-exports.cybersourcePaymentResponse = async (req, res) => {
-  console.log("DEBUG: CyberSource paymentResponse invoked.");
-  console.log("DEBUG: Received CyberSource response:", req.body);
-  try {
-    // Copy the response fields
-    const fields = { ...req.body };
+const mapCyberSourceErrorCode = (code) => {
+  // Mapping from Secure Acceptance documentation (expand as needed)
+  const errorMap = {
+    "100": "Payment processed successfully.",
+    "101": "Payment declined: Card expired.",
+    "102": "Payment declined: Insufficient funds.",
+    "202": "Payment declined: Suspected fraud.",
+    "4100": "Payment has been rejected due to risk rule violation.",
+    // You can add additional mappings here as needed.
+    // For example, if a "cancel" decision were mapped to a specific code, add it here.
+  };
+  return errorMap[code] || null;
+};
 
+exports.cybersourcePaymentResponse = async (req, res) => {
+  console.log("DEBUG: CyberSource paymentResponse invoked.", req.body);
+  try {
+    const fields = { ...req.body };
     if (!fields.signed_field_names) {
-      console.error("[cybersourcePaymentResponse] Missing signed_field_names in response.");
+      console.error("ERROR: Missing signed_field_names in CyberSource response.");
       return res.redirect(
-        `${process.env.PAYMENT_RESPONSE_URL}?status=error&message=No Response Data`,
+        `${process.env.PAYMENT_RESPONSE_URL}?status=error&message=No response data provided.`,
       );
     }
 
@@ -618,51 +663,73 @@ exports.cybersourcePaymentResponse = async (req, res) => {
     const responseSignature = fields.signature;
     delete fields.signature;
 
-    // Rebuild the data to sign based on the signed_field_names
+    // Rebuild the data to sign using the order defined in signed_field_names
     const signedNames = fields.signed_field_names.split(",");
     const dataToSign = {};
     signedNames.forEach((field) => {
       dataToSign[field] = fields[field];
     });
 
-    // Compute the signature using our helper 'sign' function
+    // Compute the signature using our helper 'sign' function (assumes proper implementation)
     const computedSignature = sign(dataToSign, process.env.CYBERSOURCE_SECRET_KEY);
-    if (computedSignature === responseSignature) {
-      const decision = fields.decision || "UNKNOWN";
-      console.log("[cybersourcePaymentResponse] Valid signature. Decision:", decision);
-
-      // Use the reference_number from the response as the key to find our ticket.
-      // In our booking flow we stored our unique transactionId in reference_number.
-      const referenceNumber = fields.reference_number;
-      const ticket = await Ticket.findOne({ transactionId: referenceNumber });
-      if (ticket) {
-        ticket.paymentStatus = decision.toLowerCase() === "accept" ? "Paid" : "Failed";
-        // Optionally, update the confirmationId with the CyberSource transaction_id
-        ticket.confirmationId = fields.transaction_id || "";
-        await ticket.save();
-        console.log("DEBUG: Ticket updated:", ticket);
-      } else {
-        console.error("ERROR: No ticket found with reference number:", referenceNumber);
-      }
-
-      // Redirect to frontend with query parameters indicating the transaction outcome.
+    if (computedSignature !== responseSignature) {
+      console.error("ERROR: CyberSource signature mismatch!");
       return res.redirect(
-        `${
-          process.env.PAYMENT_RESPONSE_URL
-        }?status=${decision}&message=Transaction ${decision}&ticketId=${
-          ticket ? ticket._id.toString() : ""
-        }`,
-      );
-    } else {
-      console.error("[cybersourcePaymentResponse] Signature mismatch!");
-      return res.redirect(
-        `${process.env.PAYMENT_RESPONSE_URL}?status=failed&message=Invalid Signature`,
+        `${process.env.PAYMENT_RESPONSE_URL}?status=failed&message=Invalid secure signature.`,
       );
     }
-  } catch (error) {
-    console.error("[cybersourcePaymentResponse] Error:", error);
+
+    // Determine transaction outcome from the decision field
+    const decision = fields.decision ? fields.decision.toLowerCase() : "unknown";
+    if (decision !== "accept") {
+      // Attempt to use a mapped error message from reason_code if available
+      let errorMessage = "";
+      if (fields.reason_code) {
+        errorMessage = mapCyberSourceErrorCode(fields.reason_code);
+      }
+      // If no mapped message and a message is provided by the gateway, use that
+      if (!errorMessage && fields.message) {
+        errorMessage = fields.message;
+      }
+      // Fallback to a default friendly error message if still empty
+      if (!errorMessage) {
+        errorMessage = "Payment was not accepted. Please try again.";
+      }
+      console.error(
+        "ERROR: CyberSource payment declined with decision:",
+        decision,
+        "and reason code:",
+        fields.reason_code,
+      );
+      return res.redirect(
+        `${process.env.PAYMENT_RESPONSE_URL}?status=failed&message=${encodeURIComponent(
+          errorMessage,
+        )}&ticketId=${fields.ticketId || ""}`,
+      );
+    }
+
+    // Retrieve the ticket based on your transaction reference (using reference_number here)
+    const referenceNumber = fields.reference_number;
+    const ticket = await Ticket.findOne({ transactionId: referenceNumber });
+    if (ticket) {
+      ticket.paymentStatus = "Paid";
+      ticket.confirmationId = fields.transaction_id || "";
+      await ticket.save();
+      console.log("DEBUG: Ticket updated:", ticket);
+    } else {
+      console.error("ERROR: No ticket found with reference number:", referenceNumber);
+    }
+
+    // Redirect to the frontend with a success message
     return res.redirect(
-      `${process.env.PAYMENT_RESPONSE_URL}?status=error&message=Processing Error`,
+      `${process.env.PAYMENT_RESPONSE_URL}?status=success&message=Payment accepted.&ticketId=${
+        ticket ? ticket._id.toString() : ""
+      }`,
+    );
+  } catch (error) {
+    console.error("Error handling CyberSource response:", error);
+    return res.redirect(
+      `${process.env.PAYMENT_RESPONSE_URL}?status=error&message=Failed to process payment response.`,
     );
   }
 };
