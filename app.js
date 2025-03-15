@@ -38,19 +38,19 @@ const { sendGmail } = require("./scheduler");
 let app = express();
 let weekCounter = 0;
 
-// app.use(
-//   cors({
-//     origin: [
-//       "http://localhost:5173",
-//       "https://earnest-beijinho-ce768b.netlify.app",
-//       "https://www.dohabus.com",
-//       "https://dohabus.com",
-//     ],
-//     credentials: true,
-//   }),
-// );
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://earnest-beijinho-ce768b.netlify.app",
+      "https://www.dohabus.com",
+      "https://dohabus.com",
+    ],
+    credentials: true,
+  }),
+);
 
-app.use(cors({ origin: "*", credentials: true }));
+// app.use(cors({ origin: "*", credentials: true }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
