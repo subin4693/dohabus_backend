@@ -1,4 +1,4 @@
-name: Deploy to backend
+name: Deploy to Backend
 
 on:
   push:
@@ -16,5 +16,8 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.KEY }}
         port: ${{ secrets.PORT }}
-        script: cd code/dohabus_backend && git pull && pm2 restart backend
-        
+        script: |
+          cd code/dohabus_backend
+          git pull
+          npm install
+          pm2 reload backend
