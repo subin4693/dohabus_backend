@@ -1252,6 +1252,11 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       console.log("DEBUG: Ticket created:", ticket);
       console.log("DEBUG: Ticket with PUN stored:", ticket);
 
+      // Log the backend's static IP by fetching it from an external service.
+      const ipResponse = await axios.get("https://api64.ipify.org?format=json");
+      const backendIP = ipResponse.data.ip;
+      console.log("DEBUG: Backend Static IP:", backendIP);
+
       // Instead of sending JSON, return an HTML page with a hidden form that auto-submits.
       const formInputs = Object.entries(paymentData)
         .map(([key, value]) => `<input type="hidden" name="${key}" value="${value}" />`)
@@ -1321,6 +1326,11 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         ...fieldsToSign,
         signature,
       });
+
+      // Log the backend's static IP by fetching it from an external service.
+      const ipResponse = await axios.get("https://api64.ipify.org?format=json");
+      const backendIP = ipResponse.data.ip;
+      console.log("DEBUG: Backend Static IP:", backendIP);
 
       const ticket = await Ticket.create({
         uniqueId: newUniqueId,
