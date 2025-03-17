@@ -947,11 +947,8 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
   } = req.body.dataa;
 
   try {
-    console.log("DEBUG: Fetching plan and category details...");
     const planDetails = await Plan.findById(plan);
     const planCategory = await Category.findById(category);
-    console.log("DEBUG: planDetails:", planDetails);
-    console.log("DEBUG: planCategory:", planCategory);
     const userDetails = { name: firstName };
 
     if (!planDetails) {
@@ -969,7 +966,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       minPerson,
       pricingLimits,
     } = planObject;
-    console.log("DEBUG: Initial pricing values:", { childPrice, adultPrice, adultData, childData });
 
     if (date) {
       const normalizedSelectedDate = new Date(date);
@@ -982,7 +978,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         endDate.setHours(0, 0, 0, 0);
         return date >= startDate && date <= endDate;
       });
-      console.log("DEBUG: currentPricingLimit:", currentPricingLimit);
       if (currentPricingLimit) {
         childPrice = currentPricingLimit.childPrice ?? null;
         adultPrice = currentPricingLimit.adultPrice ?? null;
@@ -990,11 +985,9 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         childData = currentPricingLimit.childData?.length ? currentPricingLimit.childData : null;
       }
     }
-    console.log("DEBUG: Updated pricing values:", { childPrice, adultPrice, adultData, childData });
 
     const sessionLimit = planDetails.limit;
     const targetDate = new Date(date);
-    console.log("DEBUG: Fetching tickets for plan, session, date...");
     const tickets = await Ticket.find({
       plan: plan,
       session: session,
@@ -1005,7 +998,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     tickets.forEach((ticket) => {
       totalBookedTickets += ticket.adultQuantity + ticket.childQuantity;
     });
-    console.log("DEBUG: totalBookedTickets:", totalBookedTickets);
     const totalNewTickets = adultQuantity + childQuantity;
     if (sessionLimit > 0 && totalBookedTickets + totalNewTickets > sessionLimit) {
       const availableTickets = sessionLimit - totalBookedTickets;
