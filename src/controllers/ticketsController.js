@@ -1061,14 +1061,12 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     }
 
     let totalCost = totalAdultPrice + totalChildPrice;
-    console.log("DEBUG: Total cost before discounts:", totalCost);
 
     // Coupon logic
     let adultDiscountAmount = 0;
     let childDiscountAmount = 0;
     let offer = null;
     if (coupon) {
-      console.log("DEBUG: Coupon provided, checking coupon details...");
       const couponDetails = await Offer.findOne({ plan, couponCode: coupon, status: "active" });
       if (!couponDetails) {
         console.error("ERROR: Invalid or expired coupon.");
@@ -1103,14 +1101,12 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
       const discountedAdultPrice = totalAdultPrice - adultDiscountAmount || 0;
       const discountedChildPrice = totalChildPrice - childDiscountAmount || 0;
       totalCost = discountedAdultPrice + discountedChildPrice;
-      console.log("DEBUG: Total cost after discount:", totalCost);
     }
 
     // Add-on price calculations
     let addOnTotalPrice = 0;
     let addonFeatures = [];
     if (addons?.length > 0 && planDetails?.addOn?.length > 0) {
-      console.log("DEBUG: Processing addons...");
       addons.forEach((addOnId) => {
         const [addId, count] = addOnId.split(":");
         const matchingAddOn = planDetails?.addOn?.find((addOn) => addOn._id == addId);
@@ -1120,7 +1116,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
           addOnTotalPrice += matchingAddOn.price * addOnCount;
         }
       });
-      console.log("DEBUG: Total addon price:", addOnTotalPrice);
     }
 
     // Generate a new unique ticket ID
@@ -1129,7 +1124,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
     const newUniqueId = String(newIdNumber).padStart(5, "0");
 
     const allcost = totalCost + addOnTotalPrice;
-    console.log("DEBUG: Final total cost:", allcost);
 
     // Generate a transaction identifier.
     // For QPay we use our own transactionId, for CyberSource we will generate a UUID.
@@ -1250,8 +1244,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         pickupTime,
         pun: truncatedPUN, // Store the generated PUN
       });
-      console.log("DEBUG: Ticket created:", ticket);
-      console.log("DEBUG: Ticket with PUN stored:", ticket);
+      // console.log("DEBUG: Ticket with PUN stored:", ticket);
 
       // Log the backend's static IP by fetching it from an external service.
       const ipResponse = await axios.get("https://api64.ipify.org?format=json");
@@ -1357,7 +1350,6 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         pickupTime,
         pun: null, // CyberSource doesn't use PUN
       });
-      console.log("DEBUG: Ticket created (CyberSource):", ticket);
 
       // Return an HTML page with an auto-submitting form for CyberSource.
       const formInputs = Object.entries({ ...fieldsToSign, signature })
@@ -1655,7 +1647,6 @@ exports.editTicket = catchAsync(async (req, res, next) => {
   console.log("DEBUG: editTicket invoked with id:", req.params.id);
   const ticketId = req.params.id;
   const data = req.body;
-  console.log("DEBUG: Data for editTicket:", data);
   const planTypes = await Plan.find({ _id: { $in: data.map((plan) => plan.plan) } });
   if (planTypes.length !== data.length) return next(new AppError("Invalid tickets", 400));
   const ticketPromise = data.map((ticket) => {
@@ -1680,7 +1671,6 @@ exports.editTicket = catchAsync(async (req, res, next) => {
     totalCost += t.price;
     totalQuantity += t.quantity;
   }
-  console.log("DEBUG: Updated tickets:", ticketTest);
   res.status(201).json({
     status: "success",
     data: { bookedTickets: ticketTest },
@@ -1688,7 +1678,6 @@ exports.editTicket = catchAsync(async (req, res, next) => {
 });
 
 exports.getTicketCounts = catchAsync(async (req, res, next) => {
-  console.log("DEBUG: getTicketCounts invoked with req.body:", req.body);
   try {
     const { date, planId } = req.body;
     if (!date || !planId) {
@@ -1721,7 +1710,6 @@ exports.getTicketCounts = catchAsync(async (req, res, next) => {
         sessionStatus[session.name] = "Filling Up";
       }
     }
-    console.log("DEBUG: Session Status:", sessionStatus, "Session Counts:", sessionCounts);
     return res.status(200).json({ sessionCounts, sessionStatus });
   } catch (error) {
     console.error("ERROR in getTicketCounts:", error);
@@ -1730,7 +1718,6 @@ exports.getTicketCounts = catchAsync(async (req, res, next) => {
 });
 
 exports.getTicketById = catchAsync(async (req, res, next) => {
-  console.log("DEBUG: getTicketById invoked with id:", req.params.id);
   const { id } = req.params;
   const ticket = await Ticket.findById(id);
   if (!ticket) {
@@ -1739,7 +1726,6 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
   }
   const plan = await Plan.findById(ticket.plan);
   const planCategory = await Category.findById(ticket.category);
-  console.log("DEBUG: Returning ticket:", ticket);
   res.status(200).json({
     status: "success",
     data: { ticket, plan, planCategory },
