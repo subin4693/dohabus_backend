@@ -402,6 +402,8 @@ exports.getRefundRequests = catchAsync(async (req, res, next) => {
   const refunds = await Refund.find()
     .populate("ticketId")
     .populate("ticketId", "uniqueId firstName lastName email paymentStatus");
+  console.log(refunds);
+
   return res.status(200).json({
     status: "success",
     data: {
