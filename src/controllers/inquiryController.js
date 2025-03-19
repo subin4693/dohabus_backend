@@ -116,9 +116,9 @@ const qs = require("qs");
 const catchAsync = require("../utils/catchAsync");
 // Import your custom AppError class.
 const AppError = require("../utils/appError");
-// Import the Ticket model and refund model.
+// Import the Ticket model and refund.
 const Ticket = require("../models/ticketModel");
-const Refund = require("../models/Refund");
+const Refund = require("../models/refundModel");
 
 // Helper: Generates the secure hash for an inquiry request.
 // Fields order: SecretKey + Action + BankID + Lang + MerchantID + OriginalPUN
@@ -194,7 +194,7 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
       await ticket.save();
       return res.status(200).json({
         status: "success",
-        message: "No payment or refund transaction found. Ticket updated to Cancelled.",
+        message: "No payment transaction found. Ticket updated to Cancelled.",
         updatedPaymentStatus: ticket.paymentStatus,
       });
     }
