@@ -116,8 +116,9 @@ const qs = require("qs");
 const catchAsync = require("../utils/catchAsync");
 // Import your custom AppError class.
 const AppError = require("../utils/appError");
-// Import the Ticket model.
+// Import the Ticket model and refund model.
 const Ticket = require("../models/ticketModel");
+const Refund = require("../models/Refund");
 
 // Helper: Generates the secure hash for an inquiry request.
 // Fields order: SecretKey + Action + BankID + Lang + MerchantID + OriginalPUN
@@ -175,13 +176,28 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
 
   if (!ticket.pun) {
     console.log("inquirePayment: No payment transaction found for ticket with uniqueId:", uniqueId);
-    ticket.paymentStatus = "Cancelled";
-    await ticket.save();
-    return res.status(200).json({
-      status: "success",
-      message: "No payment transaction found. Ticket updated to Cancelled.",
-      updatedPaymentStatus: ticket.paymentStatus,
-    });
+
+    // Check if the ticket has a refund record
+    const refundRecord = await Refund.findOne({ ticketId: ticket._id });
+    if (refundRecord) {
+      console.log("inquirePayment: Refund record found for ticket with uniqueId:", uniqueId);
+      ticket.paymentStatus = "Refund Initiated";
+      await ticket.save();
+      return res.status(200).json({
+        status: "success",
+        message: "Refund has been initiated for your ticket.",
+        updatedPaymentStatus: ticket.paymentStatus,
+      });
+    } else {
+      console.log("inquirePayment: No refund record found for ticket with uniqueId:", uniqueId);
+      ticket.paymentStatus = "Cancelled";
+      await ticket.save();
+      return res.status(200).json({
+        status: "success",
+        message: "No payment or refund transaction found. Ticket updated to Cancelled.",
+        updatedPaymentStatus: ticket.paymentStatus,
+      });
+    }
   }
 
   const inquiryData = {

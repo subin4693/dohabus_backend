@@ -95,6 +95,7 @@ const ticketModel = new mongoose.Schema(
         "Paid",
         "Failed",
         "Cancelled",
+        "Refund Initiated",
         "Refund Pending",
         "Refund Processing",
         "Refunded",
