@@ -1579,7 +1579,8 @@ exports.cybersourcePaymentResponse = async (req, res) => {
     const ticket = await Ticket.findOne({ transactionId: referenceNumber });
     if (ticket) {
       ticket.paymentStatus = "Paid";
-      ticket.confirmationId = fields.transaction_id || "";
+      // Previously, you were saving in confirmationId. Instead, assign to cybersourceOrderId:
+      ticket.cybersourceOrderId = fields.transaction_id || "";
       await ticket.save();
       console.log("DEBUG: Ticket updated:", ticket);
     } else {
