@@ -594,7 +594,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     // Build the REST API endpoint using the original transaction ID
     // Production endpoint: https://api.cybersource.com/pts/v2/payments/{id}/refunds
     // For testing, use: https://apitest.cybersource.com/pts/v2/payments/{id}/refunds
-    const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.transactionId}/refunds`;
+    const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.confirmationId}/refunds`;
 
     // Build payload per the REST API structure
     const refundPayload = {
