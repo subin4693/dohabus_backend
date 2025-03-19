@@ -181,7 +181,7 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
     const refundRecord = await Refund.findOne({ ticketId: ticket._id });
     if (refundRecord) {
       console.log("inquirePayment: Refund record found for ticket with uniqueId:", uniqueId);
-      ticket.paymentStatus = "Refund Initiated";
+      ticket.paymentStatus = "Paid";
       await ticket.save();
       return res.status(200).json({
         status: "success",
