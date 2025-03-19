@@ -214,7 +214,7 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
   }
 
   // Update ticket payment status based on the inquiry response
-  if (responseStatus === "0000" && originalStatus === "0000") {
+  if (responseStatus === "0000") {
     ticket.paymentStatus = "Paid";
   } else {
     ticket.paymentStatus = "Failed";
