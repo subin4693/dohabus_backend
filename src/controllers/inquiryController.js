@@ -166,17 +166,22 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
   const ticket = await Ticket.findOne({ uniqueId: uniqueId });
   if (!ticket) {
     console.log("inquirePayment: Ticket not found for uniqueId:", uniqueId);
-    return next(new AppError("Ticket not found", 404));
+    return res.status(200).json({
+      status: "success",
+      message: "Ticket not found. Payment status set to Cancelled.",
+      updatedPaymentStatus: "Cancelled",
+    });
   }
 
   if (!ticket.pun) {
     console.log("inquirePayment: No payment transaction found for ticket with uniqueId:", uniqueId);
-    return next(
-      new AppError(
-        "No payment transaction found for this ticket. Please create a payment transaction first or wait for an update.",
-        400,
-      ),
-    );
+    ticket.paymentStatus = "Cancelled";
+    await ticket.save();
+    return res.status(200).json({
+      status: "success",
+      message: "No payment transaction found. Ticket updated to Cancelled.",
+      updatedPaymentStatus: ticket.paymentStatus,
+    });
   }
 
   const inquiryData = {
