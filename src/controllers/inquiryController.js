@@ -201,6 +201,13 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
   const responseStatusMessage = parsedInquiryResponse["Response.StatusMessage"];
   const originalStatus = parsedInquiryResponse["Response.OriginalStatus"];
   const originalConfirmationID = parsedInquiryResponse["Response.OriginalConfirmationID"];
+  console.log(
+    responseStatus,
+    responseStatus,
+    originalStatus,
+    originalConfirmationID,
+    "results from parsed request",
+  );
 
   if (!responseStatus) {
     return next(new AppError("Invalid inquiry response: missing Response.Status", 500));
