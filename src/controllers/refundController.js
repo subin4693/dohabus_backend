@@ -668,6 +668,8 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         return next(new AppError(`Refund failed: ${errorMsg}`, 400));
       }
     } catch (error) {
+      console.log(error);
+
       console.error("CyberSource refund request error:", error.message);
       return next(new AppError("CyberSource refund request error: " + error.message, 500));
     }
