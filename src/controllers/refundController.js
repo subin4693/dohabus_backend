@@ -595,13 +595,14 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     // Production endpoint: https://api.cybersource.com/pts/v2/payments/{id}/refunds
     // For testing, use: https://apitest.cybersource.com/pts/v2/payments/{id}/refunds
     const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
+    console.log(refundEndpoint);
 
     // Build payload per the REST API structure
     const refundPayload = {
       orderInformation: {
         amountDetails: {
           totalAmount: refundAmount.toString(),
-          currency: 634, // e.g., "USD"
+          currency: "634", // e.g., "USD"
         },
       },
     };
