@@ -1078,35 +1078,78 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     return next(new AppError("Only paid tickets can be refunded", 400));
   }
 
-  // CyberSource refund processing using the REST API
+  // Only process refunds for CyberSource payments
   if (ticket.paymentMethod === "cybersource") {
-    console.log("Processing CyberSource refund...");
-    const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
+    console.log("Processing CyberSource refund using REST API...");
 
-    // Build payload per the REST API structure
+    // Build the refund endpoint using the original CyberSource order id stored in ticket.cybersourceOrderId.
+    const refundEndpoint = `https://apitest.cybersource.com/pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
+    console.log("Refund Endpoint:", refundEndpoint);
+
+    // Build the refund payload.
+    // Here, clientReferenceInformation.transactionId is set from the original transaction id stored in ticket.transactionId.
     const refundPayload = {
+      clientReferenceInformation: {
+        transactionId: ticket.transactionId
+      },
       orderInformation: {
         amountDetails: {
-          totalAmount: Number(refundAmount).toFixed(2), // ensures "100.00" format
-          currency: "QAR", // use the exact three-letter code used originally (or "QAR" if appropriate)
-        },
-      },
+          totalAmount: Number(refundAmount).toFixed(2), // Ensure format "10.00"
+          currency: "USD" // Use the exact three-letter ISO code as per your configuration
+        }
+      }
     };
 
-    console.log("Sending CyberSource refund request to:", refundEndpoint);
-    console.log("CyberSource refund request payload:", refundPayload);
+    // Convert payload to JSON string for computing the digest.
+    const payloadString = JSON.stringify(refundPayload);
+
+    // Generate the digest header: SHA-256 hash of the payload, base64 encoded.
+    const digest = "SHA-256=" + crypto.createHash('sha256').update(payloadString).digest('base64');
+
+    // Generate v-c-date header in GMT (UTC) format.
+    const vCDate = new Date().toUTCString();
+
+    // Set the host header.
+    const host = "apitest.cybersource.com";
+
+    // Build the request-target header. It must be lowercase and in the format: "post {path}"
+    const requestTarget = `post /pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
+
+    // Retrieve the v-c-merchant-id from your environment.
+    const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID;
+
+    // Build the signing string per the header ordering: "host v-c-date request-target digest v-c-merchant-id"
+    const signingString =
+      `host: ${host}\n` +
+      `v-c-date: ${vCDate}\n` +
+      `request-target: ${requestTarget}\n` +
+      `digest: ${digest}\n` +
+      `v-c-merchant-id: ${vCMerchantId}`;
+
+    // Compute the HMAC SHA256 signature using your secret key.
+    const secretKey = process.env.CYBERSOURCE_SECRET_KEY;
+    const computedSignature = crypto.createHmac('sha256', secretKey).update(signingString).digest('base64');
+
+    // Build the signature header string. The keyid comes from your environment.
+    const keyId = process.env.CYBERSOURCE_KEY_ID;
+    const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host v-c-date request-target digest v-c-merchant-id", signature="${computedSignature}"`;
+
+    // Build the headers object.
+    const headers = {
+      "Content-Type": "application/json",
+      "v-c-merchant-id": vCMerchantId,
+      "v-c-date": vCDate,
+      "digest": digest,
+      "signature": signatureHeader,
+      "host": host
+    };
+
+    console.log("Refund Payload:", refundPayload);
+    console.log("Request Headers:", headers);
 
     try {
-      const response = await axios.post(refundEndpoint, refundPayload, {
-        headers: {
-          "Content-Type": "application/json",
-          "v-c-merchant-id": process.env.CYBERSOURCE_MERCHANT_ID,
-          // Include additional authentication headers if required.
-        },
-      });
+      const response = await axios.post(refundEndpoint, refundPayload, { headers });
       console.log("CyberSource refund response received:", response.data);
-      console.log("CyberSource refund response received:", response.data.data);
-      console.log("CyberSource refund response received:", response.data.data.errorInformation);
 
       if (
         response.data.status === "PENDING" ||
@@ -1126,8 +1169,8 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
         return res.status(200).json({
           status: "success",
-          message: "Refund request initiated via CyberSource",
-          data: { refundResponse: response.data },
+          message: "Refund request initiated via CyberSource REST API",
+          data: { refundResponse: response.data }
         });
       } else {
         let errorMsg = "";
@@ -1157,11 +1200,10 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         return next(new AppError(`Refund failed: ${errorMsg}`, 400));
       }
     } catch (error) {
-      console.log(error);
       console.error("CyberSource refund request error:", error.message);
       return next(new AppError("CyberSource refund request error: " + error.message, 500));
     }
-  } else {
+  }  else {
     // QPay refund processing
     console.log("Processing QPay refund...");
     const formattedRefundAmount = Math.round(parseFloat(refundAmount) * 100).toString();
