@@ -591,9 +591,6 @@ exports.processRefund = catchAsync(async (req, res, next) => {
   // CyberSource refund processing using the REST API
   if (ticket.paymentMethod === "cybersource") {
     console.log("Processing CyberSource refund...");
-    // Build the REST API endpoint using the original transaction ID
-    // Production endpoint: https://api.cybersource.com/pts/v2/payments/{id}/refunds
-    // For testing, use: https://apitest.cybersource.com/pts/v2/payments/{id}/refunds
     const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
 
     // Build payload per the REST API structure
@@ -601,7 +598,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       orderInformation: {
         amountDetails: {
           totalAmount: Number(refundAmount).toFixed(2), // ensures "100.00" format
-          currency: 634, // use the exact three-letter code used originally (or "QAR" if appropriate)
+          currency: "QAR", // use the exact three-letter code used originally (or "QAR" if appropriate)
         },
       },
     };
