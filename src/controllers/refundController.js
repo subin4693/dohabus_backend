@@ -618,49 +618,108 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     return next(new AppError("Ticket not found", 404));
   }
 
+  // Only "Paid" tickets can be refunded
   if (ticket.paymentStatus !== "Paid") {
     return next(new AppError("Only paid tickets can be refunded", 400));
   }
 
-  // CyberSource refund processing using the REST API
+  // Process CyberSource refunds
   if (ticket.paymentMethod === "cybersource") {
-    console.log("Processing CyberSource refund...");
-    const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
+    console.log("Processing CyberSource refund using REST API...");
 
-    // Build payload per the REST API structure
+    // The refund endpoint: https://api.cybersource.com/pts/v2/payments/{id}/refunds
+    // {id} must be the transaction/order ID returned by CyberSource when payment was created
+    const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
+    console.log("Refund Endpoint:", refundEndpoint);
+
+    // Build the refund payload, including clientReferenceInformation
     const refundPayload = {
+      clientReferenceInformation: {
+        // Often used to identify the transaction on your side; you can also use .code
+        transactionId: ticket.transactionId,
+      },
       orderInformation: {
         amountDetails: {
-          totalAmount: Number(refundAmount).toFixed(2), // ensures "100.00" format
-          currency: "QAR", // use the exact three-letter code used originally (or "QAR" if appropriate)
+          // Must match the original transaction currency and format
+          totalAmount: Number(refundAmount).toFixed(2),
+          currency: "QAR",
         },
       },
     };
 
-    console.log("Sending CyberSource refund request to:", refundEndpoint);
-    console.log("CyberSource refund request payload:", refundPayload);
+    // Convert the payload to JSON for the digest calculation
+    const payloadString = JSON.stringify(refundPayload);
+
+    // 1) Compute the Digest header: SHA-256 hash of the payload, base64-encoded
+    const digest =
+      "SHA-256=" +
+      crypto
+        .createHash("sha256")
+        .update(payloadString)
+        .digest("base64");
+
+    // 2) Generate the v-c-date header in UTC string format
+    const vCDate = new Date().toUTCString();
+
+    // 3) Define the host (production) and request-target in lowercase
+    const host = "api.cybersource.com";
+    const requestTarget = `post /pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
+
+    // 4) Collect the merchant ID from environment
+    const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID;
+
+    // 5) Build the signing string in the required order
+    //    host, v-c-date, request-target, digest, v-c-merchant-id
+    const signingString =
+      `host: ${host}\n` +
+      `v-c-date: ${vCDate}\n` +
+      `request-target: ${requestTarget}\n` +
+      `digest: ${digest}\n` +
+      `v-c-merchant-id: ${vCMerchantId}`;
+
+    // 6) Compute HMAC SHA256 signature using your CyberSource secret key
+    //    (Often referred to as the "Shared Secret" or "API Shared Secret" in the Business Center)
+    const secretKey = process.env.CYBERSOURCE_SECRET_KEY;
+    const computedSignature = crypto
+      .createHmac("sha256", secretKey)
+      .update(signingString)
+      .digest("base64");
+
+    // 7) Build the Signature header. keyid is your "API Key ID" or "Access Key"
+    //    as shown in the CyberSource Business Center.
+    const keyId = process.env.CYBERSOURCE_ACCESS_KEY;
+    const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host v-c-date request-target digest v-c-merchant-id", signature="${computedSignature}"`;
+
+    // 8) Final headers
+    const headers = {
+      "Content-Type": "application/json",
+      "v-c-merchant-id": vCMerchantId,
+      "v-c-date": vCDate,
+      digest: digest,
+      signature: signatureHeader,
+      host: host,
+    };
+
+    console.log("Refund Payload:", refundPayload);
+    console.log("Request Headers:", headers);
 
     try {
-      const response = await axios.post(refundEndpoint, refundPayload, {
-        headers: {
-          "Content-Type": "application/json",
-          "v-c-merchant-id": process.env.CYBERSOURCE_MERCHANT_ID,
-          // Include additional authentication headers if required.
-        },
-      });
+      // Send the POST request with the custom-signed headers
+      const response = await axios.post(refundEndpoint, refundPayload, { headers });
       console.log("CyberSource refund response received:", response.data);
-      console.log("CyberSource refund response received:", response.data.data);
-      console.log("CyberSource refund response received:", response.data.data.errorInformation);
 
+      // Check success conditions: status === "PENDING" or responseCode === "100"
       if (
         response.data.status === "PENDING" ||
         (response.data.processorInformation &&
           response.data.processorInformation.responseCode === "100")
       ) {
+        // Update ticket to reflect refund in progress
         ticket.paymentStatus = "Refund Processing";
         ticket.refundTransactionId = response.data.id;
         await ticket.save();
 
+        // If there's a record in the Refund collection, update it
         const refundRecord = await Refund.findOne({ ticketId: ticket._id });
         if (refundRecord) {
           refundRecord.status = "Processing";
@@ -670,10 +729,12 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
         return res.status(200).json({
           status: "success",
-          message: "Refund request initiated via CyberSource",
+          message: "Refund request initiated via CyberSource REST API",
           data: { refundResponse: response.data },
         });
       } else {
+        // For a non-100 response code or no "PENDING" status,
+        // extract a relevant error message
         let errorMsg = "";
         if (response.data.processorInformation) {
           switch (response.data.processorInformation.responseCode) {
@@ -701,8 +762,6 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         return next(new AppError(`Refund failed: ${errorMsg}`, 400));
       }
     } catch (error) {
-      console.log(error);
-
       console.error("CyberSource refund request error:", error.message);
       return next(new AppError("CyberSource refund request error: " + error.message, 500));
     }
