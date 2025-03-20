@@ -1061,6 +1061,8 @@ const sendRefundRequest = async (refundData) => {
  *   sends the request to QPay or CyberSource based on the payment method,
  *   updates the ticket and refund record, and returns the response.
  */
+
+
 exports.processRefund = catchAsync(async (req, res, next) => {
   const { refundAmount, ticketId } = req.body;
   if (!ticketId || !refundAmount) {
@@ -1078,47 +1080,45 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     return next(new AppError("Only paid tickets can be refunded", 400));
   }
 
-  // Only process refunds for CyberSource payments
   if (ticket.paymentMethod === "cybersource") {
     console.log("Processing CyberSource refund using REST API...");
 
-    // Build the refund endpoint using the original CyberSource order id stored in ticket.cybersourceOrderId.
-    const refundEndpoint = `https://apitest.cybersource.com/pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
+    // Production refund endpoint using the original CyberSource order ID
+    const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
     console.log("Refund Endpoint:", refundEndpoint);
 
-    // Build the refund payload.
-    // Here, clientReferenceInformation.transactionId is set from the original transaction id stored in ticket.transactionId.
+    // Build the refund payload. The clientReferenceInformation.transactionId is set using ticket.transactionId.
     const refundPayload = {
       clientReferenceInformation: {
         transactionId: ticket.transactionId
       },
       orderInformation: {
         amountDetails: {
-          totalAmount: Number(refundAmount).toFixed(2), // Ensure format "10.00"
-          currency: "USD" // Use the exact three-letter ISO code as per your configuration
+          totalAmount: Number(refundAmount).toFixed(2), // e.g., "10.00"
+          currency: "USD"
         }
       }
     };
 
-    // Convert payload to JSON string for computing the digest.
+    // Convert payload to a JSON string for digest calculation.
     const payloadString = JSON.stringify(refundPayload);
 
-    // Generate the digest header: SHA-256 hash of the payload, base64 encoded.
-    const digest = "SHA-256=" + crypto.createHash('sha256').update(payloadString).digest('base64');
+    // Compute the digest header: SHA-256 hash of the payload, base64 encoded.
+    const digest = "SHA-256=" + crypto.createHash("sha256").update(payloadString).digest("base64");
 
-    // Generate v-c-date header in GMT (UTC) format.
+    // Generate the v-c-date header in UTC string format.
     const vCDate = new Date().toUTCString();
 
-    // Set the host header.
-    const host = "apitest.cybersource.com";
+    // Define the host header.
+    const host = "api.cybersource.com";
 
-    // Build the request-target header. It must be lowercase and in the format: "post {path}"
+    // Build the request-target header. Note that it must be lowercase.
     const requestTarget = `post /pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
 
     // Retrieve the v-c-merchant-id from your environment.
     const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID;
 
-    // Build the signing string per the header ordering: "host v-c-date request-target digest v-c-merchant-id"
+    // Build the signing string (headers in order: host, v-c-date, request-target, digest, v-c-merchant-id).
     const signingString =
       `host: ${host}\n` +
       `v-c-date: ${vCDate}\n` +
@@ -1128,9 +1128,9 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
     // Compute the HMAC SHA256 signature using your secret key.
     const secretKey = process.env.CYBERSOURCE_SECRET_KEY;
-    const computedSignature = crypto.createHmac('sha256', secretKey).update(signingString).digest('base64');
+    const computedSignature = crypto.createHmac("sha256", secretKey).update(signingString).digest("base64");
 
-    // Build the signature header string. The keyid comes from your environment.
+    // Build the signature header. The keyid is provided from your environment.
     const keyId = process.env.CYBERSOURCE_KEY_ID;
     const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host v-c-date request-target digest v-c-merchant-id", signature="${computedSignature}"`;
 
@@ -1139,9 +1139,9 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       "Content-Type": "application/json",
       "v-c-merchant-id": vCMerchantId,
       "v-c-date": vCDate,
-      "digest": digest,
-      "signature": signatureHeader,
-      "host": host
+      digest: digest,
+      signature: signatureHeader,
+      host: host
     };
 
     console.log("Refund Payload:", refundPayload);
@@ -1203,7 +1203,8 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       console.error("CyberSource refund request error:", error.message);
       return next(new AppError("CyberSource refund request error: " + error.message, 500));
     }
-  }  else {
+  }
+  else {
     // QPay refund processing
     console.log("Processing QPay refund...");
     const formattedRefundAmount = Math.round(parseFloat(refundAmount) * 100).toString();
@@ -1639,7 +1640,7 @@ exports.cybersourcePaymentResponse = async (req, res) => {
       `${process.env.PAYMENT_RESPONSE_URL}/?status=error&message=Failed to process payment response.`
     );
   }
-});
+};
 
 /**
  * handleQPayResponse:
