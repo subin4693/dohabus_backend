@@ -947,7 +947,6 @@
 //   });
 // });
 
-
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const axios = require("axios");
@@ -1062,7 +1061,6 @@ const sendRefundRequest = async (refundData) => {
  *   updates the ticket and refund record, and returns the response.
  */
 
-
 exports.processRefund = catchAsync(async (req, res, next) => {
   const { refundAmount, ticketId } = req.body;
   if (!ticketId || !refundAmount) {
@@ -1090,21 +1088,26 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     // Build the refund payload. The clientReferenceInformation.transactionId is set using ticket.transactionId.
     const refundPayload = {
       clientReferenceInformation: {
-        transactionId: ticket.transactionId
+        transactionId: ticket.transactionId,
       },
       orderInformation: {
         amountDetails: {
           totalAmount: Number(refundAmount).toFixed(2), // e.g., "10.00"
-          currency: "USD"
-        }
-      }
+          currency: "USD",
+        },
+      },
     };
 
     // Convert payload to a JSON string for digest calculation.
     const payloadString = JSON.stringify(refundPayload);
 
     // Compute the digest header: SHA-256 hash of the payload, base64 encoded.
-    const digest = "SHA-256=" + crypto.createHash("sha256").update(payloadString).digest("base64");
+    const digest =
+      "SHA-256=" +
+      crypto
+        .createHash("sha256")
+        .update(payloadString)
+        .digest("base64");
 
     // Generate the v-c-date header in UTC string format.
     const vCDate = new Date().toUTCString();
@@ -1128,7 +1131,10 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
     // Compute the HMAC SHA256 signature using your secret key.
     const secretKey = process.env.CYBERSOURCE_SECRET_KEY;
-    const computedSignature = crypto.createHmac("sha256", secretKey).update(signingString).digest("base64");
+    const computedSignature = crypto
+      .createHmac("sha256", secretKey)
+      .update(signingString)
+      .digest("base64");
 
     // Build the signature header. The keyid is provided from your environment.
     const keyId = process.env.CYBERSOURCE_KEY_ID;
@@ -1141,7 +1147,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       "v-c-date": vCDate,
       digest: digest,
       signature: signatureHeader,
-      host: host
+      host: host,
     };
 
     console.log("Refund Payload:", refundPayload);
@@ -1170,7 +1176,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         return res.status(200).json({
           status: "success",
           message: "Refund request initiated via CyberSource REST API",
-          data: { refundResponse: response.data }
+          data: { refundResponse: response.data },
         });
       } else {
         let errorMsg = "";
@@ -1203,8 +1209,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       console.error("CyberSource refund request error:", error.message);
       return next(new AppError("CyberSource refund request error: " + error.message, 500));
     }
-  }
-  else {
+  } else {
     // QPay refund processing
     console.log("Processing QPay refund...");
     const formattedRefundAmount = Math.round(parseFloat(refundAmount) * 100).toString();
@@ -1459,7 +1464,7 @@ exports.cybersourcePaymentResponse = async (req, res) => {
     if (!fields.signed_field_names) {
       console.error("ERROR: Missing signed_field_names in CyberSource response.");
       return res.redirect(
-        `${process.env.PAYMENT_RESPONSE_URL}?status=error&message=No response data provided.`
+        `${process.env.PAYMENT_RESPONSE_URL}?status=error&message=No response data provided.`,
       );
     }
 
@@ -1479,7 +1484,7 @@ exports.cybersourcePaymentResponse = async (req, res) => {
     if (computedSignature !== responseSignature) {
       console.error("ERROR: CyberSource signature mismatch!");
       return res.redirect(
-        `${process.env.PAYMENT_RESPONSE_URL}?status=failed&message=Invalid secure signature.`
+        `${process.env.PAYMENT_RESPONSE_URL}?status=failed&message=Invalid secure signature.`,
       );
     }
 
@@ -1496,11 +1501,16 @@ exports.cybersourcePaymentResponse = async (req, res) => {
       if (!errorMessage) {
         errorMessage = "Payment was not accepted. Please try again.";
       }
-      console.error("ERROR: CyberSource payment declined with decision:", decision, "and reason code:", fields.reason_code);
+      console.error(
+        "ERROR: CyberSource payment declined with decision:",
+        decision,
+        "and reason code:",
+        fields.reason_code,
+      );
       return res.redirect(
         `${process.env.PAYMENT_RESPONSE_URL}?status=failed&message=${encodeURIComponent(
-          errorMessage
-        )}&ticketId=${fields.ticketId || ""}`
+          errorMessage,
+        )}&ticketId=${fields.ticketId || ""}`,
       );
     }
 
@@ -1637,7 +1647,7 @@ exports.cybersourcePaymentResponse = async (req, res) => {
   } catch (error) {
     console.error("Error handling CyberSource response:", error);
     return res.redirect(
-      `${process.env.PAYMENT_RESPONSE_URL}/?status=error&message=Failed to process payment response.`
+      `${process.env.PAYMENT_RESPONSE_URL}/?status=error&message=Failed to process payment response.`,
     );
   }
 };
@@ -1703,7 +1713,7 @@ exports.handleQPayResponse = async (req, res) => {
         "ERROR: Invalid Secure Hash! Expected:",
         generatedSecureHash,
         "Received:",
-        receivedSecureHash
+        receivedSecureHash,
       );
       return res.status(400).json({ status: "error", message: "Invalid secure hash" });
     }
@@ -1740,10 +1750,10 @@ exports.handleQPayResponse = async (req, res) => {
   } catch (error) {
     console.error("Error handling QPay response:", error);
     return res.redirect(
-      `${process.env.PAYMENT_RESPONSE_URL}/?status=error&message=Failed to process response`
+      `${process.env.PAYMENT_RESPONSE_URL}/?status=error&message=Failed to process response`,
     );
   }
-});
+};
 
 /**
  * requestRefund:
