@@ -635,7 +635,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     // Build the refund payload, including clientReferenceInformation
     const refundPayload = {
       clientReferenceInformation: {
-        transactionId: ticket.transactionId,
+        code: ticket.transactionId,
       },
       orderInformation: {
         amountDetails: {
