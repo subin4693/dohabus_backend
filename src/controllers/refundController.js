@@ -613,7 +613,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       const response = await axios.post(refundEndpoint, refundPayload, {
         headers: {
           "Content-Type": "application/json",
-          "v-c-merchant-id": process.env.CYBERSOURCE_PROFILE_ID,
+          "v-c-merchant-id": process.env.QPAY_MERCHANT_ID,
           // Include additional authentication headers if required.
         },
       });
