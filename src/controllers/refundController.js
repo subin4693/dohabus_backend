@@ -615,6 +615,8 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         },
       });
       console.log("CyberSource refund response received:", response.data);
+      console.log("CyberSource refund response received:", response.data.data);
+      console.log("CyberSource refund response received:", response.data.data.errorInformation);
 
       if (
         response.data.status === "PENDING" ||
