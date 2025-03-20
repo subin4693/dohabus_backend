@@ -1130,14 +1130,15 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       `v-c-merchant-id: ${vCMerchantId}`;
 
     // Compute the HMAC SHA256 signature using your secret key.
-    const secretKey = process.env.CYBERSOURCE_SECRET_KEY;
+    // const secretKey = process.env.CYBERSOURCE_SECRET_KEY;
+    const secretKey = process.env.CYBERSOURCE_SHARED_API_SECRET;
     const computedSignature = crypto
       .createHmac("sha256", secretKey)
       .update(signingString)
       .digest("base64");
 
     // Build the signature header. The keyid is provided from your environment.
-    const keyId = process.env.CYBERSOURCE_ACCESS_KEY;
+    const keyId = process.env.CYBERSOURCE_SHARED_API_KEY_ID;
     const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host v-c-date request-target digest v-c-merchant-id", signature="${computedSignature}"`;
 
     // Build the headers object.
@@ -1480,7 +1481,8 @@ exports.cybersourcePaymentResponse = async (req, res) => {
     });
 
     // Compute the signature using our helper 'sign' function
-    const computedSignature = sign(dataToSign, process.env.CYBERSOURCE_SECRET_KEY);
+    // const computedSignature = sign(dataToSign, process.env.CYBERSOURCE_SECRET_KEY);
+    const computedSignature = sign(dataToSign, process.env.CYBERSOURCE_SHARED_API_SECRET);
     if (computedSignature !== responseSignature) {
       console.error("ERROR: CyberSource signature mismatch!");
       return res.redirect(
