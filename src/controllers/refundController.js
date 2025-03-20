@@ -601,7 +601,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       orderInformation: {
         amountDetails: {
           totalAmount: Number(refundAmount).toFixed(2), // ensures "100.00" format
-          currency: "QAR", // use the exact three-letter code used originally (or "QAR" if appropriate)
+          currency: "qar", // use the exact three-letter code used originally (or "QAR" if appropriate)
         },
       },
     };
