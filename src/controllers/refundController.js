@@ -641,7 +641,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         amountDetails: {
           // Must match the original transaction currency and format
           totalAmount: Number(refundAmount).toFixed(2),
-          currency: "QAR",
+          currency: "qar",
         },
       },
     };
