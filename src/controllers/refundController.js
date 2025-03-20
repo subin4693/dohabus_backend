@@ -601,7 +601,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       orderInformation: {
         amountDetails: {
           totalAmount: Number(refundAmount).toFixed(2), // ensures "100.00" format
-          currency: "634", // use the exact three-letter code used originally (or "QAR" if appropriate)
+          currency: "QAR", // use the exact three-letter code used originally (or "QAR" if appropriate)
         },
       },
     };
@@ -613,7 +613,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       const response = await axios.post(refundEndpoint, refundPayload, {
         headers: {
           "Content-Type": "application/json",
-          "v-c-merchant-id": process.env.CYBERSOURCE_MERCHANT_ID,
+          "v-c-merchant-id": process.env.CYBERSOURCE_PROFILE_ID,
           // Include additional authentication headers if required.
         },
       });
