@@ -628,14 +628,13 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     console.log("Processing CyberSource refund using REST API...");
 
     // The refund endpoint: https://api.cybersource.com/pts/v2/payments/{id}/refunds
-    // {id} must be the transaction/order ID returned by CyberSource when payment was created
+    // {id} must be the order/transaction ID returned by CyberSource when payment was created.
     const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
     console.log("Refund Endpoint:", refundEndpoint);
 
     // Build the refund payload, including clientReferenceInformation
     const refundPayload = {
       clientReferenceInformation: {
-        // Often used to identify the transaction on your side; you can also use .code
         transactionId: ticket.transactionId,
       },
       orderInformation: {
@@ -677,17 +676,15 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       `digest: ${digest}\n` +
       `v-c-merchant-id: ${vCMerchantId}`;
 
-    // 6) Compute HMAC SHA256 signature using your CyberSource secret key
-    //    (Often referred to as the "Shared Secret" or "API Shared Secret" in the Business Center)
-    const secretKey = process.env.CYBERSOURCE_SECRET_KEY;
+    // 6) Compute HMAC SHA256 signature using your CyberSource shared secret
+    const secretKey = process.env.CYBERSOURCE_SHARED_API_SECRET;
     const computedSignature = crypto
       .createHmac("sha256", secretKey)
       .update(signingString)
       .digest("base64");
 
-    // 7) Build the Signature header. keyid is your "API Key ID" or "Access Key"
-    //    as shown in the CyberSource Business Center.
-    const keyId = process.env.CYBERSOURCE_ACCESS_KEY;
+    // 7) Build the Signature header. The keyId must be your "API Key ID"
+    const keyId = process.env.CYBERSOURCE_SHARED_API_KEY_ID;
     const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host v-c-date request-target digest v-c-merchant-id", signature="${computedSignature}"`;
 
     // 8) Final headers
