@@ -602,7 +602,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       orderInformation: {
         amountDetails: {
           totalAmount: refundAmount.toString(),
-          currency: "634", // e.g., "USD"
+          currency: "QAR", // e.g., "USD"
         },
       },
     };
