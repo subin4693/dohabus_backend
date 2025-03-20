@@ -641,7 +641,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         amountDetails: {
           // Must match the original transaction currency and format
           totalAmount: Number(refundAmount).toFixed(2),
-          currency: "qar",
+          currency: "QAR",
         },
       },
     };
@@ -704,6 +704,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       // Send the POST request with the custom-signed headers
       const response = await axios.post(refundEndpoint, refundPayload, { headers });
       console.log("CyberSource refund response received:", response.data);
+      console.log("CyberSource refund response received:", response.data.data);
 
       // Check success conditions: status === "PENDING" or responseCode === "100"
       if (
