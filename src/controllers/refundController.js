@@ -601,7 +601,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       orderInformation: {
         amountDetails: {
           totalAmount: Number(refundAmount).toFixed(2), // ensures "100.00" format
-          currency: 634, // use the exact three-letter code used originally (or "QAR" if appropriate)
+          currency: "qar", // use the exact three-letter code used originally (or "QAR" if appropriate)
         },
       },
     };
@@ -613,7 +613,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       const response = await axios.post(refundEndpoint, refundPayload, {
         headers: {
           "Content-Type": "application/json",
-          "v-c-merchant-id": "db98954",
+          "v-c-merchant-id": process.env.CYBERSOURCE_MERCHANT_ID,
           // Include additional authentication headers if required.
         },
       });
@@ -637,7 +637,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
         return res.status(200).json({
           status: "success",
-          message: "Refund request initiated via CyberSource REST API",
+          message: "Refund request initiated via CyberSource",
           data: { refundResponse: response.data },
         });
       } else {
