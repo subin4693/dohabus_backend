@@ -1137,7 +1137,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       .digest("base64");
 
     // Build the signature header. The keyid is provided from your environment.
-    const keyId = process.env.CYBERSOURCE_KEY_ID;
+    const keyId = process.env.CYBERSOURCE_ACCESS_KEY;
     const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host v-c-date request-target digest v-c-merchant-id", signature="${computedSignature}"`;
 
     // Build the headers object.
