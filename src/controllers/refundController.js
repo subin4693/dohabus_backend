@@ -1093,7 +1093,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       orderInformation: {
         amountDetails: {
           totalAmount: Number(refundAmount).toFixed(2), // e.g., "10.00"
-          currency: "USD",
+          currency: "QAR",
         },
       },
     };
