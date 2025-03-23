@@ -164,7 +164,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     console.log("Date (UTC):", vCDate);
 
     const host = "api.cybersource.com";
-    const requestTarget = `post /pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
+    const requestTarget = `post /pts/v2/payments/${ticket.cybersourceConfirmationId}/refunds`;
 
     const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID;
     const keyId = process.env.CYBERSOURCE_ACCESS_KEY; // Fixed variable name
