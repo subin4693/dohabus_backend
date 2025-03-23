@@ -926,7 +926,7 @@ exports.cybersourcePaymentResponse = async (req, res) => {
     }
 
     // Retrieve the ticket based on the transaction reference (using reference_number here)
-    const referenceNumber = fields.reference_number;
+    const referenceNumber = fields.req_reference_number;
     const ticket = await Ticket.findOne({ transactionId: referenceNumber });
     console.log("Ticekt Found", ticket);
 

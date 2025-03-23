@@ -68,11 +68,7 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
   // Check if the payment method is qpay
   if (ticket.paymentMethod === "cybersource") {
     console.log("inquirePayment: Payment method is not qpay for ticket with uniqueId:", uniqueId);
-    return res.status(200).json({
-      status: "success",
-      message: "Payment method used is not qpay and does not need to inquire.",
-      updatedPaymentStatus: ticket.paymentStatus,
-    });
+    return next(new AppError("Payed using Credit Card. Please check Cybersource Portal", 400));
   }
 
   if (!ticket.pun) {
