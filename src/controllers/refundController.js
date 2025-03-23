@@ -131,10 +131,10 @@ exports.processRefund = catchAsync(async (req, res, next) => {
   }
 
   if (ticket.paymentMethod === "cybersource") {
-    console.log("🚀 Processing CyberSource refund using REST API...");
+    console.log("Processing CyberSource refund using REST API...");
 
     const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
-    console.log("🟢 Refund Endpoint:", refundEndpoint);
+    console.log("Refund Endpoint:", refundEndpoint);
 
     const refundPayload = {
       clientReferenceInformation: {
@@ -149,7 +149,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     };
 
     const payloadString = JSON.stringify(refundPayload);
-    console.log("📝 Payload JSON:", payloadString);
+    console.log("Payload JSON:", payloadString);
 
     const digest =
       "SHA-256=" +
@@ -158,10 +158,10 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         .update(payloadString)
         .digest("base64");
 
-    console.log("🔐 Digest:", digest);
+    console.log("Digest:", digest);
 
     const vCDate = new Date().toUTCString();
-    console.log("📆 Date (UTC):", vCDate);
+    console.log("Date (UTC):", vCDate);
 
     const host = "api.cybersource.com";
     const requestTarget = `post /pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
@@ -170,11 +170,11 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     const keyId = process.env.CYBERSOURCE_ACCESS_KEY; // Fixed variable name
     const secretKey = process.env.CYBERSOURCE_SECRET_KEY;
 
-    // 🧬 Log ENV values for sanity check (safe version)
-    console.log("🧬 ENV Debug Logs:");
-    console.log("🔑 CYBERSOURCE_MERCHANT_ID:", vCMerchantId);
-    console.log("🆔 CYBERSOURCE_ACCESS_KEY:", keyId);
-    console.log("🔐 CYBERSOURCE_SECRET_KEY (first 10 chars):", secretKey?.slice(0, 10) + "...");
+    // Log ENV values for sanity check (safe version)
+    console.log("ENV Debug Logs:");
+    console.log("CYBERSOURCE_MERCHANT_ID:", vCMerchantId);
+    console.log("CYBERSOURCE_ACCESS_KEY:", keyId);
+    console.log("CYBERSOURCE_SECRET_KEY (first 10 chars):", secretKey?.slice(0, 10) + "...");
 
     // Use "date" (not v-c-date) in the signing string to match the header below
     const signingString =
@@ -184,14 +184,14 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       `digest: ${digest}\n` +
       `v-c-merchant-id: ${vCMerchantId}`;
 
-    console.log("🧾 Signing String:\n", signingString);
+    console.log("Signing String:\n", signingString);
 
     const computedSignature = crypto
       .createHmac("sha256", secretKey)
       .update(signingString)
       .digest("base64");
 
-    console.log("🔏 Computed Signature:", computedSignature);
+    console.log("Computed Signature:", computedSignature);
 
     const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host date (request-target) digest v-c-merchant-id", signature="${computedSignature}"`;
 
@@ -205,11 +205,11 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       "Content-Type": "application/json",
     };
 
-    console.log("📦 Final Request Headers:", headers);
+    console.log("Final Request Headers:", headers);
 
     try {
       const response = await axios.post(refundEndpoint, refundPayload, { headers });
-      console.log("✅ CyberSource Refund Response:", response.data);
+      console.log("CyberSource Refund Response:", response.data);
 
       if (
         response.data.status === "PENDING" ||
@@ -260,7 +260,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         return next(new AppError(`Refund failed: ${errorMsg}`, 400));
       }
     } catch (error) {
-      console.error("❌ CyberSource refund request error:", error.response?.data || error.message);
+      console.error("CyberSource refund request error:", error.response?.data || error.message);
       return next(new AppError("CyberSource refund request error: " + error.message, 500));
     }
 
