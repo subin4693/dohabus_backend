@@ -10,9 +10,9 @@ const refundWithSDK = async (ticket, refundAmount) => {
   const configObject = {
     authenticationType: "http_signature",
     runEnvironment: "https://api.cybersource.com",
-    merchantID: process.env.CYBERSOURCE_MERCHANT_ID,
-    merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID,
-    merchantSecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET,
+    merchantID: process.env.CYBERSOURCE_MERCHANT_ID, // keep this as is
+    merchantKeyId: process.env.CYBERSOURCE_ACCESS_KEY, // use the new access key
+    merchantSecretKey: process.env.CYBERSOURCE_SECRET_KEY, // use the new secret key
     enableLog: false, // set to true if you want to enable SDK logging
     logConfiguration: {
       enableLogging: false,
