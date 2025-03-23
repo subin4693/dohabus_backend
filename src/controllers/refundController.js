@@ -132,7 +132,6 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
   if (ticket.paymentMethod === "cybersource") {
     console.log("🚀 Processing CyberSource refund using REST API...");
-    // 4) Collect the merchant ID and credentials from en
 
     const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
     console.log("🟢 Refund Endpoint:", refundEndpoint);
@@ -168,17 +167,16 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     const requestTarget = `post /pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
 
     const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID;
-    const keyId = process.env.CYBERSOURCE_ACCES_KEY;
+    const keyId = process.env.CYBERSOURCE_ACCESS_KEY; // Fixed variable name
     const secretKey = process.env.CYBERSOURCE_SECRET_KEY;
+
     // 🧬 Log ENV values for sanity check (safe version)
     console.log("🧬 ENV Debug Logs:");
     console.log("🔑 CYBERSOURCE_MERCHANT_ID:", vCMerchantId);
-    console.log("🆔 CYBERSOURCE_SHARED_API_KEY_ID:", keyId);
-    console.log(
-      "🔐 CYBERSOURCE_SHARED_API_SECRET (first 10 chars):",
-      secretKey?.slice(0, 10) + "...",
-    );
+    console.log("🆔 CYBERSOURCE_ACCESS_KEY:", keyId);
+    console.log("🔐 CYBERSOURCE_SECRET_KEY (first 10 chars):", secretKey?.slice(0, 10) + "...");
 
+    // Use "date" (not v-c-date) in the signing string to match the header below
     const signingString =
       `host: ${host}\n` +
       `date: ${vCDate}\n` +
@@ -197,13 +195,14 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
     const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host date (request-target) digest v-c-merchant-id", signature="${computedSignature}"`;
 
+    // Use "date" as the header name (not v-c-date)
     const headers = {
-      "Content-Type": "application/json",
       host,
-      date: vCDate,
-      "v-c-merchant-id": vCMerchantId,
-      digest,
       signature: signatureHeader,
+      digest,
+      "v-c-merchant-id": vCMerchantId,
+      date: vCDate,
+      "Content-Type": "application/json",
     };
 
     console.log("📦 Final Request Headers:", headers);
