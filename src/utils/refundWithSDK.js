@@ -4,14 +4,13 @@ const refundWithSDK = async (ticket, refundAmount) => {
   console.log("🚀 Initiating CyberSource refund via SDK...");
   console.log("🎫 Ticket:", ticket);
   console.log("💰 Refund Amount:", refundAmount);
-
-  const configObject = {
+  const configObject = new cybersourceRestApi.Configuration({
     authenticationType: "http_signature",
     runEnvironment: "https://api.cybersource.com",
     merchantID: process.env.CYBERSOURCE_MERCHANT_ID,
     merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID,
     merchantSecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET,
-  };
+  });
 
   // Log ENV values (safely)
   console.log("🔐 ENVIRONMENT CONFIG:");
