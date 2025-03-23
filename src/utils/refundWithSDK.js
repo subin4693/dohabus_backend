@@ -1,18 +1,25 @@
 const cybersourceRestApi = require("cybersource-rest-client");
 
+// Refund function using CyberSource's SDK
 const refundWithSDK = async (ticket, refundAmount) => {
   console.log("🚀 Initiating CyberSource refund via SDK...");
   console.log("🎫 Ticket:", ticket);
   console.log("💰 Refund Amount:", refundAmount);
-  const configObject = new cybersourceRestApi.Configuration({
+
+  // Build configuration object required by the SDK
+  const configObject = {
     authenticationType: "http_signature",
     runEnvironment: "https://api.cybersource.com",
     merchantID: process.env.CYBERSOURCE_MERCHANT_ID,
     merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID,
     merchantSecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET,
-  });
+    enableLog: false, // set to true if you want to enable SDK logging
+    logConfiguration: {
+      enableLogging: false,
+    },
+  };
 
-  // Log ENV values (safely)
+  // Log ENV values (with sensitive info partially hidden)
   console.log("🔐 ENVIRONMENT CONFIG:");
   console.log("🔑 CYBERSOURCE_MERCHANT_ID:", configObject.merchantID);
   console.log("🆔 CYBERSOURCE_SHARED_API_KEY_ID:", configObject.merchantKeyId);
@@ -21,10 +28,12 @@ const refundWithSDK = async (ticket, refundAmount) => {
     configObject.merchantSecretKey?.slice(0, 10) + "...",
   );
 
+  // Initialize the CyberSource API Client and Refund API instance
   const apiClient = new cybersourceRestApi.ApiClient();
   const refundApiInstance = new cybersourceRestApi.RefundApi(configObject, apiClient);
   const request = new cybersourceRestApi.RefundPaymentRequest();
 
+  // Set the client reference information and order amount details
   request.clientReferenceInformation = {
     code: ticket.transactionId,
   };
@@ -36,7 +45,7 @@ const refundWithSDK = async (ticket, refundAmount) => {
     },
   };
 
-  console.log("📦 Refund Request Payload:", request);
+  console.log("📦 Refund Request Payload:", JSON.stringify(request, null, 2));
 
   return new Promise((resolve, reject) => {
     refundApiInstance.refundPayment(
