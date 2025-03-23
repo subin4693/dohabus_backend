@@ -19,7 +19,7 @@ const refundWithSDK = async (ticket, refundAmount) => {
   console.log("🆔 CYBERSOURCE_SHARED_API_KEY_ID:", configObject.merchantKeyId);
   console.log(
     "🧬 CYBERSOURCE_SHARED_API_SECRET (first 10 chars):",
-    configObject.merchantSecretKey?.slice(0, 10) + "..."
+    configObject.merchantSecretKey?.slice(0, 10) + "...",
   );
 
   const apiClient = new cybersourceRestApi.ApiClient();
@@ -60,4 +60,48 @@ const refundWithSDK = async (ticket, refundAmount) => {
           ticket.paymentStatus = "Refund Processing";
           ticket.refundTransactionId = data.id;
           await ticket.save();
-          console.log
+          console.log("📝 Ticket updated with refund transaction ID:", data.id);
+
+          const refundRecord = await Refund.findOne({ ticketId: ticket._id });
+          if (refundRecord) {
+            refundRecord.status = "Processing";
+            refundRecord.refundAmount = refundAmount;
+            await refundRecord.save();
+            console.log("🗃️ Refund record updated in DB.");
+          } else {
+            console.warn("⚠️ No existing refund record found for ticket:", ticket._id);
+          }
+
+          return resolve(data);
+        } else {
+          const code = data.processorInformation?.responseCode;
+          let errorMsg = "";
+          switch (code) {
+            case "101":
+              errorMsg = "Invalid refund amount.";
+              break;
+            case "102":
+              errorMsg = "Refund not allowed for this transaction.";
+              break;
+            case "150":
+              errorMsg = "Original transaction has not been settled yet.";
+              break;
+            case "200":
+              errorMsg = "Refund already processed.";
+              break;
+            case "300":
+              errorMsg = "Authentication error during refund processing.";
+              break;
+            default:
+              errorMsg = data.message || "Unknown refund error.";
+          }
+
+          console.warn("⚠️ Refund rejected by CyberSource:", errorMsg);
+          return reject(new Error("Refund failed: " + errorMsg));
+        }
+      },
+    );
+  });
+};
+
+module.exports = refundWithSDK;
