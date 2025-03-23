@@ -933,9 +933,8 @@ exports.cybersourcePaymentResponse = async (req, res) => {
     if (ticket) {
       ticket.paymentMethod = ticket.paymentMethod || "cybersource";
       ticket.paymentStatus = "Paid";
-      await ticket.save();
       // Ensure the required paymentMethod field is set.
-      ticket.confirmationId = fields.transaction_id || "";
+      ticket.cybersourceConfirmationId = fields.transaction_id || "";
       ticket.cybersourceOrderId = fields.auth_reconciliation_reference_number || "";
       await ticket.save();
       console.log("DEBUG: Ticket updated:", ticket);

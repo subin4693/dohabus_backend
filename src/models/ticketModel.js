@@ -10,6 +10,10 @@ const ticketModel = new mongoose.Schema(
       type: String,
       default: "",
     },
+    cybersourceConfirmationId: {
+      type: String,
+      default: "",
+    },
     paymentMethod: {
       type: String,
       enum: ["qpay", "cybersource"],
