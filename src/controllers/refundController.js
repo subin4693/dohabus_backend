@@ -131,6 +131,19 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
   if (ticket.paymentMethod === "cybersource") {
     console.log("🚀 Processing CyberSource refund using REST API...");
+    // 4) Collect the merchant ID and credentials from env
+    const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID;
+    const keyId = process.env.CYBERSOURCE_SHARED_API_KEY_ID;
+    const secretKey = process.env.CYBERSOURCE_SHARED_API_SECRET;
+
+    // 🧬 Log ENV values for sanity check (safe version)
+    console.log("🧬 ENV Debug Logs:");
+    console.log("🔑 CYBERSOURCE_MERCHANT_ID:", vCMerchantId);
+    console.log("🆔 CYBERSOURCE_SHARED_API_KEY_ID:", keyId);
+    console.log(
+      "🔐 CYBERSOURCE_SHARED_API_SECRET (first 10 chars):",
+      secretKey?.slice(0, 10) + "...",
+    );
 
     const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
     console.log("🟢 Refund Endpoint:", refundEndpoint);
@@ -211,7 +224,9 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         ticket.refundTransactionId = response.data.id;
         await ticket.save();
 
-        const refundRecord = await Refund.findOne({ ticketId: ticket._id });
+        const refundRecord = await Refund.findOne({
+          ticketId: ticket._id,
+        });
         if (refundRecord) {
           refundRecord.status = "Processing";
           refundRecord.refundAmount = refundAmount;
