@@ -1244,7 +1244,7 @@ exports.cybersourcePaymentResponse = async (req, res) => {
   try {
     const fields = { ...req.body };
 
-    // Instead of verifying the signature, we simply check the decision field.
+    // Instead of verifying the signature, simply check the decision field.
     const decision = fields.decision ? fields.decision.toLowerCase() : "unknown";
     if (decision !== "accept") {
       let errorMessage = "";
@@ -1274,6 +1274,8 @@ exports.cybersourcePaymentResponse = async (req, res) => {
     const referenceNumber = fields.reference_number;
     const ticket = await Ticket.findOne({ transactionId: referenceNumber });
     if (ticket) {
+      // Ensure the required paymentMethod field is set.
+      ticket.paymentMethod = ticket.paymentMethod || "cybersource";
       ticket.paymentStatus = "Paid";
       ticket.confirmationId = fields.transaction_id || "";
       await ticket.save();
@@ -1408,7 +1410,122 @@ exports.cybersourcePaymentResponse = async (req, res) => {
       ${esignature}
       `;
 
-      console.log("Email sent to user");
+      const emailContentFordohabus = `
+<h3 style="font-family: Arial, sans-serif; color: #333;">
+  New Ticket Purchase Notification
+</h3>
+
+<p style="font-family: Arial, sans-serif; color: #333;">
+  Dear Team,
+</p>
+
+<p style="font-family: Arial, sans-serif; color: #333;">
+  We are pleased to inform you about a new ticket purchase. Here are the details:
+</p>
+
+<table style="font-family: Arial, sans-serif; color: #333; border-collapse: collapse; width: 100%;">
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Customer Name:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.firstName} ${ticket?.lastName}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Email:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.email}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Phone Number:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.number}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Unique Id:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.uniqueId}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Tour Name:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.plan?.title?.en}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Selected Plan:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.plan?.title?.en}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Category:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.category?.title?.en}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Session:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.session}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Date:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${new Date(ticket?.date).toLocaleDateString(
+      "en-US",
+      {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      },
+    )}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Number Of Adults:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.adultQuantity}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Number Of Children:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.childQuantity}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Number Of Tickets:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.adultQuantity +
+      ticket?.childQuantity}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Total Amount:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.price} QAR</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Pick Up Location:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.pickupLocation}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Pickup Time:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.pickupTime}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Add On:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.addonFeatures?.join(", ") ||
+      "None"}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Status:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.status}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ccc; padding: 8px;"><strong>Payment Status:</strong></td>
+    <td style="border: 1px solid #ccc; padding: 8px;">${ticket?.paymentStatus}</td>
+  </tr>
+</table>
+
+<p style="font-family: Arial, sans-serif; color: #333;">
+  You can view the customer's invoice details by clicking the link below:
+</p>
+
+<p style="font-family: Arial, sans-serif; color: #333;">
+  <a href="https://dohabus.com/invoice/${
+    ticket?._id
+  }" style="color: #007bff; text-decoration: none; font-weight: bold;" target="_blank" rel="noopener noreferrer">
+    Customer Invoice Details
+  </a>
+</p>
+
+<p style="font-family: Arial, sans-serif; color: #333;">
+  Best regards,<br>
+  Doha Bus
+</p>
+`;
+
+      console.log("Email sent to Company");
       await transporter.sendMail({
         to: ticket.email,
         subject: `Hello ${ticket?.firstName}, Thank you for purchasing ${ticket?.plan?.title?.en} tickets`,
