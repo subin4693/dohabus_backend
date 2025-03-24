@@ -151,7 +151,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     const payloadString = JSON.stringify(refundPayload);
     console.log("Payload JSON:", payloadString);
 
-    // Compute digest exactly on the payload string
+    // Compute the digest exactly on the payload string
     const digest =
       "SHA-256=" +
       crypto
@@ -167,7 +167,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     // Use lowercase for the HTTP method in (request-target)
     const requestTarget = `post /pts/v2/payments/${ticket.cybersourceConfirmationId}/refunds`;
 
-    // Ensure no extra whitespace in environment variables
+    // Trim environment variables to remove any hidden spaces
     const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID?.trim();
     const keyId = process.env.CYBERSOURCE_SHARED_API_KEY_ID?.trim();
     const secretKey = process.env.CYBERSOURCE_SHARED_API_SECRET?.trim();
@@ -177,7 +177,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     console.log("CYBERSOURCE_ACCESS_KEY:", keyId);
     console.log("CYBERSOURCE_SECRET_KEY (first 10 chars):", secretKey?.slice(0, 10) + "...");
 
-    // Build the signing string using an array to prevent accidental extra spaces
+    // Build the signing string using an array join to ensure no extra whitespace
     const signingString = [
       "host: " + host,
       "date: " + vCDate,
@@ -221,9 +221,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         ticket.refundTransactionId = response.data.id;
         await ticket.save();
 
-        const refundRecord = await Refund.findOne({
-          ticketId: ticket._id,
-        });
+        const refundRecord = await Refund.findOne({ ticketId: ticket._id });
         if (refundRecord) {
           refundRecord.status = "Processing";
           refundRecord.refundAmount = refundAmount;
@@ -257,7 +255,6 @@ exports.processRefund = catchAsync(async (req, res, next) => {
           default:
             errorMsg = response.data.message || "Unknown refund error.";
         }
-
         return next(new AppError(`Refund failed: ${errorMsg}`, 400));
       }
     } catch (error) {
