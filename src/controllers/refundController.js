@@ -176,11 +176,11 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     console.log("CYBERSOURCE_ACCESS_KEY:", keyId);
     console.log("CYBERSOURCE_SECRET_KEY (first 10 chars):", secretKey?.slice(0, 10) + "...");
 
-    // Use "date" (not v-c-date) in the signing string to match the header below
+    // Corrected signing string order: (request-target) host date digest v-c-merchant-id
     const signingString =
+      `(request-target): ${requestTarget}\n` +
       `host: ${host}\n` +
       `date: ${vCDate}\n` +
-      `(request-target): ${requestTarget}\n` +
       `digest: ${digest}\n` +
       `v-c-merchant-id: ${vCMerchantId}`;
 
@@ -193,7 +193,8 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
     console.log("Computed Signature:", computedSignature);
 
-    const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host date (request-target) digest v-c-merchant-id", signature="${computedSignature}"`;
+    // Updated signature header with the correct header order in the "headers" field.
+    const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="(request-target) host date digest v-c-merchant-id", signature="${computedSignature}"`;
 
     // Use "date" as the header name (not v-c-date)
     const headers = {
@@ -261,7 +262,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       }
     } catch (error) {
       console.error("CyberSource refund request error:", error.response?.data || error.message);
-      console.error("full reposne", error);
+      console.error("full response", error);
       return next(new AppError("CyberSource refund request error: " + error.message, 500));
     }
 
