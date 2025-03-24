@@ -131,19 +131,31 @@ exports.processRefund = catchAsync(async (req, res, next) => {
   }
 
   if (ticket.paymentMethod === "cybersource") {
+    // Build the configuration object for CyberSource production
     const configObject = {
       authenticationType: "http_signature",
-      runEnvironment: "api.cybersource.com", // Change to 'api.cybersource.com' for production
-      enableLog: true,
+      runEnvironment: "api.cybersource.com", // Production environment
+      enableLog: "true", // use a string "true" (not a boolean)
       merchantID: process.env.CYBERSOURCE_MERCHANT_ID.trim(),
       merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID.trim(),
-      merchantSecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET.trim(),
+      merchantsecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET.trim(),
       logFileName: "cybersource.log",
     };
 
+    console.log("CyberSource Config (non-sensitive parts):", {
+      authenticationType: configObject.authenticationType,
+      runEnvironment: configObject.runEnvironment,
+      enableLog: configObject.enableLog,
+      merchantID: configObject.merchantID,
+      merchantKeyId: configObject.merchantKeyId,
+      logFileName: configObject.logFileName,
+    });
+
     // Initialize the API client with your configuration
+    const merchantConfig = new cybersourceRestApi.MerchantConfig(configObject);
     const apiClient = new cybersourceRestApi.ApiClient();
-    apiClient.merchantConfig = new cybersourceRestApi.MerchantConfig(configObject);
+    apiClient.merchantConfig = merchantConfig;
+
     // Create an instance of the RefundApi
     const refundApi = new cybersourceRestApi.RefundApi(apiClient);
 
@@ -159,7 +171,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       },
     };
 
-    // Use the CyberSource payment id (from your ticket object) as the payment ID
+    // Use the CyberSource payment confirmation id as the payment ID
     const paymentId = ticket.cybersourceConfirmationId;
 
     console.log("Processing CyberSource refund using SDK...");
@@ -171,7 +183,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       } else {
         console.log("CyberSource Refund Response:", data);
 
-        // Check the response status and update your ticket/refund record accordingly
+        // Check if the refund was accepted (status "PENDING" or responseCode "100")
         if (
           data.status === "PENDING" ||
           (data.processorInformation && data.processorInformation.responseCode === "100")
@@ -180,9 +192,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
           ticket.refundTransactionId = data.id;
           ticket
             .save()
-            .then(() => {
-              return Refund.findOne({ ticketId: ticket._id });
-            })
+            .then(() => Refund.findOne({ ticketId: ticket._id }))
             .then((refundRecord) => {
               if (refundRecord) {
                 refundRecord.status = "Processing";
@@ -227,138 +237,140 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         }
       }
     });
-    //     console.log("Processing CyberSource refund using REST API...");
-    //
-    //     const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceConfirmationId}/refunds`;
-    //     console.log("Refund Endpoint:", refundEndpoint);
-    //
-    //     const refundPayload = {
-    //       clientReferenceInformation: {
-    //         code: ticket.transactionId,
-    //       },
-    //       orderInformation: {
-    //         amountDetails: {
-    //           totalAmount: Number(refundAmount).toFixed(2),
-    //           currency: "QAR",
-    //         },
-    //       },
-    //     };
-    //
-    //     const payloadString = JSON.stringify(refundPayload);
-    //     console.log("Payload JSON:", payloadString);
-    //
-    //     // Compute the digest exactly on the payload string
-    //     const digest =
-    //       "SHA-256=" +
-    //       crypto
-    //         .createHash("sha256")
-    //         .update(payloadString)
-    //         .digest("base64");
-    //     console.log("Digest:", digest);
-    //
-    //     const vCDate = new Date().toUTCString();
-    //     console.log("Date (UTC):", vCDate);
-    //
-    //     const host = "api.cybersource.com";
-    //     // Use lowercase for the HTTP method in (request-target)
-    //     const requestTarget = `post /pts/v2/payments/${ticket.cybersourceConfirmationId}/refunds`;
-    //
-    //     // Trim environment variables to remove any hidden spaces
-    //     const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID?.trim();
-    //     const keyId = process.env.CYBERSOURCE_SHARED_API_KEY_ID?.trim();
-    //     const secretKey = process.env.CYBERSOURCE_SHARED_API_SECRET?.trim();
-    //
-    //     console.log("ENV Debug Logs:");
-    //     console.log("CYBERSOURCE_MERCHANT_ID:", vCMerchantId);
-    //     console.log("CYBERSOURCE_ACCESS_KEY:", keyId);
-    //     console.log("CYBERSOURCE_SECRET_KEY (first 10 chars):", secretKey?.slice(0, 10) + "...");
-    //
-    //     // Build the signing string using an array join to ensure no extra whitespace
-    //     const signingString = [
-    //       "host: " + host,
-    //       "date: " + vCDate,
-    //       "(request-target): " + requestTarget,
-    //       "digest: " + digest,
-    //       "v-c-merchant-id: " + vCMerchantId,
-    //     ].join("\n");
-    //
-    //     console.log("Signing String:\n" + signingString);
-    //
-    //     const computedSignature = crypto
-    //       .createHmac("sha256", secretKey)
-    //       .update(signingString)
-    //       .digest("base64");
-    //
-    //     console.log("Computed Signature:", computedSignature);
-    //
-    //     const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host date (request-target) digest v-c-merchant-id", signature="${computedSignature}"`;
-    //
-    //     const headers = {
-    //       host,
-    //       signature: signatureHeader,
-    //       digest,
-    //       "v-c-merchant-id": vCMerchantId,
-    //       date: vCDate,
-    //       "Content-Type": "application/json",
-    //     };
-    //
-    //     console.log("Final Request Headers:", headers);
-    //
-    //     try {
-    //       const response = await axios.post(refundEndpoint, refundPayload, { headers });
-    //       console.log("CyberSource Refund Response:", response.data);
-    //
-    //       if (
-    //         response.data.status === "PENDING" ||
-    //         (response.data.processorInformation &&
-    //           response.data.processorInformation.responseCode === "100")
-    //       ) {
-    //         ticket.paymentStatus = "Refund Processing";
-    //         ticket.refundTransactionId = response.data.id;
-    //         await ticket.save();
-    //
-    //         const refundRecord = await Refund.findOne({ ticketId: ticket._id });
-    //         if (refundRecord) {
-    //           refundRecord.status = "Processing";
-    //           refundRecord.refundAmount = refundAmount;
-    //           await refundRecord.save();
-    //         }
-    //
-    //         return res.status(200).json({
-    //           status: "success",
-    //           message: "Refund request initiated via CyberSource REST API",
-    //           data: { refundResponse: response.data },
-    //         });
-    //       } else {
-    //         let errorMsg = "";
-    //         const code = response.data.processorInformation?.responseCode;
-    //         switch (code) {
-    //           case "101":
-    //             errorMsg = "Invalid refund amount.";
-    //             break;
-    //           case "102":
-    //             errorMsg = "Refund not allowed for this transaction.";
-    //             break;
-    //           case "150":
-    //             errorMsg = "Original transaction has not been settled yet.";
-    //             break;
-    //           case "200":
-    //             errorMsg = "Refund already processed.";
-    //             break;
-    //           case "300":
-    //             errorMsg = "Authentication error during refund processing.";
-    //             break;
-    //           default:
-    //             errorMsg = response.data.message || "Unknown refund error.";
-    //         }
-    //         return next(new AppError(`Refund failed: ${errorMsg}`, 400));
-    //       }
-    //     } catch (error) {
-    //       console.error("CyberSource refund request error:", error.response?.data || error.message);
-    //       console.error("full response", error);
-    //       return next(new AppError("CyberSource refund request error: " + error.message, 500));
-    //     }
-  } else {
+  }
+
+  //     console.log("Processing CyberSource refund using REST API...");
+  //
+  //     const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceConfirmationId}/refunds`;
+  //     console.log("Refund Endpoint:", refundEndpoint);
+  //
+  //     const refundPayload = {
+  //       clientReferenceInformation: {
+  //         code: ticket.transactionId,
+  //       },
+  //       orderInformation: {
+  //         amountDetails: {
+  //           totalAmount: Number(refundAmount).toFixed(2),
+  //           currency: "QAR",
+  //         },
+  //       },
+  //     };
+  //
+  //     const payloadString = JSON.stringify(refundPayload);
+  //     console.log("Payload JSON:", payloadString);
+  //
+  //     // Compute the digest exactly on the payload string
+  //     const digest =
+  //       "SHA-256=" +
+  //       crypto
+  //         .createHash("sha256")
+  //         .update(payloadString)
+  //         .digest("base64");
+  //     console.log("Digest:", digest);
+  //
+  //     const vCDate = new Date().toUTCString();
+  //     console.log("Date (UTC):", vCDate);
+  //
+  //     const host = "api.cybersource.com";
+  //     // Use lowercase for the HTTP method in (request-target)
+  //     const requestTarget = `post /pts/v2/payments/${ticket.cybersourceConfirmationId}/refunds`;
+  //
+  //     // Trim environment variables to remove any hidden spaces
+  //     const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID?.trim();
+  //     const keyId = process.env.CYBERSOURCE_SHARED_API_KEY_ID?.trim();
+  //     const secretKey = process.env.CYBERSOURCE_SHARED_API_SECRET?.trim();
+  //
+  //     console.log("ENV Debug Logs:");
+  //     console.log("CYBERSOURCE_MERCHANT_ID:", vCMerchantId);
+  //     console.log("CYBERSOURCE_ACCESS_KEY:", keyId);
+  //     console.log("CYBERSOURCE_SECRET_KEY (first 10 chars):", secretKey?.slice(0, 10) + "...");
+  //
+  //     // Build the signing string using an array join to ensure no extra whitespace
+  //     const signingString = [
+  //       "host: " + host,
+  //       "date: " + vCDate,
+  //       "(request-target): " + requestTarget,
+  //       "digest: " + digest,
+  //       "v-c-merchant-id: " + vCMerchantId,
+  //     ].join("\n");
+  //
+  //     console.log("Signing String:\n" + signingString);
+  //
+  //     const computedSignature = crypto
+  //       .createHmac("sha256", secretKey)
+  //       .update(signingString)
+  //       .digest("base64");
+  //
+  //     console.log("Computed Signature:", computedSignature);
+  //
+  //     const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host date (request-target) digest v-c-merchant-id", signature="${computedSignature}"`;
+  //
+  //     const headers = {
+  //       host,
+  //       signature: signatureHeader,
+  //       digest,
+  //       "v-c-merchant-id": vCMerchantId,
+  //       date: vCDate,
+  //       "Content-Type": "application/json",
+  //     };
+  //
+  //     console.log("Final Request Headers:", headers);
+  //
+  //     try {
+  //       const response = await axios.post(refundEndpoint, refundPayload, { headers });
+  //       console.log("CyberSource Refund Response:", response.data);
+  //
+  //       if (
+  //         response.data.status === "PENDING" ||
+  //         (response.data.processorInformation &&
+  //           response.data.processorInformation.responseCode === "100")
+  //       ) {
+  //         ticket.paymentStatus = "Refund Processing";
+  //         ticket.refundTransactionId = response.data.id;
+  //         await ticket.save();
+  //
+  //         const refundRecord = await Refund.findOne({ ticketId: ticket._id });
+  //         if (refundRecord) {
+  //           refundRecord.status = "Processing";
+  //           refundRecord.refundAmount = refundAmount;
+  //           await refundRecord.save();
+  //         }
+  //
+  //         return res.status(200).json({
+  //           status: "success",
+  //           message: "Refund request initiated via CyberSource REST API",
+  //           data: { refundResponse: response.data },
+  //         });
+  //       } else {
+  //         let errorMsg = "";
+  //         const code = response.data.processorInformation?.responseCode;
+  //         switch (code) {
+  //           case "101":
+  //             errorMsg = "Invalid refund amount.";
+  //             break;
+  //           case "102":
+  //             errorMsg = "Refund not allowed for this transaction.";
+  //             break;
+  //           case "150":
+  //             errorMsg = "Original transaction has not been settled yet.";
+  //             break;
+  //           case "200":
+  //             errorMsg = "Refund already processed.";
+  //             break;
+  //           case "300":
+  //             errorMsg = "Authentication error during refund processing.";
+  //             break;
+  //           default:
+  //             errorMsg = response.data.message || "Unknown refund error.";
+  //         }
+  //         return next(new AppError(`Refund failed: ${errorMsg}`, 400));
+  //       }
+  //     } catch (error) {
+  //       console.error("CyberSource refund request error:", error.response?.data || error.message);
+  //       console.error("full response", error);
+  //       return next(new AppError("CyberSource refund request error: " + error.message, 500));
+  //     }
+  else {
     // QPay refund processing
     console.log("Processing QPay refund...");
     const formattedRefundAmount = Math.round(parseFloat(refundAmount) * 100).toString();
