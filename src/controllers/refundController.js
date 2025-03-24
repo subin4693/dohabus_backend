@@ -180,10 +180,10 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
     // Build signing string with the order: host, date, (request-target), digest, v-c-merchant-id
     const signingString =
-      `host: ${host}\n` +
-      `date: ${vCDate}\n` +
-      `(request-target): ${requestTarget}\n` +
-      `digest: ${digest}\n` +
+      `host: ${host}\r\n` +
+      `date: ${vCDate}\r\n` +
+      `(request-target): ${requestTarget}\r\n` +
+      `digest: ${digest}\r\n` +
       `v-c-merchant-id: ${vCMerchantId}`;
 
     console.log("Signing String:\n", signingString);
