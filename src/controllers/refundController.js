@@ -178,9 +178,9 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
     // Corrected signing string order: (request-target) host date digest v-c-merchant-id
     const signingString =
-      `(request-target): ${requestTarget}\n` +
       `host: ${host}\n` +
       `date: ${vCDate}\n` +
+      `(request-target): ${requestTarget}\n` +
       `digest: ${digest}\n` +
       `v-c-merchant-id: ${vCMerchantId}`;
 
