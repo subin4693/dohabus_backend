@@ -151,42 +151,42 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     const payloadString = JSON.stringify(refundPayload);
     console.log("Payload JSON:", payloadString);
 
+    // Compute digest exactly on the payload string
     const digest =
       "SHA-256=" +
       crypto
         .createHash("sha256")
         .update(payloadString)
         .digest("base64");
-
     console.log("Digest:", digest);
 
     const vCDate = new Date().toUTCString();
     console.log("Date (UTC):", vCDate);
 
     const host = "api.cybersource.com";
-    // Use uppercase "POST" for the request target – change to lowercase if required.
+    // Use lowercase for the HTTP method in (request-target)
     const requestTarget = `post /pts/v2/payments/${ticket.cybersourceConfirmationId}/refunds`;
 
-    const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID;
-    const keyId = process.env.CYBERSOURCE_SHARED_API_KEY_ID;
-    // Trim any extra whitespace/newlines from the secret key
+    // Ensure no extra whitespace in environment variables
+    const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID?.trim();
+    const keyId = process.env.CYBERSOURCE_SHARED_API_KEY_ID?.trim();
     const secretKey = process.env.CYBERSOURCE_SHARED_API_SECRET?.trim();
 
-    // Log ENV values for sanity check (safe version)
     console.log("ENV Debug Logs:");
     console.log("CYBERSOURCE_MERCHANT_ID:", vCMerchantId);
     console.log("CYBERSOURCE_ACCESS_KEY:", keyId);
     console.log("CYBERSOURCE_SECRET_KEY (first 10 chars):", secretKey?.slice(0, 10) + "...");
 
-    // Build signing string with the order: host, date, (request-target), digest, v-c-merchant-id
-    const signingString =
-      `host: ${host}\r\n` +
-      `date: ${vCDate}\r\n` +
-      `(request-target): ${requestTarget}\r\n` +
-      `digest: ${digest}\r\n` +
-      `v-c-merchant-id: ${vCMerchantId}`;
+    // Build the signing string using an array to prevent accidental extra spaces
+    const signingString = [
+      "host: " + host,
+      "date: " + vCDate,
+      "(request-target): " + requestTarget,
+      "digest: " + digest,
+      "v-c-merchant-id: " + vCMerchantId,
+    ].join("\n");
 
-    console.log("Signing String:\n", signingString);
+    console.log("Signing String:\n" + signingString);
 
     const computedSignature = crypto
       .createHmac("sha256", secretKey)
@@ -195,10 +195,8 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
     console.log("Computed Signature:", computedSignature);
 
-    // Signature header reflects the same header order used above.
     const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host date (request-target) digest v-c-merchant-id", signature="${computedSignature}"`;
 
-    // Final headers – note we use "date" (not v-c-date)
     const headers = {
       host,
       signature: signatureHeader,
