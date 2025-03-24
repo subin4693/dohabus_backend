@@ -176,7 +176,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     console.log("CYBERSOURCE_ACCESS_KEY:", keyId);
     console.log("CYBERSOURCE_SECRET_KEY (first 10 chars):", secretKey?.slice(0, 10) + "...");
 
-    // Corrected signing string order: (request-target) host date digest v-c-merchant-id
+    // Build signing string with the order as per CyberSource docs: host, date, (request-target), digest, v-c-merchant-id
     const signingString =
       `host: ${host}\n` +
       `date: ${vCDate}\n` +
@@ -193,8 +193,8 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
     console.log("Computed Signature:", computedSignature);
 
-    // Updated signature header with the correct header order in the "headers" field.
-    const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="(request-target) host date digest v-c-merchant-id", signature="${computedSignature}"`;
+    // Updated signature header with the headers in the same order as the signing string.
+    const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host date (request-target) digest v-c-merchant-id", signature="${computedSignature}"`;
 
     // Use "date" as the header name (not v-c-date)
     const headers = {
