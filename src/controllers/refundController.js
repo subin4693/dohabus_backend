@@ -156,8 +156,11 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     const apiClient = new cybersourceRestApi.ApiClient();
     apiClient.merchantConfig = merchantConfig;
 
+    console.log("erached 1");
+
     // Create an instance of the RefundApi
     const refundApi = new cybersourceRestApi.RefundApi(apiClient);
+    console.log("erached 2");
 
     // Build the refund request object
     const requestObj = new cybersourceRestApi.CreateRefundRequest();
@@ -170,6 +173,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         currency: "QAR",
       },
     };
+    console.log("erached 3");
 
     // Use the CyberSource payment confirmation id as the payment ID
     const paymentId = ticket.cybersourceConfirmationId;
