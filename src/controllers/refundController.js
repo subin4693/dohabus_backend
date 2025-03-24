@@ -167,8 +167,8 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     const requestTarget = `post /pts/v2/payments/${ticket.cybersourceConfirmationId}/refunds`;
 
     const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID;
-    const keyId = process.env.CYBERSOURCE_CC_ID;
-    const secretKey = process.env.CYBERSOURCE_CC_KEY;
+    const keyId = process.env.CYBERSOURCE_SHARED_API_KEY_ID;
+    const secretKey = process.env.CYBERSOURCE_SHARED_API_SECRET;
 
     // Log ENV values for sanity check (safe version)
     console.log("ENV Debug Logs:");
