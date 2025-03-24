@@ -134,11 +134,11 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     // Build the configuration object for CyberSource production
     const configObject = {
       authenticationType: "http_signature",
-      runEnvironment: "api.cybersource.com", // or the correct environment constant
-      enableLog: "true",
+      runEnvironment: "api.cybersource.com", // Production environment
+      enableLog: "true", // Using a string "true"
       merchantID: process.env.CYBERSOURCE_MERCHANT_ID.trim(),
       merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID.trim(),
-      merchantsecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET.trim(),
+      merchantSecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET.trim(), // Ensure this key is provided
       logFileName: "cybersource.log",
     };
 
