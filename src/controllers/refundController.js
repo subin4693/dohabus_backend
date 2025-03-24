@@ -133,7 +133,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
   if (ticket.paymentMethod === "cybersource") {
     console.log("Processing CyberSource refund using REST API...");
 
-    const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceOrderId}/refunds`;
+    const refundEndpoint = `https://api.cybersource.com/pts/v2/payments/${ticket.cybersourceConfirmationId}/refunds`;
     console.log("Refund Endpoint:", refundEndpoint);
 
     const refundPayload = {
