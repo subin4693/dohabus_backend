@@ -164,11 +164,13 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     console.log("Date (UTC):", vCDate);
 
     const host = "api.cybersource.com";
-    const requestTarget = `post /pts/v2/payments/${ticket.cybersourceConfirmationId}/refunds`;
+    // Use uppercase "POST" for the request target – change to lowercase if required.
+    const requestTarget = `POST /pts/v2/payments/${ticket.cybersourceConfirmationId}/refunds`;
 
     const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID;
     const keyId = process.env.CYBERSOURCE_SHARED_API_KEY_ID;
-    const secretKey = process.env.CYBERSOURCE_SHARED_API_SECRET;
+    // Trim any extra whitespace/newlines from the secret key
+    const secretKey = process.env.CYBERSOURCE_SHARED_API_SECRET?.trim();
 
     // Log ENV values for sanity check (safe version)
     console.log("ENV Debug Logs:");
@@ -176,7 +178,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     console.log("CYBERSOURCE_ACCESS_KEY:", keyId);
     console.log("CYBERSOURCE_SECRET_KEY (first 10 chars):", secretKey?.slice(0, 10) + "...");
 
-    // Build signing string with the order as per CyberSource docs: host, date, (request-target), digest, v-c-merchant-id
+    // Build signing string with the order: host, date, (request-target), digest, v-c-merchant-id
     const signingString =
       `host: ${host}\n` +
       `date: ${vCDate}\n` +
@@ -193,10 +195,10 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
     console.log("Computed Signature:", computedSignature);
 
-    // Updated signature header with the headers in the same order as the signing string.
+    // Signature header reflects the same header order used above.
     const signatureHeader = `keyid="${keyId}", algorithm="HmacSHA256", headers="host date (request-target) digest v-c-merchant-id", signature="${computedSignature}"`;
 
-    // Use "date" as the header name (not v-c-date)
+    // Final headers – note we use "date" (not v-c-date)
     const headers = {
       host,
       signature: signatureHeader,
