@@ -133,7 +133,8 @@ exports.processRefund = catchAsync(async (req, res, next) => {
   if (ticket.paymentMethod === "cybersource") {
     const configObject = {
       authenticationType: "http_signature",
-      runEnvironment: "apitest.cybersource.com", // Change to 'api.cybersource.com' for production
+      runEnvironment: "api.cybersource.com", // Change to 'api.cybersource.com' for production
+      enableLog: true,
       merchantID: process.env.CYBERSOURCE_MERCHANT_ID.trim(),
       merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID.trim(),
       merchantsecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET.trim(),
@@ -142,7 +143,6 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     // Initialize the API client with your configuration
     const apiClient = new cybersourceRestApi.ApiClient();
     apiClient.merchantConfig = new cybersourceRestApi.MerchantConfig(configObject);
-
     // Create an instance of the RefundApi
     const refundApi = new cybersourceRestApi.RefundApi(apiClient);
 
