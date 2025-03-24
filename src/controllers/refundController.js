@@ -165,7 +165,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
     const host = "api.cybersource.com";
     // Use uppercase "POST" for the request target – change to lowercase if required.
-    const requestTarget = `POST /pts/v2/payments/${ticket.cybersourceConfirmationId}/refunds`;
+    const requestTarget = `post /pts/v2/payments/${ticket.cybersourceConfirmationId}/refunds`;
 
     const vCMerchantId = process.env.CYBERSOURCE_MERCHANT_ID;
     const keyId = process.env.CYBERSOURCE_SHARED_API_KEY_ID;
