@@ -138,6 +138,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       merchantID: process.env.CYBERSOURCE_MERCHANT_ID.trim(),
       merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID.trim(),
       merchantsecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET.trim(),
+      logFileName: "cybersource.log",
     };
 
     // Initialize the API client with your configuration
