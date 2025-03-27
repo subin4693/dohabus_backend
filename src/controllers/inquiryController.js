@@ -148,3 +148,26 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
     updatedPaymentStatus: ticket.paymentStatus,
   });
 });
+
+exports.inquireTicket = catchAsync(async (req, res, next) => {
+  console.log("inquireTicket: Request body:", req.body);
+
+  const { uniqueId } = req.body;
+  if (!uniqueId) {
+    console.log("inquireTicket: Missing uniqueId");
+    return next(new AppError("uniqueId is required", 400));
+  }
+
+  console.log("inquireTicket: Looking up ticket with uniqueId:", uniqueId);
+  const ticket = await Ticket.findOne({ uniqueId: uniqueId });
+  if (!ticket) {
+    console.log("inquireTicket: Ticket not found for uniqueId:", uniqueId);
+    return next(new AppError("Ticket not found", 404));
+  }
+
+  console.log("inquireTicket: Ticket found:", ticket);
+  return res.status(200).json({
+    status: "success",
+    ticket,
+  });
+});

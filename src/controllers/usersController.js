@@ -36,9 +36,10 @@ exports.signup = catchAsync(async (req, res, next) => {
 });
 
 exports.signin = catchAsync(async (req, res, next) => {
-  console.log("sicnin reived")
+  console.log("sicnin reived");
   const email = req.body.email;
   const password = req.body.password;
+  console.log(email, password);
 
   if (!email || !password) {
     const error = new AppError("Please enter mail id and password for login", 400);
@@ -46,6 +47,7 @@ exports.signin = catchAsync(async (req, res, next) => {
   }
 
   const user = await User.findOne({ email });
+  console.log(user);
 
   if (!user) {
     const error = new AppError("User not found", 400);
@@ -113,19 +115,20 @@ exports.verify = catchAsync(async (req, res, next) => {
   // });
 });
 
-
-
-
 exports.SigninWithGoogle = catchAsync(async (req, res, next) => {
-  console.log("Goooooogle")
+  console.log("Goooooogle");
   const data = req.body;
-  console.log(data.fields.email)
+  console.log(data.fields.email);
 
   const user = await User.findOne({ email: data.fields.email });
 
   try {
     if (!user) {
-      const newUser = await User.create({ email: data.fields.email, name: data.fields.name, number: data.fields.phone });
+      const newUser = await User.create({
+        email: data.fields.email,
+        name: data.fields.name,
+        number: data.fields.phone,
+      });
       const token = jwt.sign(
         { id: newUser._id, role: newUser.role, email: newUser.email },
         process.env.JWT_SECRECT,
@@ -145,8 +148,7 @@ exports.SigninWithGoogle = catchAsync(async (req, res, next) => {
           user: newUser,
         },
       });
-    }
-    else {
+    } else {
       const user = await User.findOne({ email: data.fields.email });
       const token = jwt.sign(
         { id: user._id, role: user.role, email: user.email },
@@ -165,14 +167,11 @@ exports.SigninWithGoogle = catchAsync(async (req, res, next) => {
           user,
         },
       });
-
     }
   } catch (error) {
-    console.log(error.message)
+    console.log(error.message);
     res.status(500).json({
       status: "Failed",
     });
   }
-
-
 });
