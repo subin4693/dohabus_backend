@@ -402,11 +402,13 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
   const responseStatus = parsedInquiryResponse["Response.Status"];
   const responseStatusMessage = parsedInquiryResponse["Response.StatusMessage"];
   const originalStatus = parsedInquiryResponse["Response.OriginalStatus"];
+  const originalStatusMessgae = parsedInquiryResponse["Response.OriginalStatusMessage"];
   const originalConfirmationID = parsedInquiryResponse["Response.OriginalConfirmationID"];
   console.log(
     responseStatus,
     responseStatusMessage,
     originalStatus,
+    originalStatusMessgae,
     originalConfirmationID,
     "results from parsed request",
   );
@@ -416,7 +418,7 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
   }
 
   // Update ticket payment status based on the inquiry response
-  if (responseStatus === "0000") {
+  if (originalStatus === "0000") {
     ticket.paymentStatus = "Paid";
   } else {
     ticket.paymentStatus = "Failed";
@@ -428,7 +430,7 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
 
   return res.status(200).json({
     status: "success",
-    message: responseStatusMessage,
+    message: originalStatusMessgae,
     updatedPaymentStatus: ticket.paymentStatus,
   });
 });
