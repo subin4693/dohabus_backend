@@ -457,3 +457,45 @@ exports.inquireTicket = catchAsync(async (req, res, next) => {
     ticket,
   });
 });
+
+exports.searchTickets = catchAsync(async (req, res, next) => {
+  const { filterBy, filterValue } = req.body;
+  console.log("searchTickets: Request body:", req.body);
+
+  if (!filterBy || !filterValue) {
+    return next(new AppError("Both filterBy and filterValue are required", 400));
+  }
+
+  let query = {};
+  switch (filterBy) {
+    case "uniqueId":
+      query.uniqueId = { $regex: filterValue, $options: "i" };
+      break;
+    case "email":
+      query.email = { $regex: filterValue, $options: "i" };
+      break;
+    case "customer name":
+      query = {
+        $or: [
+          { firstName: { $regex: filterValue, $options: "i" } },
+          { lastName: { $regex: filterValue, $options: "i" } },
+        ],
+      };
+      break;
+    case "number":
+      query.number = { $regex: filterValue, $options: "i" };
+      break;
+    case "price":
+      // For price, we assume an exact numeric match. You could enhance this to support ranges.
+      query.price = Number(filterValue);
+      break;
+    default:
+      return next(new AppError("Invalid filter provided", 400));
+  }
+
+  const tickets = await Ticket.find(query);
+  return res.status(200).json({
+    status: "success",
+    tickets,
+  });
+});
