@@ -19,7 +19,7 @@ router.route("/qpay-refund").post(refundController.processRefund);
 router.route("/qpay-refund-request").post(refundController.requestRefund);
 router.route("/reject-refund").post(refundController.rejectRefundRequest);
 
-router.route("/qpay-payment-inquire").post(inquireController.inquirePayment);
+router.route("/payment-inquire").post(inquireController.inquirePayment);
 router.route("/inquire-ticket").post(inquireController.inquireTicket);
 router.route("/search-tickets").post(inquireController.searchTickets);
 
