@@ -2,14 +2,16 @@ require("dotenv").config();
 const crypto = require("crypto");
 const axios = require("axios");
 const qs = require("qs");
+const cybersourceRestApi = require("cybersource-rest-client");
 
 // Import your helper for catching async errors.
 const catchAsync = require("../utils/catchAsync");
 // Import your custom AppError class.
 const AppError = require("../utils/appError");
-// Import the Ticket model and refund.
+// Import the Ticket model and Refund.
 const Ticket = require("../models/ticketModel");
 const Refund = require("../models/refundModel");
+const { log } = require("console");
 
 const sign = (data, secretKey) => {
   // data.signed_field_names is a comma-separated list of keys in the order to sign.
@@ -20,6 +22,7 @@ const sign = (data, secretKey) => {
   hmac.update(signData);
   return hmac.digest("base64");
 };
+
 // Helper: Generates the secure hash for an inquiry request.
 // Fields order: SecretKey + Action + BankID + Lang + MerchantID + OriginalPUN
 const generateInquirySecureHash = (data, secretKey) => {
@@ -74,144 +77,135 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
     });
   }
 
-  // If the payment method is CyberSource, then build and send the inquiry request
+  console.log("inquirePayment: Ticket found:", ticket);
+
+  // CyberSource Inquiry Branch: Check the payment transaction status.
   if (ticket.paymentMethod === "cybersource") {
-    if (!ticket.cybersourceConfirmationId) {
-      return next(new AppError("Missing cybersourceConfirmationId", 400));
-    }
+    console.log("💳 Payment method is CyberSource. Proceeding with inquiry.");
 
-    const transactionId = ticket.cybersourceConfirmationId;
-    const host = "api.cybersource.com";
-    const url = `${process.env.CYBERSOURCE_INQUIRY_URL}${transactionId}`;
-    const merchantId = process.env.CYBERSOURCE_MERCHANT_ID;
-    const apiKeyId = process.env.CYBERSOURCE_SHARED_API_KEY_ID;
-    const sharedSecret = process.env.CYBERSOURCE_SHARED_API_SECRET;
-    const date = new Date().toUTCString();
-
-    // Compute digest of empty string for GET request
-    const digest = crypto
-      .createHash("sha256")
-      .update("")
-      .digest("base64");
-    const digestHeader = `SHA-256=${digest}`;
-
-    // Construct signature string with content-type included
-    const signatureString = `(host): ${host}
-(date): ${date}
-(digest): ${digestHeader}
-(content-type): application/json
-(v-c-merchant-id): ${merchantId}`;
-
-    const signedHeaders = "(host) (date) (digest) (content-type) (v-c-merchant-id)";
-
-    const signature = crypto
-      .createHmac("sha256", Buffer.from(sharedSecret, "base64"))
-      .update(signatureString)
-      .digest("base64");
-
-    const authHeader = `Signature keyid="${apiKeyId}", algorithm="HmacSHA256", headers="${signedHeaders}", signature="${signature}"`;
-
-    const headers = {
-      host,
-      date,
-      digest: digestHeader,
-      "v-c-merchant-id": merchantId,
-      "Content-Type": "application/json", // ✅ Must be included for GET
-      Accept: "application/json",
-      Authorization: authHeader,
+    // Inline configuration using environment variables
+    const configObject = {
+      authenticationType: process.env.CYBERSOURCE_AUTH_TYPE,
+      runEnvironment: process.env.CYBERSOURCE_RUN_ENVIRONMENT,
+      merchantID: process.env.CYBERSOURCE_MERCHANT_ID,
+      merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID,
+      merchantsecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET,
+      logConfiguration: {
+        enableLog: true,
+        logFileName: "cybs",
+        logDirectory: "log",
+        logFileMaxSize: "5242880",
+        loggingLevel: "debug",
+        enableMasking: false,
+      },
     };
 
-    // Debug logs
-    console.log("🔍 CyberSource Inquiry Debug Logs:");
-    console.log("🧾 Transaction ID:", transactionId);
-    console.log("🔗 URL:", url);
-    console.log("📅 Date (UTC):", date);
-    console.log("💨 Digest Header:", digestHeader);
-    console.log("🧠 Signature String:\n", signatureString);
-    console.log("🔐 Generated Signature:", signature);
-    console.log("🔖 Authorization Header:\n", authHeader);
-    console.log("📦 Final Headers Sent:", headers);
+    // Initialize the API client and Transaction Details API
+    const apiClient = new cybersourceRestApi.ApiClient();
+    const transactionDetailsApi = new cybersourceRestApi.TransactionDetailsApi(
+      configObject,
+      apiClient,
+    );
 
-    try {
-      const cybersourceResponse = await axios.get(url, { headers });
-
-      const paymentData = cybersourceResponse.data;
-      const status = paymentData.status;
-
-      console.log("✅ CyberSource Response Received:", JSON.stringify(paymentData, null, 2));
-
-      ticket.paymentStatus = ["AUTHORIZED", "PENDING", "SETTLED"].includes(status)
-        ? "Paid"
-        : "Failed";
-
+    // Use the CyberSource confirmation ID stored in the ticket as the payment ID
+    const paymentId = ticket.cybersourceConfirmationId;
+    if (!paymentId) {
+      ticket.paymentStatus = "Cancelled";
       await ticket.save();
+      console.error("❌ No CyberSource confirmation ID found in ticket.");
+      return next(new AppError("Payment was not completed by client", 400));
+    }
+    console.log("💳 Payment ID to inquire:", paymentId);
 
+    // Send the inquiry request to CyberSource
+    transactionDetailsApi.getTransaction(paymentId, async function(error, data, response) {
+      if (error) {
+        console.error("❌ Payment inquiry error:", JSON.stringify(error, null, 2));
+        return next(new AppError(`Payment inquiry failed: ${error.message || error}`, 500));
+      }
+      console.log("✅ Payment inquiry successful. Data:", JSON.stringify(data, null, 2));
+      console.log("🔄 Payment inquiry Response:", JSON.stringify(response, null, 2));
+      console.log("Response Code of Payment Inquiry:", response.status);
+
+      // Update the Ticket with the new payment status based on the decision from riskInformation
+      try {
+        let decision = null;
+        if (
+          data &&
+          data.riskInformation &&
+          data.riskInformation.profile &&
+          data.riskInformation.profile.decision
+        ) {
+          decision = data.riskInformation.profile.decision;
+          console.log("✅ Risk decision from inquiry:", decision);
+        }
+        // If decision is ACCEPT, mark as "Paid"; otherwise, mark as "Failed"
+        if (decision && decision.toUpperCase() === "ACCEPT") {
+          ticket.paymentStatus = "Paid";
+        } else {
+          ticket.paymentStatus = "Failed";
+        }
+        await ticket.save();
+        console.log("✅ Ticket updated with payment status:", ticket.paymentStatus);
+      } catch (dbError) {
+        console.error("❌ Error updating ticket payment status in DB:", dbError);
+        return next(new AppError("Payment inquiry succeeded but failed to update DB", 500));
+      }
+
+      // Send response to the front end with the updated payment status and inquiry data
       return res.status(200).json({
         status: "success",
-        message: `Payment status from CyberSource: ${status}`,
+        message: "Payment inquiry completed",
         updatedPaymentStatus: ticket.paymentStatus,
-        data: paymentData,
+        data: data,
       });
-    } catch (err) {
-      const errorData = err.response?.data;
-      const errorStatus = err.response?.status;
-      const errorHeaders = err.response?.headers;
+    });
+  } else {
+    console.log("💳 Payment method is QPay. Proceeding with inquiry.");
+    if (!ticket.pun) {
+      console.log("inquirePayment: Ticket has no PUN. Payment status will be set to Cancelled.");
 
-      console.error("❌ CyberSource inquiry error occurred:");
-      console.error("🧾 Status Code:", errorStatus);
-      console.error("📨 Response Body:", JSON.stringify(errorData, null, 2));
-      console.error("📄 Response Headers:", errorHeaders);
-
-      return next(new AppError("Payment Method used is Cybersource", 500));
+      ticket.paymentStatus = "Paid";
+      await ticket.save();
+      return res.status(200).json({
+        status: "success",
+        message: "Transaction was not completed by User",
+        updatedPaymentStatus: ticket.paymentStatus,
+      });
     }
-  }
 
-  // QPay Inquiry
-  if (!ticket.pun) {
-    const refundRecord = await Refund.findOne({ ticketId: ticket._id });
+    // QPay Inquiry
+    const inquiryData = {
+      Action: "14",
+      BankID: process.env.QPAY_BANK_ID.trim(),
+      Lang: "en",
+      MerchantID: process.env.QPAY_MERCHANT_ID.trim(),
+      OriginalPUN: ticket.pun,
+    };
 
-    ticket.paymentStatus = refundRecord ? "Paid" : "Cancelled";
+    inquiryData.SecureHash = generateInquirySecureHash(inquiryData, process.env.QPAY_SECRET_KEY);
+
+    const inquiryResponseRaw = await sendInquiryRequest(inquiryData);
+    const parsedInquiryResponse = require("querystring").parse(inquiryResponseRaw);
+
+    const responseStatus = parsedInquiryResponse["Response.Status"];
+    const originalStatus = parsedInquiryResponse["Response.OriginalStatus"];
+    const originalStatusMessage = parsedInquiryResponse["Response.OriginalStatusMessage"];
+
+    if (!responseStatus) {
+      return next(new AppError("Invalid inquiry response: missing Response.Status", 500));
+    }
+
+    ticket.paymentStatus = originalStatus === "0000" ? "Paid" : "Failed";
     await ticket.save();
 
     return res.status(200).json({
       status: "success",
-      message: refundRecord
-        ? "Refund has been initiated for your ticket."
-        : "No payment transaction found. Ticket updated to Cancelled.",
+      message: originalStatusMessage,
       updatedPaymentStatus: ticket.paymentStatus,
+      rawResponse: parsedInquiryResponse,
     });
   }
-
-  const inquiryData = {
-    Action: "14",
-    BankID: process.env.QPAY_BANK_ID.trim(),
-    Lang: "en",
-    MerchantID: process.env.QPAY_MERCHANT_ID.trim(),
-    OriginalPUN: ticket.pun,
-  };
-
-  inquiryData.SecureHash = generateInquirySecureHash(inquiryData, process.env.QPAY_SECRET_KEY);
-
-  const inquiryResponseRaw = await sendInquiryRequest(inquiryData);
-  const parsedInquiryResponse = require("querystring").parse(inquiryResponseRaw);
-
-  const responseStatus = parsedInquiryResponse["Response.Status"];
-  const originalStatus = parsedInquiryResponse["Response.OriginalStatus"];
-  const originalStatusMessage = parsedInquiryResponse["Response.OriginalStatusMessage"];
-
-  if (!responseStatus) {
-    return next(new AppError("Invalid inquiry response: missing Response.Status", 500));
-  }
-
-  ticket.paymentStatus = originalStatus === "0000" ? "Paid" : "Failed";
-  await ticket.save();
-
-  return res.status(200).json({
-    status: "success",
-    message: originalStatusMessage,
-    updatedPaymentStatus: ticket.paymentStatus,
-    rawResponse: parsedInquiryResponse,
-  });
 });
 
 exports.inquireTicket = catchAsync(async (req, res, next) => {

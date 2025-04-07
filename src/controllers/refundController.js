@@ -153,10 +153,8 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       },
     };
 
-    // Require the CyberSource SDK and initialize the API client
+    // Initialize the API client and Refund API with the inline configuration
     const apiClient = new cybersourceRestApi.ApiClient();
-
-    // Initialize the Refund API with the inline configuration
     const refundsApi = new cybersourceRestApi.RefundApi(configObject, apiClient);
 
     // Build the Refund Payment Request object
@@ -186,7 +184,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     console.log("💳 Payment ID to refund:", paymentId);
 
     // Execute the refundPayment request
-    refundsApi.refundPayment(requestObj, paymentId, function(error, data, response) {
+    refundsApi.refundPayment(requestObj, paymentId, async function(error, data, response) {
       if (error) {
         console.error("❌ Refund Payment error:", JSON.stringify(error, null, 2));
         return next(new AppError("Refund processing failed", 500));
@@ -195,14 +193,45 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       console.log("🔄 Refund Response:", JSON.stringify(response, null, 2));
       console.log("Response Code of Refund Payment:", response.status);
 
+      // Update the Ticket and Refund records in the DB based on the response
+      try {
+        // Update the ticket: mark it as refund processing and store the refund ID from CyberSource
+        ticket.paymentStatus = "Refund Processing";
+        // We store the CyberSource refund ID in the refundPun field for tracking
+        ticket.refundPun = data.id || "";
+        await ticket.save();
+        console.log("✅ Ticket updated with refund status and refund ID.");
+
+        // Update the Refund record if it exists, or create a new one
+        let refundRecord = await Refund.findOne({ ticketId: ticket._id });
+        if (refundRecord) {
+          refundRecord.status = "Processing";
+          refundRecord.refundAmount = refundAmount;
+          // Optionally, you can store additional CyberSource response data if needed
+          await refundRecord.save();
+          console.log("✅ Refund record updated.");
+        } else {
+          refundRecord = await Refund.create({
+            ticketId: ticket._id,
+            paymentMethod: ticket.paymentMethod,
+            status: "Processing",
+            refundAmount: refundAmount,
+          });
+          console.log("✅ Refund record created.");
+        }
+      } catch (dbError) {
+        console.error("❌ Error updating DB:", dbError);
+        return next(new AppError("Refund processed but failed to update DB", 500));
+      }
+
       return res.status(200).json({
         status: "success",
-        message: "Refund request Initiated via CyberSource",
+        message: "Refund request initiated via CyberSource and DB updated",
         data: data,
       });
     });
   } else {
-    // QPay refund processing
+    // QPay refund processing (leave unchanged)
     console.log("Processing QPay refund...");
     const formattedRefundAmount = Math.round(parseFloat(refundAmount) * 100).toString();
     const refundPUN = generateRefundPUN();
@@ -296,7 +325,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
     const refundRecord = await Refund.findOne({ ticketId: ticket._id });
     if (refundRecord) {
-      refundRecord.status = "Processing";
+      refundRecord.status = "Processing Refund";
       refundRecord.refundAmount = refundAmount;
       await refundRecord.save();
     }
