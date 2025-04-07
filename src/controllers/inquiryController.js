@@ -90,135 +90,134 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
       message: "Ticket has a refundPun. Payment status set to Refund Initiated.",
       updatedPaymentStatus: ticket.paymentStatus,
     });
-  } else {
-    console.log("Ticekt has no refundPun. Proceeding with payment inquiry.");
+  }
+  console.log("Ticekt has no refundPun. Proceeding with payment inquiry.");
 
-    if (ticket.paymentMethod === "cybersource") {
-      console.log("💳 Payment method is CyberSource. Proceeding with inquiry.");
+  if (ticket.paymentMethod === "cybersource") {
+    console.log("💳 Payment method is CyberSource. Proceeding with inquiry.");
 
-      // Inline configuration using environment variables
-      const configObject = {
-        authenticationType: process.env.CYBERSOURCE_AUTH_TYPE,
-        runEnvironment: process.env.CYBERSOURCE_RUN_ENVIRONMENT,
-        merchantID: process.env.CYBERSOURCE_MERCHANT_ID,
-        merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID,
-        merchantsecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET,
-        logConfiguration: {
-          enableLog: true,
-          logFileName: "cybs",
-          logDirectory: "log",
-          logFileMaxSize: "5242880",
-          loggingLevel: "debug",
-          enableMasking: false,
-        },
-      };
+    // Inline configuration using environment variables
+    const configObject = {
+      authenticationType: process.env.CYBERSOURCE_AUTH_TYPE,
+      runEnvironment: process.env.CYBERSOURCE_RUN_ENVIRONMENT,
+      merchantID: process.env.CYBERSOURCE_MERCHANT_ID,
+      merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID,
+      merchantsecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET,
+      logConfiguration: {
+        enableLog: true,
+        logFileName: "cybs",
+        logDirectory: "log",
+        logFileMaxSize: "5242880",
+        loggingLevel: "debug",
+        enableMasking: false,
+      },
+    };
 
-      // Initialize the API client and Transaction Details API
-      const apiClient = new cybersourceRestApi.ApiClient();
-      const transactionDetailsApi = new cybersourceRestApi.TransactionDetailsApi(
-        configObject,
-        apiClient,
-      );
+    // Initialize the API client and Transaction Details API
+    const apiClient = new cybersourceRestApi.ApiClient();
+    const transactionDetailsApi = new cybersourceRestApi.TransactionDetailsApi(
+      configObject,
+      apiClient,
+    );
 
-      // Use the CyberSource confirmation ID stored in the ticket as the payment ID
-      const paymentId = ticket.cybersourceConfirmationId;
-      if (!paymentId) {
-        ticket.paymentStatus = "Cancelled";
-        await ticket.save();
-        console.error("❌ No CyberSource confirmation ID found in ticket.");
-        return next(new AppError("Payment was not completed by client", 400));
-      }
-      console.log("💳 Payment ID to inquire:", paymentId);
-
-      // Send the inquiry request to CyberSource
-      transactionDetailsApi.getTransaction(paymentId, async function(error, data, response) {
-        if (error) {
-          console.error("❌ Payment inquiry error:", JSON.stringify(error, null, 2));
-          return next(new AppError(`Payment inquiry failed: ${error.message || error}`, 500));
-        }
-        console.log("✅ Payment inquiry successful. Data:", JSON.stringify(data, null, 2));
-        console.log("🔄 Payment inquiry Response:", JSON.stringify(response, null, 2));
-        console.log("Response Code of Payment Inquiry:", response.status);
-
-        // Update the Ticket with the new payment status based on the decision from riskInformation
-        try {
-          let decision = null;
-          if (
-            data &&
-            data.riskInformation &&
-            data.riskInformation.profile &&
-            data.riskInformation.profile.decision
-          ) {
-            decision = data.riskInformation.profile.decision;
-            console.log("✅ Risk decision from inquiry:", decision);
-          }
-          // If decision is ACCEPT, mark as "Paid"; otherwise, mark as "Failed"
-          if (decision && decision.toUpperCase() === "ACCEPT") {
-            ticket.paymentStatus = "Paid";
-          } else {
-            ticket.paymentStatus = "Failed";
-          }
-          await ticket.save();
-          console.log("✅ Ticket updated with payment status:", ticket.paymentStatus);
-        } catch (dbError) {
-          console.error("❌ Error updating ticket payment status in DB:", dbError);
-          return next(new AppError("Payment inquiry succeeded but failed to update DB", 500));
-        }
-
-        // Send response to the front end with the updated payment status and inquiry data
-        return res.status(200).json({
-          status: "success",
-          message: "Payment inquiry completed",
-          updatedPaymentStatus: ticket.paymentStatus,
-          data: data,
-        });
-      });
-    } else {
-      console.log("💳 Payment method is QPay. Proceeding with inquiry.");
-      if (!ticket.pun) {
-        console.log("inquirePayment: Ticket has no PUN. Payment status will be set to Cancelled.");
-
-        ticket.paymentStatus = "Paid";
-        await ticket.save();
-        return res.status(200).json({
-          status: "success",
-          message: "Transaction was not completed by User",
-          updatedPaymentStatus: ticket.paymentStatus,
-        });
-      }
-
-      // QPay Inquiry
-      const inquiryData = {
-        Action: "14",
-        BankID: process.env.QPAY_BANK_ID.trim(),
-        Lang: "en",
-        MerchantID: process.env.QPAY_MERCHANT_ID.trim(),
-        OriginalPUN: ticket.pun,
-      };
-
-      inquiryData.SecureHash = generateInquirySecureHash(inquiryData, process.env.QPAY_SECRET_KEY);
-
-      const inquiryResponseRaw = await sendInquiryRequest(inquiryData);
-      const parsedInquiryResponse = require("querystring").parse(inquiryResponseRaw);
-
-      const responseStatus = parsedInquiryResponse["Response.Status"];
-      const originalStatus = parsedInquiryResponse["Response.OriginalStatus"];
-      const originalStatusMessage = parsedInquiryResponse["Response.OriginalStatusMessage"];
-
-      if (!responseStatus) {
-        return next(new AppError("Invalid inquiry response: missing Response.Status", 500));
-      }
-
-      ticket.paymentStatus = originalStatus === "0000" ? "Paid" : "Failed";
+    // Use the CyberSource confirmation ID stored in the ticket as the payment ID
+    const paymentId = ticket.cybersourceConfirmationId;
+    if (!paymentId) {
+      ticket.paymentStatus = "Cancelled";
       await ticket.save();
+      console.error("❌ No CyberSource confirmation ID found in ticket.");
+      return next(new AppError("Payment was not completed by client", 400));
+    }
+    console.log("💳 Payment ID to inquire:", paymentId);
 
+    // Send the inquiry request to CyberSource
+    transactionDetailsApi.getTransaction(paymentId, async function(error, data, response) {
+      if (error) {
+        console.error("❌ Payment inquiry error:", JSON.stringify(error, null, 2));
+        return next(new AppError(`Payment inquiry failed: ${error.message || error}`, 500));
+      }
+      console.log("✅ Payment inquiry successful. Data:", JSON.stringify(data, null, 2));
+      console.log("🔄 Payment inquiry Response:", JSON.stringify(response, null, 2));
+      console.log("Response Code of Payment Inquiry:", response.status);
+
+      // Update the Ticket with the new payment status based on the decision from riskInformation
+      try {
+        let decision = null;
+        if (
+          data &&
+          data.riskInformation &&
+          data.riskInformation.profile &&
+          data.riskInformation.profile.decision
+        ) {
+          decision = data.riskInformation.profile.decision;
+          console.log("✅ Risk decision from inquiry:", decision);
+        }
+        // If decision is ACCEPT, mark as "Paid"; otherwise, mark as "Failed"
+        if (decision && decision.toUpperCase() === "ACCEPT") {
+          ticket.paymentStatus = "Paid";
+        } else {
+          ticket.paymentStatus = "Failed";
+        }
+        await ticket.save();
+        console.log("✅ Ticket updated with payment status:", ticket.paymentStatus);
+      } catch (dbError) {
+        console.error("❌ Error updating ticket payment status in DB:", dbError);
+        return next(new AppError("Payment inquiry succeeded but failed to update DB", 500));
+      }
+
+      // Send response to the front end with the updated payment status and inquiry data
       return res.status(200).json({
         status: "success",
-        message: originalStatusMessage,
+        message: "Payment inquiry completed",
         updatedPaymentStatus: ticket.paymentStatus,
-        rawResponse: parsedInquiryResponse,
+        data: data,
+      });
+    });
+  } else {
+    console.log("💳 Payment method is QPay. Proceeding with inquiry.");
+    if (!ticket.pun) {
+      console.log("inquirePayment: Ticket has no PUN. Payment status will be set to Cancelled.");
+
+      ticket.paymentStatus = "Paid";
+      await ticket.save();
+      return res.status(200).json({
+        status: "success",
+        message: "Transaction was not completed by User",
+        updatedPaymentStatus: ticket.paymentStatus,
       });
     }
+
+    // QPay Inquiry
+    const inquiryData = {
+      Action: "14",
+      BankID: process.env.QPAY_BANK_ID.trim(),
+      Lang: "en",
+      MerchantID: process.env.QPAY_MERCHANT_ID.trim(),
+      OriginalPUN: ticket.pun,
+    };
+
+    inquiryData.SecureHash = generateInquirySecureHash(inquiryData, process.env.QPAY_SECRET_KEY);
+
+    const inquiryResponseRaw = await sendInquiryRequest(inquiryData);
+    const parsedInquiryResponse = require("querystring").parse(inquiryResponseRaw);
+
+    const responseStatus = parsedInquiryResponse["Response.Status"];
+    const originalStatus = parsedInquiryResponse["Response.OriginalStatus"];
+    const originalStatusMessage = parsedInquiryResponse["Response.OriginalStatusMessage"];
+
+    if (!responseStatus) {
+      return next(new AppError("Invalid inquiry response: missing Response.Status", 500));
+    }
+
+    ticket.paymentStatus = originalStatus === "0000" ? "Paid" : "Failed";
+    await ticket.save();
+
+    return res.status(200).json({
+      status: "success",
+      message: originalStatusMessage,
+      updatedPaymentStatus: ticket.paymentStatus,
+      rawResponse: parsedInquiryResponse,
+    });
   }
 });
 
