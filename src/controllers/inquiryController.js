@@ -81,8 +81,15 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
 
   if (ticket.refundPun) {
     console.log(
-      "inquirePayment: Ticket has a refundPun. Payment status will be set to Refund Initited.",
+      "inquirePayment: Ticket has a refundPun. Payment status will be set to Refund Initaited.",
     );
+    ticket.paymentStatus = "Refund Initiated";
+    await ticket.save();
+    return res.status(200).json({
+      status: "success",
+      message: "Ticket has a refundPun. Payment status set to Refund Initiated.",
+      updatedPaymentStatus: ticket.paymentStatus,
+    });
   } else {
     console.log("Ticekt has no refundPun. Proceeding with payment inquiry.");
 
