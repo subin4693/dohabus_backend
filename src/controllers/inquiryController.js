@@ -103,14 +103,6 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
       merchantID: process.env.CYBERSOURCE_MERCHANT_ID,
       merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID,
       merchantsecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET,
-      logConfiguration: {
-        enableLog: true,
-        logFileName: "cybs",
-        logDirectory: "log",
-        logFileMaxSize: "5242880",
-        loggingLevel: "debug",
-        enableMasking: false,
-      },
     };
 
     // Initialize the API client and Transaction Details API

@@ -140,15 +140,6 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       merchantID: process.env.CYBERSOURCE_MERCHANT_ID,
       merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID,
       merchantsecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET,
-      // Logging configuration: enabled logging and disabled masking
-      logConfiguration: {
-        enableLog: true,
-        logFileName: "cybs",
-        logDirectory: "log",
-        logFileMaxSize: "5242880", // 5 MB (example value)
-        loggingLevel: "debug",
-        enableMasking: false,
-      },
     };
 
     // Initialize the API client and Refund API with the inline configuration
