@@ -372,6 +372,8 @@ exports.requestRefund = async (req, res) => {
     }
 
     // Create new Refund record using the ticket's ObjectId
+    console.log("Creating new refund record...testing code updation");
+
     const refund = new Refund({
       ticketId: ticket._id,
       reason,
