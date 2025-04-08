@@ -363,7 +363,6 @@ exports.requestRefund = async (req, res) => {
     // Check if a refund request already exists for this ticket with status Pending or Processing
     const existingRefund = await Refund.findOne({
       ticketId: ticket._id,
-      status: { $in: ["Pending Approval", "Processing Refund"] },
     });
     if (existingRefund) {
       return res.status(400).json({
