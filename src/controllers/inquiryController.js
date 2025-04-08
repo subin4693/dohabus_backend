@@ -77,7 +77,7 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
     });
   }
 
-  console.log("inquirePayment: Ticket found: test", ticket);
+  console.log("inquirePayment: Ticket found", ticket);
 
   if (ticket.refundPun) {
     console.log(

@@ -135,13 +135,11 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
     // Inline configuration using environment variables (fallbacks provided for local testing)
     const configObject = {
-      authenticationType: process.env.CYBERSOURCE_AUTH_TYPE || "http_signature",
-      runEnvironment: process.env.CYBERSOURCE_RUN_ENVIRONMENT || "api.cybersource.com",
-      merchantID: process.env.CYBERSOURCE_MERCHANT_ID || "testrest",
-      merchantKeyId:
-        process.env.CYBERSOURCE_SHARED_API_KEY_ID || "08c94330-f618-42a3-b09d-e1e43be5efda",
-      merchantsecretKey:
-        process.env.CYBERSOURCE_SHARED_API_SECRET || "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE=",
+      authenticationType: process.env.CYBERSOURCE_AUTH_TYPE,
+      runEnvironment: process.env.CYBERSOURCE_RUN_ENVIRONMENT,
+      merchantID: process.env.CYBERSOURCE_MERCHANT_ID,
+      merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID,
+      merchantsecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET,
       // Logging configuration: enabled logging and disabled masking
       logConfiguration: {
         enableLog: true,
