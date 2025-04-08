@@ -126,8 +126,21 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     return next(new AppError("Ticket not found", 404));
   }
 
-  if (ticket.paymentStatus !== "Paid") {
-    return next(new AppError("Only paid tickets can be refunded", 400));
+  if (
+    ticket.paymentStatus === "Pending" ||
+    ticket.paymentStatus === "Failed" ||
+    ticket.paymentStatus === "Cancelled"
+  ) {
+    return next(new AppError("Ticket is not paid yet", 400));
+  }
+  if (ticket.paymentStatus === "Refunded") {
+    return next(new AppError("Ticket already refunded", 400));
+  }
+  if (ticket.paymentStatus === "Refund Processing") {
+    return next(new AppError("Refund request has already been sent to the portal", 400));
+  }
+  if (ticket.paymentStatus === "Refund Rejected By DohaBus") {
+    return next(new AppError("Refund request has been rejected by DohaBus", 400));
   }
 
   if (ticket.paymentMethod === "cybersource") {
@@ -140,6 +153,15 @@ exports.processRefund = catchAsync(async (req, res, next) => {
       merchantID: process.env.CYBERSOURCE_MERCHANT_ID,
       merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID,
       merchantsecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET,
+      // Logging configuration: enabled logging and disabled masking
+      logConfiguration: {
+        enableLog: true,
+        logFileName: "cybs",
+        logDirectory: "log",
+        logFileMaxSize: "5242880", // 5 MB (example value)
+        loggingLevel: "debug",
+        enableMasking: false,
+      },
     };
 
     // Initialize the API client and Refund API with the inline configuration
@@ -187,14 +209,14 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         // Update the ticket: mark it as refund processing and store the refund ID from CyberSource
         ticket.paymentStatus = "Refund Processing";
         // We store the CyberSource refund ID in the refundPun field for tracking
-        ticket.refundPun = data.id || "";
+        ticket.refundPun = data.id;
         await ticket.save();
         console.log("✅ Ticket updated with refund status and refund ID.");
 
         // Update the Refund record if it exists, or create a new one
         let refundRecord = await Refund.findOne({ ticketId: ticket._id });
         if (refundRecord) {
-          refundRecord.status = "Processing";
+          refundRecord.status = "Request Forwarded";
           refundRecord.refundAmount = refundAmount;
           // Optionally, you can store additional CyberSource response data if needed
           await refundRecord.save();
@@ -314,7 +336,7 @@ exports.processRefund = catchAsync(async (req, res, next) => {
 
     const refundRecord = await Refund.findOne({ ticketId: ticket._id });
     if (refundRecord) {
-      refundRecord.status = "Processing Refund";
+      refundRecord.status = "Request Forwarded";
       refundRecord.refundAmount = refundAmount;
       await refundRecord.save();
     }
