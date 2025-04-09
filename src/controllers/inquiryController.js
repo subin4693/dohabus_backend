@@ -397,21 +397,6 @@ exports.inquireRefund = async (req, res, next) => {
     else {
       console.log("💳 Payment method is QPay. Proceeding with refund inquiry.");
 
-      if (!ticket.refundPun) {
-        console.log(
-          "inquireRefund: Ticket has no refundPun. Refund status will be set to Cancelled.",
-        );
-        // Log the result (no DB update) and send the response
-        console.log("Refund Status: Cancelled");
-        return res.status(200).json({
-          status: "success",
-          paymentMethod: "QPay",
-          message: "Refund was not completed by the user because no refund reference exists.",
-          updatedRefundStatus: "Cancelled",
-          rawResponse: {},
-        });
-      }
-
       try {
         // Build the inquiry data for QPay using refundPun instead of pun
         const inquiryData = {
@@ -449,6 +434,7 @@ exports.inquireRefund = async (req, res, next) => {
           status: "success",
           paymentMethod: "QPay",
           message: originalStatusMessage,
+          originalStatus: originalStatus,
           rawResponse: parsedInquiryResponse,
         });
       } catch (error) {
