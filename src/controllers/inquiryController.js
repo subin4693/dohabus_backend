@@ -393,11 +393,72 @@ exports.inquireRefund = async (req, res, next) => {
           data: refundResponse,
         });
       });
-    } else {
-      console.log("💳 Payment method is not CyberSource.");
-      return next(
-        new AppError("Refund inquiry for non-CyberSource payment methods is not implemented.", 501),
-      );
+    } // QPay Refund Inquiry
+    else {
+      console.log("💳 Payment method is QPay. Proceeding with refund inquiry.");
+
+      if (!ticket.refundPun) {
+        console.log(
+          "inquireRefund: Ticket has no refundPun. Refund status will be set to Cancelled.",
+        );
+        // Log the result (no DB update) and send the response
+        console.log("Refund Status: Cancelled");
+        return res.status(200).json({
+          status: "success",
+          paymentMethod: "QPay",
+          message: "Refund was not completed by the user because no refund reference exists.",
+          updatedRefundStatus: "Cancelled",
+          rawResponse: {},
+        });
+      }
+
+      try {
+        // Build the inquiry data for QPay using refundPun instead of pun
+        const inquiryData = {
+          Action: "14",
+          BankID: process.env.QPAY_BANK_ID.trim(),
+          Lang: "en",
+          MerchantID: process.env.QPAY_MERCHANT_ID.trim(),
+          OriginalPUN: ticket.refundPun, // use refundPun here
+        };
+
+        // Generate secure hash for inquiry
+        inquiryData.SecureHash = generateInquirySecureHash(
+          inquiryData,
+          process.env.QPAY_SECRET_KEY,
+        );
+
+        // Send the inquiry request (assumes sendInquiryRequest is an async function that returns raw response)
+        const inquiryResponseRaw = await sendInquiryRequest(inquiryData);
+        const parsedInquiryResponse = require("querystring").parse(inquiryResponseRaw);
+
+        // Extract expected values from the parsed response
+        const responseStatus = parsedInquiryResponse["Response.Status"];
+        const originalStatus = parsedInquiryResponse["Response.OriginalStatus"];
+        const originalStatusMessage = parsedInquiryResponse["Response.OriginalStatusMessage"];
+
+        if (!responseStatus) {
+          throw new Error("Invalid refund inquiry response: missing Response.Status");
+        }
+
+        // Log the QPay refund inquiry result
+        console.log("QPay Refund Inquiry Result:", parsedInquiryResponse);
+
+        return res.status(200).json({
+          status: "success",
+          paymentMethod: "QPay",
+          message: originalStatusMessage,
+          rawResponse: parsedInquiryResponse,
+        });
+      } catch (error) {
+        console.error("Refund inquiry error (QPay):", error);
+        return res.status(500).json({
+          status: "error",
+          paymentMethod: "QPay",
+          message: "Failed to get refund inquiry for QPay.",
+          error: error.message,
+        });
+      }
     }
   } catch (err) {
     console.error("❌ Inquire Refund encountered an error:", err);
