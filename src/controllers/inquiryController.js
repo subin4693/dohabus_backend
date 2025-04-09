@@ -315,8 +315,94 @@ exports.inquireRefund = async (req, res, next) => {
 
     if (ticket.paymentMethod === "cybersource") {
       console.log("💳 Payment method is CyberSource. Proceeding with refund inquiry.");
-      // CyberSource branch code remains unchanged...
-      // (DB update and response handling for CyberSource)
+
+      // Inline configuration using environment variables
+      const configObject = {
+        authenticationType: process.env.CYBERSOURCE_AUTH_TYPE,
+        runEnvironment: process.env.CYBERSOURCE_RUN_ENVIRONMENT,
+        merchantID: process.env.CYBERSOURCE_MERCHANT_ID,
+        merchantKeyId: process.env.CYBERSOURCE_SHARED_API_KEY_ID,
+        merchantsecretKey: process.env.CYBERSOURCE_SHARED_API_SECRET,
+        logConfiguration: {
+          enableLog: true,
+          logFileName: "cybs",
+          logDirectory: "log",
+          logFileMaxSize: "5242880",
+          loggingLevel: "debug",
+          enableMasking: false,
+        },
+      };
+
+      // Initialize the API client and Transaction Details API
+      const apiClient = new cybersourceRestApi.ApiClient();
+      const transactionDetailsApi = new cybersourceRestApi.TransactionDetailsApi(
+        configObject,
+        apiClient,
+      );
+
+      // Send the inquiry request to CyberSource using the refund reference (refundId)
+      transactionDetailsApi.getTransaction(refundId, async function(error, data, response) {
+        if (error) {
+          console.error("❌ Refund inquiry error:", JSON.stringify(error, null, 2));
+          let errorMessage = "Refund inquiry failed due to an unexpected error.";
+          if (error.message) {
+            // Fixed bug: using proper template literal syntax
+            errorMessage = `Refund inquiry error: ${error.message}`;
+          }
+          return next(new AppError(errorMessage, 500));
+        }
+
+        // Log the returned status from CyberSource
+        console.log(
+          "✅ Refund inquiry successful: Status of Refund:",
+          data.applicationInformation.status,
+        );
+        const responseCode = data.applicationInformation.status;
+
+        // Update database based on the response status
+        if (responseCode === "TRANSMITTED") {
+          // Update ticket: set paymentStatus to "Refunded"
+          ticket.paymentStatus = "Refunded";
+          await ticket.save();
+          // Update refund record: set status to "Refunded"
+          let refundRecord = await Refund.findOne({ ticketId: ticket._id });
+          if (refundRecord) {
+            refundRecord.status = "Refunded";
+            await refundRecord.save();
+          }
+        } else if (responseCode === "PENDING") {
+          // Update ticket: set paymentStatus to "Refund Pending"
+          ticket.paymentStatus = "Refund Pending";
+          await ticket.save();
+          // No refund update logic for PENDING status
+        } else {
+          // For all other cases, treat as rejected.
+          ticket.paymentStatus = "Refund Rejected By Portal";
+          await ticket.save();
+          let refundRecord = await Refund.findOne({ ticketId: ticket._id });
+          if (refundRecord) {
+            refundRecord.status = "Rejected";
+            await refundRecord.save();
+          }
+        }
+
+        // Prepare a friendlier response for the frontend
+        const refundResponse = {
+          refundId: data.id,
+          status: data.applicationInformation?.status || "Unknown",
+          reconciliationId: data.reconciliationId,
+          submitTimeUTC: data.submitTimeUTC,
+          approvalCode: data.processorInformation?.approvalCode || null,
+          errorMessage: data.errorInformation?.message || null,
+          fullResponse: data,
+        };
+
+        return res.status(200).json({
+          status: "success",
+          message: "Refund inquiry completed successfully.",
+          data: refundResponse,
+        });
+      });
     } else {
       // QPay Refund Inquiry
       console.log("💳 Payment method is QPay. Proceeding with refund inquiry.");
