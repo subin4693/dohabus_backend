@@ -431,6 +431,7 @@ exports.inquireRefund = async (req, res, next) => {
         // Send the inquiry request (assumes sendInquiryRequest is an async function that returns raw response)
         const inquiryResponseRaw = await sendInquiryRequest(inquiryData);
         const parsedInquiryResponse = require("querystring").parse(inquiryResponseRaw);
+        console.log("Parsed inquiry response:", parsedInquiryResponse);
 
         // Extract expected values from the parsed response
         const responseStatus = parsedInquiryResponse["Response.Status"];
