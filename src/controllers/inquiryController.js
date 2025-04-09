@@ -435,7 +435,6 @@ exports.inquireRefund = async (req, res, next) => {
           paymentMethod: "QPay",
           message: originalStatusMessage,
           originalStatus: originalStatus,
-          rawResponse: parsedInquiryResponse,
         });
       } catch (error) {
         console.error("Refund inquiry error (QPay):", error);
