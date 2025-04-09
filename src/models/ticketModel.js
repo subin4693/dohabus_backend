@@ -108,6 +108,7 @@ const ticketModel = new mongoose.Schema(
         "Refund Processing",
         "Refunded",
         "Refund Rejected By DohaBus",
+        "Refund Rejected By Portal",
       ],
       default: "Pending",
     },

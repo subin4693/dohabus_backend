@@ -429,14 +429,10 @@ exports.requestRefund = async (req, res) => {
  * - Returns the refund data for the admin panel.
  */
 exports.getRefundRequests = catchAsync(async (req, res, next) => {
-  console.log("Fetching all refund requests for admin panel...");
-
   // Only select refunds where ticketId is not null
   const refunds = await Refund.find({ ticketId: { $ne: null } })
     .populate("ticketId")
     .populate("ticketId", "uniqueId firstName lastName email paymentStatus");
-
-  console.log(refunds);
 
   return res.status(200).json({
     status: "success",
