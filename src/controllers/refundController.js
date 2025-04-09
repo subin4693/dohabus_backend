@@ -214,22 +214,12 @@ exports.processRefund = catchAsync(async (req, res, next) => {
         console.log("✅ Ticket updated with refund status and refund ID.");
 
         // Update the Refund record if it exists, or create a new one
-        let refundRecord = await Refund.findOne({ ticketId: ticket._id });
-        if (refundRecord) {
-          refundRecord.status = "Request Forwarded";
-          refundRecord.refundAmount = refundAmount;
-          // Optionally, you can store additional CyberSource response data if needed
-          await refundRecord.save();
-          console.log("✅ Refund record updated.");
-        } else {
-          refundRecord = await Refund.create({
-            ticketId: ticket._id,
-            paymentMethod: ticket.paymentMethod,
-            status: "Processing",
-            refundAmount: refundAmount,
-          });
-          console.log("✅ Refund record created.");
-        }
+        const refundRecord = await Refund.findOne({ ticketId: ticket._id });
+        refundRecord.status = "Request Forwarded";
+        refundRecord.refundAmount = refundAmount;
+        // Optionally, you can store additional CyberSource response data if needed
+        await refundRecord.save();
+        console.log("✅ Refund record updated.");
       } catch (dbError) {
         console.error("❌ Error updating DB:", dbError);
         return next(new AppError("Refund processed but failed to update DB", 500));
@@ -335,11 +325,9 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     console.log("Updated Ticket Data:", updatedTicket);
 
     const refundRecord = await Refund.findOne({ ticketId: ticket._id });
-    if (refundRecord) {
-      refundRecord.status = "Request Forwarded";
-      refundRecord.refundAmount = refundAmount;
-      await refundRecord.save();
-    }
+    refundRecord.status = "Request Forwarded";
+    refundRecord.refundAmount = refundAmount;
+    await refundRecord.save();
 
     return res.status(200).json({
       status: "success",
@@ -376,8 +364,11 @@ exports.requestRefund = async (req, res) => {
       ticketId: ticket._id,
     });
     if (existingRefund) {
+      const refundStatus = existingRefund.status;
+      console.log("Refund Status:", refundStatus);
+
       return res.status(400).json({
-        error: "A refund request for this ticket already exists.",
+        error: `Request already exists. Status: ${refundStatus}`,
       });
     }
 

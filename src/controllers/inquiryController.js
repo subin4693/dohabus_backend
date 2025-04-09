@@ -177,7 +177,7 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
     if (!ticket.pun) {
       console.log("inquirePayment: Ticket has no PUN. Payment status will be set to Cancelled.");
 
-      ticket.paymentStatus = "Paid";
+      ticket.paymentStatus = "Cancelled";
       await ticket.save();
       return res.status(200).json({
         status: "success",
