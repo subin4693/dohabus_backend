@@ -142,6 +142,9 @@ exports.processRefund = catchAsync(async (req, res, next) => {
   if (ticket.paymentStatus === "Refund Rejected By DohaBus") {
     return next(new AppError("Refund request has been rejected by DohaBus", 400));
   }
+  if (ticket.paymentStatus === "Refund Rejected By Portal") {
+    return next(new AppError("Refund request has been rejected by Portal", 400));
+  }
 
   if (ticket.paymentMethod === "cybersource") {
     console.log(`🔄 Initiating CyberSource refund for ticket: ${ticketId}`);

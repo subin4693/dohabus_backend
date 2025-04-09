@@ -208,7 +208,14 @@ exports.inquirePayment = catchAsync(async (req, res, next) => {
       return next(new AppError("Invalid inquiry response: missing Response.Status", 500));
     }
 
-    ticket.paymentStatus = originalStatus === "0000" ? "Paid" : "Failed";
+    // Updated part: update ticket.paymentStatus based on proper QPay response codes
+    if (originalStatus === "0000") {
+      ticket.paymentStatus = "Paid";
+    } else if (originalStatus === "2996" || originalStatus === "2997") {
+      ticket.paymentStatus = "Cancelled";
+    } else {
+      ticket.paymentStatus = "Failed";
+    }
     await ticket.save();
 
     return res.status(200).json({
