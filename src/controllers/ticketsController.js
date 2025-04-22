@@ -477,6 +477,7 @@ exports.bookTicket = catchAsync(async (req, res, next) => {
         pun: null, // CyberSource doesn't use PUN
       });
 
+      console.log("DEBUG: Ticket created in DB:", ticket);
       // Return an HTML page with an auto-submitting form for CyberSource.
       const formInputs = Object.entries({ ...fieldsToSign, signature })
         .map(([key, value]) => `<input type="hidden" name="${key}" value="${value}" />`)
@@ -927,7 +928,10 @@ exports.cybersourcePaymentResponse = async (req, res) => {
 
     // Retrieve the ticket based on the transaction reference (using reference_number here)
     const referenceNumber = fields.req_reference_number;
-    const ticket = await Ticket.findOne({ transactionId: referenceNumber });
+    const ticket = await Ticket.findOne({ transactionId: referenceNumber })
+      .populate("plan")
+      .populate("category");
+
     console.log("Ticekt Found", ticket);
 
     if (ticket) {
