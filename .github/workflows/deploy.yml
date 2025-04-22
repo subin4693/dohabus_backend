@@ -19,5 +19,4 @@ jobs:
         script: |
           cd code/dohabus_backend
           git pull
-          npm install
           pm2 reload backend
